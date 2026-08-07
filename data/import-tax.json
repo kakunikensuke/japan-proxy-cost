@@ -1,0 +1,138 @@
+{
+  "_meta": {
+    "updated": "2026-08-07",
+    "purpose": "輸入時にかかる税は『配送先の国』の制度であって代行会社の性質ではない。代行会社が決めるのは“いつ払うか”（事前徴収 or 着払い）だけ。したがって税は全社に同じ条件で乗せ、事前徴収の有無だけを表示する。",
+    "warning": "税率・免税枠は制度変更が頻繁。2025〜2026年に米国・EUで大きな改正があった。GitHub Actions で定期的に見直すこと。",
+    "displayPolicy": "利用者には ①今すぐ代行に払う額 ②到着時に現地で払う額 ③合計 の3段で見せる。②が0でも『事前徴収済み』と明示し、消えたように見せない。"
+  },
+
+  "countries": {
+    "US": {
+      "name": "United States",
+      "vatRate": null,
+      "vatNote": "米国に輸入VAT/GSTは無い。州の売上税は輸入時には徴収されない。",
+      "deMinimis": {
+        "status": "suspended",
+        "formerThresholdUsd": 800,
+        "suspendedSince": "2025-08-29",
+        "madeIndefinite": "2026-06-24",
+        "statutoryRepeal": "2027-07-01",
+        "note": "2025年8月29日より全ての国からの荷物について$800免税枠が停止。2026年6月24日にCBPが無期限化。金額・原産国・配送手段を問わず正式な通関手続きと関税支払いが必要。",
+        "sources": [
+          "https://www.federalregister.gov/documents/2026/06/24/2026-12669/indefinite-suspension-of-the-de-minimis-exemption-for-mail-shipments-and-new-postal-informal-entry",
+          "https://www.federalregister.gov/documents/2026/06/24/2026-12670/indefinite-suspension-of-the-de-minimis-exemption-for-merchandise-arriving-through-all-modes-other"
+        ]
+      },
+      "dutyRate": null,
+      "dutyRateStatus": "unknown-by-hs-code",
+      "dutyNote": "関税率はHSコード（品目）ごとに異なるため一律の数値を出せない。推測値を表示せず、『関税がかかる』事実と根拠だけを示す。",
+      "displayEn": {
+        "headline": "Duty now applies to every shipment",
+        "body": "The US $800 de minimis exemption was suspended on 29 Aug 2025 and made indefinite on 24 Jun 2026. Every parcel needs formal entry and duty, regardless of value. The exact rate depends on the item's HS code, so we do not estimate it here.",
+        "severity": "high"
+      }
+    },
+
+    "GB": {
+      "name": "United Kingdom",
+      "vatRate": 0.20,
+      "vatBase": "goods+shipping",
+      "deMinimis": {
+        "status": "active",
+        "dutyThreshold": 135,
+        "currency": "GBP",
+        "note": "£135以下の荷物は関税なし。ただしVATは販売時点で課税される。2025年秋季予算で廃止方針が示され、2029年3月までに撤廃予定。",
+        "verifiedAt": "2026-08-07"
+      },
+      "displayEn": {
+        "headline": "20% VAT applies",
+        "body": "UK VAT of 20% is charged on the goods plus shipping. Consignments of £135 or less are free of customs duty (this threshold is due to be abolished by March 2029).",
+        "severity": "medium"
+      }
+    },
+
+    "DE": {
+      "name": "Germany",
+      "vatRate": 0.19,
+      "vatBase": "goods+shipping",
+      "deMinimis": {
+        "status": "removed",
+        "formerThreshold": 150,
+        "currency": "EUR",
+        "removedOn": "2026-07-01",
+        "flatDutyEur": 3,
+        "note": "EUの€150関税免除は2026年7月1日に廃止。低額のEC荷物には1点あたり€3の固定関税。VATは従来どおり全額課税。",
+        "verifiedAt": "2026-08-07"
+      },
+      "displayEn": {
+        "headline": "19% VAT + new €3 flat duty",
+        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Low-value ecommerce parcels now carry a flat €3 customs duty per item, on top of 19% German VAT on goods plus shipping.",
+        "severity": "medium"
+      }
+    },
+
+    "FR": {
+      "name": "France",
+      "vatRate": 0.20,
+      "vatBase": "goods+shipping",
+      "deMinimis": {
+        "status": "removed",
+        "formerThreshold": 150,
+        "currency": "EUR",
+        "removedOn": "2026-07-01",
+        "flatDutyEur": 3,
+        "verifiedAt": "2026-08-07"
+      },
+      "displayEn": {
+        "headline": "20% VAT + new €3 flat duty",
+        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Low-value ecommerce parcels now carry a flat €3 customs duty per item, on top of 20% French VAT on goods plus shipping.",
+        "severity": "medium"
+      }
+    },
+
+    "AU": {
+      "name": "Australia",
+      "vatRate": 0.10,
+      "vatLabel": "GST",
+      "vatBase": "goods+shipping",
+      "deMinimis": { "status": "active", "dutyThreshold": 1000, "currency": "AUD" },
+      "displayEn": {
+        "headline": "10% GST applies",
+        "body": "Australian GST of 10% applies to goods plus shipping. Parcels valued at AUD 1,000 or less are treated as low-value goods and GST is collected up front by the retailer or proxy.",
+        "severity": "low"
+      }
+    },
+
+    "CA": {
+      "name": "Canada",
+      "vatRate": null,
+      "vatLabel": "GST/HST",
+      "vatRateStatus": "varies-by-province",
+      "vatNote": "州によって5%〜15%（GST単独かHSTか）。州を選ばせないと確定できないため v1 では数値を出さない。",
+      "deMinimis": { "status": "active", "dutyThreshold": 20, "currency": "CAD", "note": "CAD20超で課税対象。郵便扱いの場合は別途手数料あり" },
+      "displayEn": {
+        "headline": "GST/HST applies (rate varies by province)",
+        "body": "Canadian sales tax on imports ranges from 5% to 15% depending on your province. Parcels over CAD 20 are taxable. Couriers usually add a customs handling fee on delivery.",
+        "severity": "medium"
+      }
+    },
+
+    "SG": {
+      "name": "Singapore",
+      "vatRate": 0.09,
+      "vatLabel": "GST",
+      "vatBase": "goods+shipping",
+      "deMinimis": { "status": "removed", "note": "2023年1月1日より低額品にもGST。2024年から税率9%" },
+      "displayEn": {
+        "headline": "9% GST applies",
+        "body": "Singapore charges 9% GST on goods plus shipping for imported parcels. Low-value goods have been taxable since 1 January 2023.",
+        "severity": "low"
+      }
+    }
+  },
+
+  "courierHandlingFee": {
+    "note": "事前徴収されなかった税を到着時に立て替える配送業者が請求する手数料。事前徴収を選ぶとこれを回避できる場合が多い。実額は業者・国により幅があるため、v1では『発生しうる』とだけ表示し金額は出さない。",
+    "status": "not-quantified"
+  }
+}

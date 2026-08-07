@@ -1,0 +1,8 @@
+name = "japan-proxy-cost"
+compatibility_date = "2026-08-07"
+
+[assets]
+directory = "./dist"
+# 静的HTMLを全ルート分プリレンダしているのでSPAフォールバックは使わない。
+# single-page-application にすると存在しないURLまで200で返すソフト404になる。
+not_found_handling = "404-page"

@@ -1,0 +1,234 @@
+{
+  "_meta": {
+    "updated": "2026-08-07",
+    "currency": "JPY",
+    "note": "各社公式ページからの転記。unverified:true の項目は未確認のため計算時に警告を出すこと。",
+    "sourceKeys": ["yahoo_auction", "mercari", "rakuma", "amazon_jp", "rakuten", "recommended", "other_shop"]
+  },
+
+  "proxies": [
+    {
+      "id": "fromjapan",
+      "name": "One Map by FROM JAPAN",
+      "shortName": "FROM JAPAN",
+      "url": "https://www.fromjapan.co.jp/",
+      "verifiedAt": "2026-08-07",
+      "verifiedBy": "official-guide",
+
+      "serviceFee": {
+        "unit": "item",
+        "note": "Product Protection Plan として ¥500/点。同一商品を複数個まとめて支払う場合は1点分。",
+        "bySource": {
+          "yahoo_auction": 500, "mercari": 500, "rakuma": 500,
+          "amazon_jp": 500, "rakuten": 500, "recommended": 500, "other_shop": 500
+        }
+      },
+      "included": ["storage60d", "consolidation", "domestic_trade_guarantee", "inspection", "international_insurance"],
+      "paymentFee": { "type": "none", "rate": 0, "note": "日本国内の決済手数料は顧客に請求しない" },
+      "packingFee": { "type": "included", "amount": 0 },
+      "domesticShipping": { "type": "actual", "freeShippingItemsCost": 0, "note": "送料無料の商品は¥0" },
+      "storage": { "freeDays": 60, "note": "プランに含まれる" },
+      "photoService": { "amount": 500, "photos": 3 },
+      "repackFee": { "min": 1500 },
+      "exportClearanceFee": { "amount": 2800, "thresholdJpy": 200000, "carriers": ["ems", "intl_parcel"] },
+      "carrierSurcharges": [
+        { "carrier": "fedex", "label": "直配エリア外", "amount": 2710 },
+        { "carrier": "ups", "label": "拡大エリア", "amount": 2820, "perKg": 80, "rule": "max" },
+        { "carrier": "ups", "label": "遠隔地", "amount": 3040, "perKg": 90, "rule": "max" }
+      ],
+      "taxPrepay": [
+        { "country": "AU", "tax": "GST", "rate": 0.10, "base": "charge1+charge2", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "under" },
+        { "country": "NZ", "tax": "GST", "rate": 0.15, "base": "charge1+charge2" },
+        { "country": "SG", "tax": "GST", "rate": 0.09, "base": "charge1+charge2", "thresholdValue": 400, "thresholdCurrency": "SGD", "thresholdRule": "under", "note": "Surface便は事前徴収なし" },
+        { "country": "MY", "tax": "SST", "rate": 0.10, "base": "charge1", "thresholdValue": 500, "thresholdCurrency": "MYR", "thresholdRule": "atOrUnder" }
+      ],
+      "paymentMethods": ["visa", "mastercard", "paypal", "alipay", "deposit", "fj_points"],
+      "uxNotes": [
+        "クレカはVISA/MasterCardのみ（AMEX不可）",
+        "PayPal決済分は支払い時指定の国以外へ転送不可",
+        "ヤフオク入札には終了後12時間分のデポジット残高が必要",
+        "落札後48時間以内に未払いでアカウント制限"
+      ],
+      "affiliate": { "status": "none", "note": "友達紹介はFJポイント(1pt=1円)のみ。換金不可のため収益源にならない" }
+    },
+
+    {
+      "id": "buyee",
+      "name": "Buyee",
+      "operator": "tenso株式会社",
+      "url": "https://buyee.jp/",
+      "verifiedAt": "2026-08-07",
+      "verifiedBy": "official-guide",
+      "shippingModes": ["standard", "direct"],
+      "calcMode": "standard",
+      "calcModeNote": "ダイレクト配送はBuyeeが独自予測した概算額を前払いさせる方式で、実費と乖離しても返金なし。外部から計算不能なため本ツールは通常配送のみ計算する。",
+
+      "serviceFee": {
+        "unit": "order",
+        "note": "オークション/フリマは1落札・1購入ごとに¥500（個数2個以上でも一律）。ショッピングは1オーダーごと¥500（同一ショップなら複数商品でも一律）。",
+        "bySource": {
+          "yahoo_auction": { "amount": 500, "unit": "purchase" },
+          "mercari": { "amount": 500, "unit": "purchase" },
+          "rakuma": { "amount": 500, "unit": "purchase" },
+          "amazon_jp": { "amount": 500, "unit": "order" },
+          "rakuten": { "amount": 500, "unit": "order" },
+          "recommended": { "amount": 500, "unit": "order" },
+          "other_shop": { "amount": 500, "unit": "order" }
+        }
+      },
+      "plans": [
+        { "id": "light",      "name": "ライトプラン",      "nameEn": "Light — no cover",                  "fee": 0,   "shippingGuarantee": false, "inspection": false },
+        { "id": "inspection", "name": "検品プラン",        "nameEn": "Inspection only",                   "fee": 300, "shippingGuarantee": false, "inspection": true },
+        { "id": "guarantee",  "name": "配送保障プラン",     "nameEn": "Shipping guarantee only",           "fee": 500, "shippingGuarantee": true,  "inspection": false },
+        { "id": "standard",   "name": "スタンダードプラン", "nameEn": "Standard — guarantee + inspection", "fee": 500, "shippingGuarantee": true,  "inspection": true, "recommended": true }
+      ],
+      "defaultPlan": "light",
+      "paymentFee": { "type": "none", "rate": 0 },
+      "packingFee": { "type": "paid", "amount": null, "unverified": true, "note": "おまとめ梱包・厳重梱包は有料オプション。金額が未取得のため要追加確認" },
+      "domesticShipping": { "type": "actual", "rangeMin": 150, "rangeMax": 1500, "per": "order", "note": "「送料無料」商品でも追跡可能な配送方法への変更により発生しうる。同一ストアでも注文ごとに発生。" },
+      "storage": { "freeDays": null, "unverified": true },
+      "exportClearanceFee": { "amount": 2800, "thresholdJpy": 200000, "carriers": ["ems", "intl_parcel_air", "intl_parcel_sal", "intl_parcel_sea", "small_packet_air", "small_packet_sal"] },
+      "taxPrepay": [
+        { "country": "AU", "tax": "GST", "unverifiedRate": true },
+        { "country": "NZ", "tax": "GST", "unverifiedRate": true },
+        { "country": "SG", "tax": "GST", "unverifiedRate": true },
+        { "country": "MY", "tax": "SST", "unverifiedRate": true }
+      ],
+      "warehouses": ["JP", "US"],
+      "affiliate": { "status": "network", "networks": ["skimlinks", "brandreward", "linkbux"], "rate": null, "unverified": true }
+    },
+
+    {
+      "id": "zenmarket",
+      "name": "ZenMarket",
+      "url": "https://zenmarket.jp/",
+      "verifiedAt": "2026-08-07",
+      "verifiedBy": "official-fees-page",
+
+      "serviceFee": {
+        "unit": "item",
+        "note": "同一商品の複数個は1回分。色・サイズ違いは別商品として各1回分。",
+        "bySource": {
+          "recommended": 300,
+          "amazon_jp": 500,
+          "rakuten": 500,
+          "other_shop": 500,
+          "mercari": 800,
+          "yahoo_auction": 800,
+          "rakuma": { "amount": 500, "unverified": true, "note": "公式文言に明記なし。Mercari/JDirectItemsのみ800と記載されているため500と推定" }
+        }
+      },
+      "paymentFee": {
+        "type": "rate",
+        "rate": 0.035,
+        "grossUp": true,
+        "label": "Funds Deposit Fee",
+        "note": "公式FAQ「Deposit fee is 3.5% of the total transaction amount, not of the amount you wish to deposit」より。必要額の実質3.627%。料金ページの「from 1%」は一部決済手段の下限で、クレカ/PayPalは3.5%。",
+        "verifiedAt": "2026-08-07"
+      },
+      "packingFee": { "type": "included", "amount": 0, "note": "初回の同梱・梱包は無料" },
+      "reinforcementFee": { "amount": 1000, "per": "box", "optional": true },
+      "domesticShipping": { "type": "actual", "note": "出品者・ショップによる。無料の場合あり" },
+      "storage": { "freeDays": 60, "overstayPerDayPerItem": 50, "disposeAfterDays": 90 },
+      "photoService": { "amount": 500, "photos": 3, "extra5Photos": 500 },
+      "intangibleGoodsFee": { "rate": 0.10, "note": "ゲームコード等" },
+      "insurance": { "includedUnderJpy": 5000000 },
+      "repackFee": [
+        { "maxWeightG": 4999, "amount": 1000 },
+        { "maxWeightG": 14999, "amount": 2000 },
+        { "maxWeightG": 29999, "amount": 3000 },
+        { "maxWeightG": null, "amount": 4000 }
+      ],
+      "cancelFee": { "amount": 1000, "note": "倉庫到着後。ヤフオク・メルカリ・ラクマは不可" },
+      "disposalFee": { "perKg": 300, "laborPer15min": 1000, "batteryPerUnitMin": 300, "batteryPerUnitMax": 3200 },
+      "taxPrepayNote": "公式 shipping.aspx より。全て『商品代と国際送料の両方が課税対象』と明記されている。DDPオプションもあり。",
+      "taxPrepay": [
+        { "country": "AU", "tax": "GST", "rate": 0.10,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "NZ", "tax": "GST", "rate": 0.15,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "GB", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "NO", "tax": "VAT", "rate": 0.25,  "base": "goods+intl", "verifiedAt": "2026-08-07", "note": "VOECスキーム" },
+        { "country": "CH", "tax": "VAT", "rate": 0.081, "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "SG", "tax": "GST", "rate": 0.09,  "base": "goods+intl", "verifiedAt": "2026-08-07", "note": "400SGD超の品が混在する荷物は、事前徴収後に追加課税されることがある" },
+        { "country": "KZ", "tax": "VAT", "rate": 0.16,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "DE", "tax": "VAT", "rate": 0.19,  "base": "goods+intl", "note": "ZenMarketは『EU VAT rates by country』と記載。19%はドイツの標準税率" },
+        { "country": "FR", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "note": "ZenMarketは『EU VAT rates by country』と記載。20%はフランスの標準税率" }
+      ],
+      "insurance": { "includedUnderJpy": 5000000, "note": "サービス料に込み。割引キャンペーン中でも適用" },
+      "exportClearanceFee": null,
+      "exportClearanceNote": "公式の customs duties セクションに20万円超の通関業務委託料の記載なし。Buyee/FROM JAPANは明記しているため、非徴収の可能性が高いが要確認（問い合わせ項目）。",
+      "affiliate": { "status": "own", "amountPerSignup": 100, "unverified": true, "note": "情報源が古い。要確認" }
+    },
+
+    {
+      "id": "neokyo",
+      "name": "Neokyo",
+      "url": "https://neokyo.com/",
+      "verifiedAt": "2026-08-07",
+      "verifiedBy": "official-fees-page",
+
+      "serviceFee": {
+        "unit": "item",
+        "note": "同一商品の複数個は1回のみ。購入・問い合わせ対応・サポート・45日保管を含む。2025年後半に¥250→¥350へ値上げ（二次情報）。",
+        "bySource": {
+          "yahoo_auction": 350, "mercari": 350, "rakuma": 350,
+          "amazon_jp": 350, "rakuten": 350, "recommended": 350, "other_shop": 350
+        }
+      },
+      "packingFee": {
+        "type": "weight",
+        "baseAmount": 500,
+        "baseUpToG": 2000,
+        "perAdditionalKg": 150,
+        "note": "2kg未満 ¥500 / 2kg以上 ¥500 + 超過1kgごと¥150"
+      },
+      "paymentFee": { "type": "unknown", "unverified": true },
+      "domesticShipping": { "type": "unknown", "unverified": true },
+      "storage": {
+        "freeDays": 45,
+        "freeDaysStoredParcel": 7,
+        "overstayUnit": "week",
+        "verifiedAt": "2026-08-07",
+        "weeklyBySize": {
+          "small":   { "order": 350,  "parcel": 210 },
+          "average": { "order": 700,  "parcel": 490 },
+          "large":   { "order": 1400, "parcel": 980 }
+        },
+        "maxUnpaidWeeks": 6,
+        "note": "無料期間後、最大6週まで週次課金。6週を過ぎると放棄扱い"
+      },
+      "openParcelFee": { "amount": 1000, "note": "+梱包料" },
+      "konbiniPaymentFee": { "amount": 1000 },
+      "carriers": ["surface", "airmail", "ems", "fedex", "ups", "dhl"],
+      "insuranceByCarrier": {
+        "ems":     { "freeUpToJpy": 20000, "perStepJpy": 20000, "stepFee": 50 },
+        "surface": { "freeUpToJpy": 6000,  "baseFee": 400, "perStepJpy": 20000, "stepFee": 50 },
+        "ups":     { "freeUpToJpy": 11000, "perStepJpy": 11000, "stepFee": 130 }
+      },
+      "exportClearanceFee": null,
+      "exportClearanceNote": "公式 shipping ページに20万円超の通関業務委託料の記載なし。要確認（問い合わせ項目）。",
+      "taxPrepay": [
+        { "country": "AU", "tax": "GST", "rate": 0.10, "base": "charge1", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "atOrUnder", "verifiedAt": "2026-08-07", "note": "宣言価値に対して10%（Low-Value Goods）" },
+        {
+          "country": "US", "tax": "DDP", "rate": 0.134, "base": "charge1",
+          "onlyCarriers": ["fedex"],
+          "otherCarrierNote": "DHL利用時はDDU（到着後に現地で請求）。EMS等は事前徴収なし。",
+          "extraPerParcelJpy": 150,
+          "brokerFeeRateOfTax": 0.02, "brokerFeeMinUsd": 15,
+          "itemLineFeeUsd": 3.5,
+          "foodCosmeticsExtraUsd": 29,
+          "verifiedAt": "2026-08-07",
+          "note": "FedEx利用時のみDDP。基本税=宣言価値の13.4%+150円/包、ブローカー費用=基本税の2%か$15の高い方、品目ラインごと$3.50〜、食品・化粧品は+$29"
+        }
+      ],
+      "affiliate": { "status": "unknown", "unverified": true }
+    }
+  ],
+
+  "openQuestions": [
+    "Buyee: おまとめ梱包・厳重梱包の金額、無料保管日数、税率",
+    "Neokyo: 国内送料の扱い、決済手数料、45日超の保管料、税率",
+    "【優先】Neokyo / ZenMarket: 20万円超の輸出通関料（¥2,800相当）の有無。Buyee と FROM JAPAN のみ確認済みのため、高額品シナリオで両社が不当に安く出てしまう",
+    "ZenMarket: ラクマの手数料、Funds Deposit Fee の決済手段別レート、EUのVAT税率",
+    "全社: DHL/FedEx/UPS/各社独自便の国際送料表（現在はEMSのみ）"
+  ]
+}

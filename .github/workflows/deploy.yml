@@ -1,0 +1,41 @@
+# Cloudflare 側の Git 連携（Workers Builds）には依存しない。
+# ロッカーアプリで「disconnected 状態になって push しても自動デプロイが走らない」問題を踏んでいるため、
+# 最初から GitHub Actions で build + wrangler deploy を完結させる。
+# 詳細は ../../デプロイ・インフラ運用ノウハウ.md 参照。
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify fee calculations
+        # 料金データを触ったときに、手計算で検証済みの試算表とズレたら気づけるようにする。
+        # ここが落ちたらデプロイしない。
+        run: npm run verify
+
+      - name: Build and prerender
+        # postbuild で静的HTML 153ページ + sitemap.xml + robots.txt を生成する
+        run: npm run build
+        env:
+          VITE_SITE_URL: https://japanproxy.kakuni-lab.com
+          VITE_GA4_ID: ${{ vars.GA4_ID }}
+
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
