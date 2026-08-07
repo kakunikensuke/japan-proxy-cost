@@ -34,51 +34,6 @@ jobs:
           VITE_SITE_URL: https://japanproxy.kakuni-lab.com
           VITE_GA4_ID: ${{ vars.GA4_ID }}
 
-      # --- ここから診断ステップ ---
-      # Actions のログ本体は認証なしでは読めないが、ステップ名と成否は公開APIから見える。
-      # デプロイ失敗の原因（設定ミス / トークン不正 / アカウント違い）を
-      # 「どのステップで落ちたか」だけで切り分けられるように分割している。
-      # 原因が判明して安定したら、この3ステップは削除してよい。
-
-      - name: Diag1 - wrangler config is valid
-        run: npx wrangler deploy --dry-run
-
-      # /user/tokens/verify は「ユーザーAPIトークン」専用。
-      # ダッシュボードのアカウント側で作った「アカウントAPIトークン」は、正常でもここで弾かれる。
-      # よって成否でデプロイを止めない（continue-on-error）。本当の判定は Diag3 と本番デプロイで行う。
-      - name: Diag2 - token shape and verify endpoints (informational)
-        continue-on-error: true
-        run: |
-          echo "token length = ${#CLOUDFLARE_API_TOKEN}"
-          case "$CLOUDFLARE_API_TOKEN" in
-            *[![:print:]]*) echo "WARNING: token contains a newline or control character" ;;
-            *) echo "token charset looks clean" ;;
-          esac
-          echo "--- /user/tokens/verify ---"
-          curl -s -w '\nHTTP %{http_code}\n' \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            https://api.cloudflare.com/client/v4/user/tokens/verify
-          echo "--- /accounts/\$ID/tokens/verify ---"
-          curl -s -w '\nHTTP %{http_code}\n' \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Diag3 - account id is reachable with this token
-        continue-on-error: true
-        run: |
-          code=$(curl -s -o /tmp/acct.json -w '%{http_code}' \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts")
-          echo "HTTP $code"
-          head -c 400 /tmp/acct.json
-          test "$code" = "200"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
         env:
