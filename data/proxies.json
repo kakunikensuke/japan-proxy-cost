@@ -84,9 +84,9 @@
       ],
       "defaultPlan": "light",
       "paymentFee": { "type": "none", "rate": 0 },
-      "packingFee": { "type": "paid", "amount": null, "unverified": true, "note": "おまとめ梱包・厳重梱包は有料オプション。金額が未取得のため要追加確認" },
+      "packingFee": { "type": "included", "amount": 0, "verifiedAt": "2026-08-08", "sourceUrl": "https://buyee.jp/helpcenter/guide/consolidate", "note": "おまとめ梱包は2022-12-21から一律無料。厳重梱包は任意オプションで1,500円/15ドル（1回分）のため既定の試算には含めない。", "optionalStrictPacking": 1500 },
       "domesticShipping": { "type": "actual", "rangeMin": 150, "rangeMax": 1500, "per": "order", "note": "「送料無料」商品でも追跡可能な配送方法への変更により発生しうる。同一ストアでも注文ごとに発生。" },
-      "storage": { "freeDays": null, "unverified": true },
+      "storage": { "freeDays": 30, "maxDays": 90, "verifiedAt": "2026-08-08", "sourceUrl": "https://buyee.jp/helpcenter/guide/storage", "overstayUnit": "day", "overstayDailyByWeightG": [ { "maxWeightG": 10000, "amount": 100 }, { "maxWeightG": 20000, "amount": 200 }, { "maxWeightG": null, "amount": 300 } ], "note": "倉庫到着後30日無料。31日目から重量別の日額。90日で廃棄。" },
       "exportClearanceFee": { "amount": 2800, "thresholdJpy": 200000, "carriers": ["ems", "intl_parcel_air", "intl_parcel_sal", "intl_parcel_sea", "small_packet_air", "small_packet_sal"] },
       "taxPrepay": [
         { "country": "AU", "tax": "GST", "unverifiedRate": true },
