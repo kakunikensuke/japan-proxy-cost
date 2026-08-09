@@ -230,7 +230,72 @@ const run = (extra) =>
   check("米国: 免税枠ロジックの影響を受けない", us.results[0].payOnDelivery.total >= 0);
 }
 
-// 9. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
+// 9. 事前徴収のしきい値（現地通貨建て）を守っているか
+//    FROM JAPAN と Neokyo は豪州 AUD1,000 以下しかGSTを事前徴収しない。
+//    これを無視すると高額品で「事前徴収済み・到着時0円」と嘘をつくことになる。
+{
+  const small = run({ destination: "AU", itemPriceJpy: 50000 });   // ≒AUD450 → 事前徴収される
+  const big   = run({ destination: "AU", itemPriceJpy: 300000 });  // ≒AUD2,700 → 事前徴収されない
+  const fjOf = (res) => res.results.find((r) => r.proxyId === "fromjapan");
+
+  check("豪州(少額): FROM JAPAN は GST を事前徴収する", fjOf(small).taxTiming === "prepaid", fjOf(small).taxTiming);
+  check(
+    "豪州(高額): AUD1,000超なので事前徴収しない",
+    fjOf(big).taxTiming === "on-delivery",
+    fjOf(big).taxTiming
+  );
+  check(
+    "豪州(高額): 到着時0円と言い切らず、国境で払うと警告する",
+    fjOf(big).payOnDelivery.quantified === false &&
+      fjOf(big).warnings.some((w) => /only collects .* up front on orders under/.test(w)),
+    fjOf(big).warnings.join(" | ") || "(警告なし)"
+  );
+  // しきい値付近（AUD1,000 ≒ ¥111,360 の±15%）では為替の警告を出す
+  const near = run({ destination: "AU", itemPriceJpy: 110000 });
+  check(
+    "豪州: しきい値付近では為替の警告を出す",
+    fjOf(near).warnings.some((w) => /close to the AUD 1,000 limit/.test(w)),
+    fjOf(near).warnings.join(" | ") || "(警告なし)"
+  );
+}
+
+// 10. 表示文字列に日本語が混じっていないか（英語サイトなので致命的）
+//     過去に import-tax ページと禁制品の引用に日本語が出た。
+{
+  const jp = /[぀-ヿ㐀-鿿]/;
+  const dests = ["US", "CA", "GB", "DE", "FR", "AU", "SG", "TW", "HK"];
+  const attrIds = restrictions.attributes.map((a) => a.id);
+  const bad = [];
+  for (const cc of dests) {
+    for (const attrs of [[], ...attrIds.map((a) => [a])]) {
+      const { results } = run({ destination: cc, attributes: attrs });
+      for (const r of results) {
+        const texts = [
+          ...r.payNow.lines.flatMap((l) => [l.labelEn, l.note]),
+          ...r.payOnDelivery.lines.flatMap((l) => [l.labelEn, l.note]),
+          ...r.payOnDelivery.notes,
+          ...r.warnings,
+          ...r.shippable.blockers.flatMap((b) => [b.reasonEn, b.quoteEn, b.attributeLabelEn]),
+        ];
+        texts.filter((t) => t && jp.test(t)).forEach((t) => bad.push(`${cc}/${attrs[0] ?? "-"}/${r.name}: ${t}`));
+      }
+    }
+  }
+  check("利用者に見える文字列に日本語が混じっていない", bad.length === 0, bad.slice(0, 3).join(" / "));
+}
+
+// 11. 香港のように税がゼロの国で、0円の行に「到着時に請求される」と書いていない
+{
+  const hk = run({ destination: "HK" });
+  const line = hk.results[0].payOnDelivery.lines[0];
+  check(
+    "香港: 0円の行が『到着時に請求される』と矛盾していない",
+    !/when the parcel arrives/.test(line.note ?? ""),
+    line.note ?? "(注記なし)"
+  );
+}
+
+// 12. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
 {
   const withR = run({});
   const withoutR = calculateAll({ ...baseInput }, { proxies, ems, importTax });

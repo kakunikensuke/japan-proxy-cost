@@ -130,6 +130,34 @@ fs.writeFileSync(path.join(DIST, "sitemap.xml"),
 fs.writeFileSync(path.join(DIST, "robots.txt"),
   `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
 
+// ---- 生成物の自己点検 ----
+// 検索流入が生命線なので、リンク切れと日本語混入はビルドを落として止める。
+// どちらも実際に本番へ出してしまったことがある（比較ページへのリンクをアルファベット順で
+// 組み立てて404を2本、輸入税ページに社内メモの日本語をそのまま出力）。
+{
+  const known = new Set(["/", "/404", ...pages.map((p) => p.path)]);
+  const problems = [];
+  const jp = /[぀-ヿ㐀-鿿]/;
+
+  for (const p of [{ path: "/", body: homeBody }, ...pages]) {
+    for (const m of p.body.matchAll(/href="(\/[^"#?]*)"/g)) {
+      if (!known.has(m[1])) problems.push(`リンク切れ ${p.path} → ${m[1]}`);
+    }
+    for (const [field, text] of [["title", p.title], ["description", p.description], ["body", p.body]]) {
+      if (jp.test(text)) {
+        const hit = text.split(/\s+/).find((w) => jp.test(w));
+        problems.push(`日本語混入 ${p.path} の ${field}: ${hit}`);
+      }
+    }
+  }
+
+  if (problems.length) {
+    console.error(`❌ 生成物に${problems.length}件の問題があります:`);
+    [...new Set(problems)].slice(0, 20).forEach((x) => console.error("   " + x));
+    process.exit(1);
+  }
+}
+
 console.log(`✅ ${urls.length} ページ生成 (${SITE_URL})`);
 Object.entries(grouped).forEach(([k, v]) => console.log(`   ${k}: ${v.length}`));
 console.log(`   sitemap.xml / robots.txt`);

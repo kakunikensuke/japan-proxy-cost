@@ -50,7 +50,8 @@
         "LED figure base",
         "power bank"
       ],
-      "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping — the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route."
+      "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping — the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route.",
+      "whenUnconfirmedEn": "Japan Post does carry lithium batteries to this destination, but only when the battery is already installed in the device, and the proxies cap it at two per parcel. Loose cells and power banks are refused on every route. Buyee and FROM JAPAN publish no rule of their own, so with those two the decision is made at the warehouse after you have paid; ZenMarket and Neokyo at least state their conditions in writing."
     },
     {
       "id": "replica_gun",
@@ -215,8 +216,8 @@
       },
       "lithium_battery": {
         "level": "unknown",
-        "quoteEn": "The all-country prohibited list names \"Lead-acid Batteries\" but does not mention lithium batteries either way.",
-        "noteEn": "Buyee does not publish its own lithium battery rule. Japan Post rules still apply — see the destination check."
+        "quoteEn": "Lead-acid Batteries",
+        "noteEn": "That is the only battery entry in Buyee's all-country prohibited list; lithium batteries are not mentioned either way. Japan Post rules still apply — see the destination check."
       },
       "replica_gun": {
         "level": "prohibited",
@@ -228,8 +229,7 @@
       },
       "food": {
         "level": "unknown",
-        "quoteEn": "Food is not named in the all-country prohibited list.",
-        "noteEn": "Buyee points to the destination country's own rules instead of publishing a food policy."
+        "noteEn": "Food is not named anywhere in Buyee's all-country prohibited list. Buyee points to the destination country's own rules instead of publishing a food policy of its own."
       },
       "adult": {
         "level": "conditional",
@@ -273,8 +273,8 @@
       },
       "food": {
         "level": "unknown",
-        "quoteEn": "Food is not addressed in the prohibited list. Only \"Beverages with alcoholic content above 24%\" appear, restricted to DHL only.",
-        "noteEn": "Because our tool only prices EMS, an alcohol purchase would not be shippable at all — but ordinary snacks are simply not covered by the published rules."
+        "quoteEn": "Beverages with alcoholic content above 24%",
+        "noteEn": "That is the only food or drink entry in ZenMarket's prohibited list, and it is restricted to DHL. Because this tool prices EMS, such a purchase would not be shippable at all — but ordinary snacks are simply not covered by the published rules either way."
       },
       "adult": {
         "level": "conditional",
@@ -385,8 +385,7 @@
     "DE": {
       "lithium_battery": {
         "level": "prohibited",
-        "noteEn": "Japan Post does not accept lithium batteries for Germany by EMS, air mail or surface mail, so no proxy can send them on this route.",
-        "quoteEn": "Japan Post's list of countries that accept equipment containing lithium batteries by air does not include Germany (ドイツ).",
+        "noteEn": "Germany is absent from Japan Post's published list of countries that accept equipment containing lithium batteries by air. Japan Post will not take them by EMS, air mail or surface mail, so no proxy can send them on this route.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
         "verifiedAt": "2026-08-09",
         "corroboratedBy": [
@@ -398,8 +397,7 @@
     "GB": {
       "lithium_battery": {
         "level": "prohibited",
-        "noteEn": "Japan Post does not accept lithium batteries for the United Kingdom by EMS, air mail or surface mail, so no proxy can send them on this route.",
-        "quoteEn": "Japan Post's list of countries that accept equipment containing lithium batteries by air does not include the United Kingdom (英国).",
+        "noteEn": "The United Kingdom is absent from Japan Post's published list of countries that accept equipment containing lithium batteries by air. Japan Post will not take them by EMS, air mail or surface mail, so no proxy can send them on this route.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
         "verifiedAt": "2026-08-09",
         "corroboratedBy": [

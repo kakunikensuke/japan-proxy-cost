@@ -245,6 +245,9 @@ input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); out
 }
 .blocker-src { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); }
 
+/* 静的ページの可否表: 公式原文と、こちらの補足を見分けられるようにする */
+.prerender .says-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85em; }
+
 .blocked-banner .blocked-alt {
   margin-top: 10px;
   font-size: 0.88rem;

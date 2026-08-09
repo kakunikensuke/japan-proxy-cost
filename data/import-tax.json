@@ -11,6 +11,7 @@
       "name": "United States",
       "vatRate": null,
       "vatNote": "米国に輸入VAT/GSTは無い。州の売上税は輸入時には徴収されない。",
+      "vatNoteEn": "none — the US has no import VAT or GST, and state sales tax is not collected at the border",
       "deMinimis": {
         "status": "suspended",
         "formerThresholdUsd": 800,
@@ -40,6 +41,7 @@
         "status": "active",
         "dutyThreshold": 135,
         "currency": "GBP",
+        "thresholdLabelEn": "£135",
         "note": "£135以下の荷物は関税なし。ただしVATは販売時点で課税される。2025年秋季予算で廃止方針が示され、2029年3月までに撤廃予定。",
         "verifiedAt": "2026-08-07"
       },
@@ -94,7 +96,8 @@
       "deMinimis": {
         "status": "active",
         "dutyThreshold": 1000,
-        "currency": "AUD"
+        "currency": "AUD",
+        "thresholdLabelEn": "AUD 1,000"
       },
       "displayEn": {
         "headline": "10% GST applies",
@@ -108,10 +111,12 @@
       "vatLabel": "GST/HST",
       "vatRateStatus": "varies-by-province",
       "vatNote": "州によって5%〜15%（GST単独かHSTか）。州を選ばせないと確定できないため v1 では数値を出さない。",
+      "vatNoteEn": "5% to 15% depending on your province (GST alone, or HST) — we do not guess a single rate",
       "deMinimis": {
         "status": "active",
         "dutyThreshold": 20,
         "currency": "CAD",
+        "thresholdLabelEn": "CAD 20",
         "note": "CAD20超で課税対象。郵便扱いの場合は別途手数料あり"
       },
       "displayEn": {
@@ -144,6 +149,7 @@
         "status": "active",
         "dutyThreshold": 2000,
         "currency": "TWD",
+        "thresholdLabelEn": "NT$2,000",
         "sourceUrl": "https://web.customs.gov.tw/en/singlehtml/1865?cntId=cus16_180214_1865",
         "verifiedAt": "2026-08-09",
         "quoteEn": "If the Customs value is within NT$2,000, the Customs duty, commodity tax and business tax are exempted, except tobacco, alcohol, agricultural products subject to tariff quota.",
@@ -181,6 +187,20 @@
         "body": "Hong Kong is a free port. Only liquor, tobacco, hydrocarbon oil and methyl alcohol are dutiable — everything else arrives with no duty, no VAT and no sales tax. The figure below is the whole cost.",
         "severity": "low"
       }
+    }
+  },
+  "fx": {
+    "asOf": "2026-08-09",
+    "purpose": "代行会社の『いくらまでなら税を事前徴収するか』というしきい値は現地通貨建て（豪AUD1,000・星SGD400など）。円換算しないと判定できないが、換算はあくまで概算なのでレートと日付を必ず残し、しきい値付近では為替で結果が変わりうる旨を警告する。",
+    "sources": [
+      "https://www.google.com/finance/quote/AUD-JPY",
+      "https://www.google.com/finance/quote/SGD-JPY",
+      "https://www.google.com/finance/quote/TWD-JPY"
+    ],
+    "jpyPer": {
+      "AUD": 111.36,
+      "SGD": 123.44,
+      "TWD": 4.902
     }
   },
   "courierHandlingFee": {

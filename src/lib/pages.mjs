@@ -7,13 +7,13 @@
  * テンプレートを言い換えただけのページは作らない。
  *
  * ■ 生成対象と件数（意図的に絞る。数千ページの無差別生成はしない）
- *   1. 代行A vs 代行B × 配送先        6組 × 7か国 = 42
- *   2. 仕入れ元 × 配送先で最安はどこか  7 × 7        = 49
- *   3. 重量 × 配送先の総額             7 × 7        = 49
+ *   1. 代行A vs 代行B × 配送先        6組 × 9か国 = 54
+ *   2. 仕入れ元 × 配送先で最安はどこか  7 × 9        = 63
+ *   3. 重量 × 配送先の総額             7 × 9        = 63
  *   4. 各社の料金解説                                = 4
- *   5. 配送先ごとの輸入税ガイド                       = 7
- *   6. 属性 × 配送先「これは送れるのか」6属性 × 7か国 = 42（＋ハブ1）
- *   合計 194ページ（トップと404を足して196ファイル）
+ *   5. 配送先ごとの輸入税ガイド                       = 9
+ *   6. 属性 × 配送先「これは送れるのか」6属性 × 9か国 = 54（＋ハブ1）
+ *   合計 248ページ（トップと404を足して250ファイル）
  *
  * 6 は金額より先に知る必要がある情報。送れない商品の見積もりを出すと、
  * 利用者は落札後に商品代・国内送料・キャンセル料だけ失う。
@@ -90,11 +90,19 @@ export function buildPages(data) {
   const ids = proxies.proxies.map((p) => ({ id: p.id, name: p.shortName ?? p.name }));
   const countries = Object.keys(COUNTRY_SLUGS);
 
+  // 比較ページのURLは「proxies.json の並び順で先に出てくる方が左」で生成される。
+  // ここをアルファベット順で組み立てると存在しないURLを指してしまう（実際に404を2本作った）。
+  const order = ids.map((p) => p.id);
+  const versusPath = (x, y, cc) => {
+    const [first, second] = order.indexOf(x) < order.indexOf(y) ? [x, y] : [y, x];
+    return `/${first}-vs-${second}-to-${COUNTRY_SLUGS[cc]}`;
+  };
+
   // ---- 1. 代行A vs 代行B × 配送先 ----
   for (let a = 0; a < ids.length; a++) {
     for (let b = a + 1; b < ids.length; b++) {
       for (const cc of countries) {
-        const A = ids[a], B = ids[b];
+        const A = ids[a], B = ids[b];   // 左が必ず配列で先に来る方（versusPath と対応）
         const input = { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" };
         const { results, country } = calculateAll(input, data);
         const pair = results.filter((r) => r.proxyId === A.id || r.proxyId === B.id);
@@ -103,7 +111,7 @@ export function buildPages(data) {
         const cn = countryName(importTax, cc);
 
         pages.push({
-          path: `/${A.id}-vs-${B.id}-to-${COUNTRY_SLUGS[cc]}`,
+          path: versusPath(A.id, B.id, cc),
           title: `${A.name} vs ${B.name} shipping to ${cn} — which is cheaper?`,
           description: `On a ¥10,000 1kg order from Mercari to ${cn}, ${win.name} lands at ${yen(win.grandTotal)} and ${lose.name} at ${yen(lose.grandTotal)}. Full fee breakdown.`,
           prefill: input,
@@ -215,7 +223,7 @@ export function buildPages(data) {
   ${p.taxPrepay?.length ? `<h2>Import tax collected up front</h2><ul>${
     p.taxPrepay.filter((t) => t.rate).map((t) => `<li>${esc(t.country)}: ${esc(t.tax)} ${(t.rate * 100).toFixed(t.rate * 100 % 1 ? 1 : 0)}%</li>`).join("")
   }</ul><p>Where tax is collected up front you pay nothing extra when the parcel arrives, and you usually avoid the courier's own customs handling charge.</p>` : ""}
-  ${links(ids.filter((x) => x.id !== p.id).map((x) => ({ href: `/${[p.id, x.id].sort().join("-vs-")}-to-united-states`, text: `${name} vs ${x.name} to the US` })))}`,
+  ${links(ids.filter((x) => x.id !== p.id).map((x) => ({ href: versusPath(p.id, x.id, "US"), text: `${name} vs ${x.name} to the US` })))}`,
     });
   }
 
@@ -224,7 +232,11 @@ export function buildPages(data) {
     const c = importTax.countries[cc];
     if (!c) continue;
     const cn = c.name;
-    const prepayers = proxies.proxies.filter((p) => (p.taxPrepay ?? []).some((t) => t.country === cc && t.rate));
+    // 本ツールはEMSしか値付けしないので、FedEx限定の事前徴収（Neokyoの米国DDP等）を
+    // 「この会社は事前徴収します」と書くと嘘になる。carrier を必ず見る。
+    const prepayers = proxies.proxies.filter((p) => (p.taxPrepay ?? []).some(
+      (t) => t.country === cc && t.rate && (!t.onlyCarriers || t.onlyCarriers.includes("ems"))
+    ));
 
     pages.push({
       path: `/import-tax-${COUNTRY_SLUGS[cc]}`,
@@ -236,9 +248,10 @@ export function buildPages(data) {
   ${countryNotice(c)}
   <h2>The numbers</h2>
   <ul>
-    <li>Import VAT / GST: ${c.vatRate === 0 ? "none — there is no general consumption tax on imports" : c.vatRate != null ? `${(c.vatRate * 100).toFixed(c.vatRate * 100 % 1 ? 1 : 0)}% on goods plus shipping` : c.vatNote ? esc(c.vatNote) : "not applicable"}</li>
+    ${/* vatNote は日本語の社内メモなので絶対に出さない。英語ページに日本語が出た事故がある */""}
+    <li>Import VAT / GST: ${c.vatRate === 0 ? "none — there is no general consumption tax on imports" : c.vatRate != null ? `${(c.vatRate * 100).toFixed(c.vatRate * 100 % 1 ? 1 : 0)}% on goods plus shipping` : c.vatNoteEn ? esc(c.vatNoteEn) : "not applicable"}</li>
     <li>Duty-free threshold: ${
-      c.deMinimis?.status === "active" ? `${c.deMinimis.dutyThreshold} ${c.deMinimis.currency}`
+      c.deMinimis?.status === "active" ? esc(c.deMinimis.thresholdLabelEn ?? `${c.deMinimis.dutyThreshold} ${c.deMinimis.currency}`)
       : c.deMinimis?.status === "suspended" ? "suspended — duty applies to every parcel"
       : c.deMinimis?.status === "removed" ? "abolished"
       : c.deMinimis?.status === "not-applicable" ? "not applicable — nothing is taxed in the first place"
@@ -252,7 +265,7 @@ export function buildPages(data) {
   handling fees that apply almost everywhere else.</p>`
     : `<h2>Which proxies collect this tax up front</h2>
   ${prepayers.length
-    ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} collect it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
+    ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
     : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
   ${links([
     { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
@@ -281,19 +294,32 @@ export function buildPages(data) {
       // 「制限を明記した上で対象外」と「そもそも何も書いていない」を混同しない。
       const b = r.shippable.blockers[0];
       const cell = restrictions.byProxy[r.proxyId]?.[attrId];
-      const says = b?.quoteEn ?? b?.reasonEn ?? cell?.quoteEn ?? cell?.noteEn;
+
+      // 引用符で囲ってよいのは公式原文（quoteEn）だけ。こちらの説明（noteEn）まで
+      // 「 」に入れると、会社が言っていないことを言ったことにしてしまう。
+      const quote = b?.quoteEn ?? (b ? null : cell?.quoteEn);
+      const note = b ? b.reasonEn : cell?.noteEn;
+      // 国側の制限は日本郵便のルールであって、その代行会社の発言ではない
+      const prefix = b?.axis === "destination"
+        ? `<em>Japan Post rule, applies to every service:</em> `
+        : "";
+
+      const says = [
+        quote ? `${prefix}&ldquo;${esc(quote)}&rdquo;` : prefix,
+        note ? `<span class="says-note">${esc(note)}</span>` : "",
+      ].filter(Boolean).join(" ");
 
       return `
       <tr>
         <td>${esc(r.name)}</td>
         <td><strong>${VERDICT[r.shippable.level]}</strong></td>
-        <td>${says ? `&ldquo;${esc(says)}&rdquo;` : "Nothing published about this category."}</td>
+        <td>${says || "Nothing published about this category."}</td>
         <td>${r.shippable.level === "prohibited" ? "&mdash;" : yen(r.grandTotal)}</td>
       </tr>`;
     }).join("");
 
     return `<table>
-    <thead><tr><th>Service</th><th>Can it ship?</th><th>What they actually say</th><th>Total if it ships</th></tr></thead>
+    <thead><tr><th>Service</th><th>Can it ship?</th><th>What the published rules say</th><th>Total if it ships</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
   }
@@ -329,10 +355,13 @@ export function buildPages(data) {
   <p>${verdictLine}</p>
   <p class="muted">Covers ${esc(attr.helpEn.toLowerCase())} — for example ${attr.examplesEn.map((e) => esc(e)).join(", ")}.</p>
   ${verdictTable(results, attrId)}
+  ${/* 「全社不可」向けの文言を「誰も明言していないだけ」の状況に流用すると、
+        自分の表と矛盾する（リチウム電池で実際に起きた: 表はEMSで送れると示しているのに
+        「日本郵便はこの経路では運ばない」と書いていた）。文言を分けて持つ。 */""}
   ${allBlocked
     ? `<aside class="notice"><strong>What to do instead</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
     : noneConfirmed
-      ? `<aside class="notice"><strong>Read this before you bid</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
+      ? `<aside class="notice"><strong>Read this before you bid</strong><p>${esc(attr.whenUnconfirmedEn ?? attr.whenBlockedEn)}</p></aside>`
       : ""}
   <h2>Why this matters before you bid</h2>
   <p>A proxy will happily accept the order and buy the item for you. The refusal happens later, when the parcel

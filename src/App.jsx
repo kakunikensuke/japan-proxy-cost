@@ -242,10 +242,17 @@ export default function App() {
   // 「送れると公式に確認できている中で最安」だけをおすすめとして立てる。
   const bestIndex = results.findIndex((r) => r.shippable.level === "ok");
 
-  const blockedAttributes = restrictions.attributes.filter((a) =>
+  // 何らかの引っかかりがある属性。全社不可のときと「誰も明言していないだけ」のときでは
+  // 書くべきことが違うので、文言を出し分ける（同じ文を使い回すと表と矛盾する）。
+  const flaggedAttributes = restrictions.attributes.filter((a) =>
     form.attributes.includes(a.id) &&
-    results.some((r) => r.shippable.blockers.some((b) => b.attribute === a.id && b.level === "prohibited"))
+    results.some((r) => r.shippable.blockers.some((b) => b.attribute === a.id))
   );
+  const adviceFor = (a) => (allBlocked ? a.whenBlockedEn : a.whenUnconfirmedEn ?? a.whenBlockedEn);
+
+  // 国際送料が引けないときは総額が「送料抜き」になってしまう。
+  // 未確認を黙って0円扱いにしないという原則どおり、価格表そのものを出さない。
+  const cannotPrice = Boolean(shipping.error);
 
   return (
     <div className="page">
@@ -357,7 +364,7 @@ export default function App() {
 
       {/* 買えないと分かった瞬間が、利用者が代替を最も探している場面。
           ここで黙って価格表だけ出すのは不親切なので、理由と次の一手を先に出す。 */}
-      {(allBlocked || noneConfirmed) && (
+      {!cannotPrice && (allBlocked || noneConfirmed) && (
         <aside className="notice notice-high blocked-banner">
           <strong>
             {allBlocked
@@ -369,25 +376,29 @@ export default function App() {
               ? "Every provider below refuses it. The prices are shown only so you can see what it would have cost — do not buy expecting it to arrive."
               : "At least one provider has no published rule for this, so it may be accepted at checkout and then refused at the warehouse. You would still be charged for the item and the domestic shipping."}
           </p>
-          {blockedAttributes.map((a) => (
+          {flaggedAttributes.map((a) => (
             <p key={a.id} className="blocked-alt">
-              <strong>{a.labelEn}:</strong> {a.whenBlockedEn}
+              <strong>{a.labelEn}:</strong> {adviceFor(a)}
             </p>
           ))}
         </aside>
       )}
 
-      <section className="results">
-        {results.map((r, i) => (
-          <ResultCard key={r.proxyId} r={r} rank={i} isBest={i === bestIndex} />
-        ))}
-      </section>
+      {!cannotPrice && (
+        <section className="results">
+          {results.map((r, i) => (
+            <ResultCard key={r.proxyId} r={r} rank={i} isBest={i === bestIndex} />
+          ))}
+        </section>
+      )}
 
       <footer className="foot">
-        <p>
-          Shipping shown is Japan Post EMS to zone {shipping.zone}, billed at the {shipping.appliedWeightG}g band.
-          Fee data checked {proxies._meta.updated} against each provider's official pages.
-        </p>
+        {!cannotPrice && (
+          <p>
+            Shipping shown is Japan Post EMS to zone {shipping.zone}, billed at the {shipping.appliedWeightG}g band.
+            Fee data checked {proxies._meta.updated} against each provider's official pages.
+          </p>
+        )}
         <p className="disclaimer">
           Estimates only. Providers change their pricing, and customs authorities have the final say on
           duty and tax. Always confirm on the provider's own site before you buy.

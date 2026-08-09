@@ -106,13 +106,33 @@ function calcExportClearance(proxy, { itemTotal, carrier }) {
   return { amount: 0 };
 }
 
-/** その代行会社が、この配送先の税を事前徴収するか */
-function findPrepayRule(proxy, destination, carrier) {
+/**
+ * その代行会社が、この配送先の税を事前徴収するか。
+ *
+ * 事前徴収には現地通貨建てのしきい値がある（例: FROM JAPAN と Neokyo は豪州 AUD1,000 以下だけ）。
+ * これを無視すると高額品で「事前徴収済み・到着時0円」と表示してしまうが、実際には
+ * 国境で消費税と関税を請求される。0円と言い切って請求が来るのは、金額を外すより悪い。
+ * 円換算はあくまで概算なので、レートの日付を添えて warnings に出す。
+ */
+function findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx }) {
   const rule = (proxy.taxPrepay ?? []).find((t) => t.country === destination);
   if (!rule) return null;
   if (rule.onlyCarriers && !rule.onlyCarriers.includes(carrier)) return null;
   if (rule.unverifiedRate || rule.rate == null) return { ...rule, unusable: true };
-  return rule;
+
+  const jpyPer = fx?.jpyPer?.[rule.thresholdCurrency];
+  if (rule.thresholdValue == null || !jpyPer) return rule;
+
+  const thresholdJpy = Math.round(rule.thresholdValue * jpyPer);
+  const within = rule.thresholdRule === "atOrUnder"
+    ? itemPriceJpy <= thresholdJpy
+    : itemPriceJpy < thresholdJpy;
+  return { ...rule, thresholdJpy, overThreshold: !within };
+}
+
+/** 「AUD 1,000」のように読める形にする。"AUD1000" は英語圏の表記として不自然。 */
+function thresholdLabel(rule) {
+  return `${rule.thresholdCurrency} ${rule.thresholdValue.toLocaleString("en-US")}`;
 }
 
 function taxBaseAmount(base, { itemTotal, intlShipping, otherCosts }) {
@@ -236,14 +256,24 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
 
     // ---- 税: 事前徴収なら①、そうでなければ② ----
     const otherCosts = payNowLines.reduce((s, l) => s + l.amount, 0) - itemPriceJpy;
-    const prepay = findPrepayRule(proxy, destination, carrier);
+    const prepay = findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx: importTax.fx });
 
     let taxTiming = "none";
     const payOnDeliveryLines = [];
     const deliveryNotes = [];
     let deliveryQuantified = true;
 
-    if (prepay && !prepay.unusable) {
+    // しきい値付近では為替が動くだけで事前徴収の有無が入れ替わる
+    if (prepay?.thresholdJpy && Math.abs(itemPriceJpy - prepay.thresholdJpy) <= prepay.thresholdJpy * 0.15) {
+      push(
+        `This order sits close to the ${thresholdLabel(prepay)} limit below which ` +
+        `${proxy.shortName ?? proxy.name} collects ${prepay.tax} up front ` +
+        `(about ¥${prepay.thresholdJpy.toLocaleString("en-US")} at ${importTax.fx?.asOf ?? "recent"} rates). ` +
+        `Which side of the line you land on decides whether you pay now or at the border.`
+      );
+    }
+
+    if (prepay && !prepay.unusable && !prepay.overThreshold) {
       const amount = Math.round(taxBaseAmount(prepay.base, { itemTotal: itemPriceJpy, intlShipping: intl, otherCosts }) * prepay.rate);
       payNowLines.push({
         key: "tax",
@@ -254,6 +284,15 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
       taxTiming = "prepaid";
     } else {
       if (prepay?.unusable) push(`${proxy.shortName ?? proxy.name} pre-collects ${prepay.tax} for ${destination} but does not publish the rate`);
+      if (prepay?.overThreshold) {
+        deliveryQuantified = false;
+        push(
+          `${proxy.shortName ?? proxy.name} only collects ${prepay.tax} up front on orders under ` +
+          `${thresholdLabel(prepay)} (about ¥${prepay.thresholdJpy.toLocaleString("en-US")}). ` +
+          `This order is above that, so it clears customs as a formal import: you pay ${prepay.tax} at the ` +
+          `border and customs duty may apply on top, which we cannot estimate without the item's HS code.`
+        );
+      }
       taxTiming = "on-delivery";
 
       if (country?.vatRate != null) {
@@ -262,25 +301,32 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
         // 円換算はあくまで概算なので、しきい値付近では為替で結果が変わる旨を警告する。
         const dm = country.deMinimis;
         const dmActive = dm?.status === "active" && dm.approxJpy != null;
+        const dmLabel = dm ? (dm.thresholdLabelEn ?? `${dm.currency} ${dm.dutyThreshold}`) : null;
         const taxableBase = itemPriceJpy + intl;
         const underThreshold = dmActive && taxableBase <= dm.approxJpy;
+        const taxFree = country.vatRate === 0;
 
         const amount = underThreshold ? 0 : Math.round(taxableBase * country.vatRate);
         payOnDeliveryLines.push({
           key: "import_tax",
-          labelEn: underThreshold
-            ? `${country.vatLabel ?? "Import VAT"} — under the ${dm.currency}${dm.dutyThreshold} duty-free limit`
-            : `${country.vatLabel ?? "Import VAT"} (${(country.vatRate * 100).toFixed(country.vatRate * 100 % 1 ? 1 : 0)}%)`,
+          labelEn: taxFree
+            ? `${country.vatLabel ?? "Import VAT"} — none at this destination`
+            : underThreshold
+              ? `${country.vatLabel ?? "Import VAT"} — under the ${dmLabel} duty-free limit`
+              : `${country.vatLabel ?? "Import VAT"} (${(country.vatRate * 100).toFixed(country.vatRate * 100 % 1 ? 1 : 0)}%)`,
           amount,
-          note: underThreshold
-            ? `Parcels valued at or below ${dm.currency}${dm.dutyThreshold} arrive tax free.`
-            : "Charged by your customs authority when the parcel arrives.",
+          // 税がゼロの国に「到着時に税関から請求されます」と書くと、0円の行と矛盾する
+          note: taxFree
+            ? "There is no import tax on general goods at this destination."
+            : underThreshold
+              ? `Parcels valued at or below ${dmLabel} arrive tax free.`
+              : "Charged by your customs authority when the parcel arrives.",
         });
 
         // しきい値の±15%以内なら、為替が動くだけで課税・非課税が入れ替わる
         if (dmActive && Math.abs(taxableBase - dm.approxJpy) <= dm.approxJpy * 0.15) {
           push(
-            `This order is close to ${country.name}'s ${dm.currency}${dm.dutyThreshold} duty-free limit ` +
+            `This order is close to ${country.name}'s ${dmLabel} duty-free limit ` +
             `(about ¥${dm.approxJpy.toLocaleString("en-US")} at ${dm.fx?.asOf ?? "recent"} rates). ` +
             `A move in the exchange rate can push it either side of the line.`
           );
