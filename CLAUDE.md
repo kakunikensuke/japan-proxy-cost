@@ -16,7 +16,8 @@ Render も UptimeRobot も使わない（スリープ問題が発生しない）
 
 SNS運用も動画撮影も行わないため、**流入は検索のみ**。したがって静的HTML生成が必須。
 
-- `scripts/prerender.mjs` を `postbuild` で実行し、**196ページ**（配送可否42＋ハブ1・比較42・仕入れ元別49・重量別49・料金解説4・輸入税7・トップ1・404）と sitemap.xml / robots.txt を生成する
+- `scripts/prerender.mjs` を `postbuild` で実行し、**250ページ**（配送可否54＋ハブ1・比較54・仕入れ元別63・重量別63・料金解説4・輸入税9・トップ1・404）と sitemap.xml / robots.txt を生成する
+- **配送先は9か国**（米・加・英・独・仏・豪・シンガポール・台湾・香港）。国を1つ足すとページが約27本増える。EMS料金・輸入税・禁制品の3つのデータすべてに追加が必要
 - **`dist/foo/index.html` ではなく `dist/foo.html` に出力すること。** 前者は Cloudflare で `/foo` → `/foo/` の307リダイレクトが挟まり canonical と食い違う（[技術記事](../../技術記事プロジェクト/articles/vite-spa-prerender-cloudflare.md)参照）
 - 検証は `vite preview` ではなく **`wrangler dev`** で行う。前者はSPAフォールバックが優先され、静的HTMLが使われない
 - `not_found_handling = "404-page"` にしているので **`dist/404.html` の生成が必須**（無いと本文ゼロバイトの白ページになる）

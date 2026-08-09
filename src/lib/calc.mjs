@@ -164,6 +164,12 @@ export function checkShippable(attributes, { proxyId, destination, carrier = "em
       if (cellLevel === "carrier_limited" && cell.allowedCarriers && !cell.allowedCarriers.includes(carrier)) {
         cellLevel = "prohibited";
       }
+      // 「原則OKだが、この国宛だけ不可」を表現する。
+      // 代行会社が国名を名指しで挙げているケース（例: Neokyo は成人向けを香港宛に禁止）は、
+      // 配送先を1か国足しただけで判定がひっくり返るので、国リストとして持つ必要がある。
+      if (cell.prohibitedDestinations?.includes(destination)) {
+        cellLevel = "prohibited";
+      }
       if (cellLevel === "ok") continue;
 
       blockers.push({
@@ -251,18 +257,44 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
       taxTiming = "on-delivery";
 
       if (country?.vatRate != null) {
-        const amount = Math.round((itemPriceJpy + intl) * country.vatRate);
+        // 免税枠がまだ生きている国（台湾など）は、しきい値以下なら税がかからない。
+        // これを無視すると、免税枠のある国を不当に高く見せてしまう。
+        // 円換算はあくまで概算なので、しきい値付近では為替で結果が変わる旨を警告する。
+        const dm = country.deMinimis;
+        const dmActive = dm?.status === "active" && dm.approxJpy != null;
+        const taxableBase = itemPriceJpy + intl;
+        const underThreshold = dmActive && taxableBase <= dm.approxJpy;
+
+        const amount = underThreshold ? 0 : Math.round(taxableBase * country.vatRate);
         payOnDeliveryLines.push({
           key: "import_tax",
-          labelEn: `${country.vatLabel ?? "Import VAT"} (${(country.vatRate * 100).toFixed(country.vatRate * 100 % 1 ? 1 : 0)}%)`,
+          labelEn: underThreshold
+            ? `${country.vatLabel ?? "Import VAT"} — under the ${dm.currency}${dm.dutyThreshold} duty-free limit`
+            : `${country.vatLabel ?? "Import VAT"} (${(country.vatRate * 100).toFixed(country.vatRate * 100 % 1 ? 1 : 0)}%)`,
           amount,
-          note: "Charged by your customs authority when the parcel arrives.",
+          note: underThreshold
+            ? `Parcels valued at or below ${dm.currency}${dm.dutyThreshold} arrive tax free.`
+            : "Charged by your customs authority when the parcel arrives.",
         });
+
+        // しきい値の±15%以内なら、為替が動くだけで課税・非課税が入れ替わる
+        if (dmActive && Math.abs(taxableBase - dm.approxJpy) <= dm.approxJpy * 0.15) {
+          push(
+            `This order is close to ${country.name}'s ${dm.currency}${dm.dutyThreshold} duty-free limit ` +
+            `(about ¥${dm.approxJpy.toLocaleString("en-US")} at ${dm.fx?.asOf ?? "recent"} rates). ` +
+            `A move in the exchange rate can push it either side of the line.`
+          );
+        }
       } else if (country) {
         deliveryQuantified = false;
         deliveryNotes.push(country.displayEn?.body ?? "Import charges apply but cannot be estimated.");
       }
-      deliveryNotes.push("Couriers usually add their own customs handling fee on top. Paying tax up front often avoids it.");
+      // 税がゼロの国（香港など）に「通関手数料が上乗せされる」と出すと嘘になる
+      if (country?.vatRate === 0) {
+        deliveryNotes.push("Nothing to pay on arrival — this destination charges no import tax on general goods.");
+      } else {
+        deliveryNotes.push("Couriers usually add their own customs handling fee on top. Paying tax up front often avoids it.");
+      }
     }
 
     // 免税枠の廃止など、国側の重要な注意は税のタイミングに関係なく常に出す

@@ -323,8 +323,11 @@
       },
       "adult": {
         "level": "ok",
+        "prohibitedDestinations": [
+          "HK"
+        ],
         "quoteEn": "CHINESE MAINLAND, HONG KONG, SAUDI ARABIA — Item related to pornography (Books, Video game, Figure, Bed sheets…)",
-        "noteEn": "Restricted only for those three destinations. Child sexual abuse material, and adult items depicting minors, are banned worldwide."
+        "noteEn": "Neokyo names Hong Kong specifically, so adult material cannot be sent there through them. Fine for the other destinations. Child sexual abuse material, and adult items depicting minors, are banned worldwide."
       },
       "blade": {
         "level": "prohibited",
@@ -441,6 +444,22 @@
       "lithium_battery": {
         "level": "conditional",
         "noteEn": "Japan Post accepts lithium batteries for Singapore by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "TW": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Taiwan by air when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "HK": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Hong Kong by air when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
         "verifiedAt": "2026-08-09"
       }

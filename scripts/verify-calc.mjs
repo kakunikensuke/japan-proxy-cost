@@ -173,7 +173,64 @@ const run = (extra) =>
   );
 }
 
-// 6. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
+// 6. 代行会社が国名を名指しで挙げているケース（prohibitedDestinations）
+//    Neokyo は成人向けを香港宛に禁止している。香港を配送先に足した時点で
+//    「対象国に該当なし」が嘘になるので、国リストとして持てているかを確かめる。
+{
+  const us = run({ attributes: ["adult"], destination: "US" });
+  const hk = run({ attributes: ["adult"], destination: "HK" });
+  const pick = (res) => res.results.find((r) => r.proxyId === "neokyo").shippable.level;
+  check("成人向け: Neokyo は米国宛なら ok", pick(us) === "ok", `level=${pick(us)}`);
+  check("成人向け: Neokyo は香港宛だと prohibited", pick(hk) === "prohibited", `level=${pick(hk)}`);
+}
+
+// 7. 台湾・香港が配送先として計算できる
+{
+  for (const [cc, label] of [["TW", "台湾"], ["HK", "香港"]]) {
+    const { shipping, results } = run({ destination: cc });
+    check(
+      `${label}: EMS料金が引ける`,
+      shipping.amount != null && !shipping.error,
+      `zone${shipping.zone} ${shipping.amount}円`
+    );
+    check(`${label}: 4社とも総額が出る`, results.every((r) => r.grandTotal > 0));
+  }
+  // 香港は関税も消費税も無いので、到着時に払う額が0で確定する
+  const hk = run({ destination: "HK" });
+  check(
+    "香港: 到着時の支払いが0で確定している（見積もり不能ではない）",
+    hk.results.every((r) => r.payOnDelivery.total === 0 && r.payOnDelivery.quantified),
+    hk.results.map((r) => `${r.name}:${r.payOnDelivery.total}/${r.payOnDelivery.quantified}`).join(" ")
+  );
+}
+
+// 8. 免税枠が生きている国（台湾 NT$2,000 ≒ ¥9,800）を正しく扱えているか
+//    枠を無視して一律5%を課すと、免税枠のある国を不当に高く見せてしまう。
+{
+  const cheap = run({ destination: "TW", itemPriceJpy: 3000, weightG: 500 });   // 3,000+1,450 = 4,450 → 非課税
+  const dear  = run({ destination: "TW", itemPriceJpy: 50000, weightG: 500 });  // 50,000+1,450 → 課税
+  const taxOf = (res) => res.results[0].payOnDelivery.total;
+
+  check("台湾: 免税枠以下なら到着時の税が0", taxOf(cheap) === 0, `${taxOf(cheap)}円`);
+  check("台湾: 免税枠を超えたら5%かかる", taxOf(dear) === Math.round((50000 + 1450) * 0.05), `${taxOf(dear)}円`);
+  check(
+    "台湾: 免税枠以下のときラベルが『枠内』と明示される",
+    /duty-free limit/.test(cheap.results[0].payOnDelivery.lines[0].labelEn),
+    cheap.results[0].payOnDelivery.lines[0].labelEn
+  );
+  // しきい値付近（¥9,800±15%）では為替次第で結果が変わるので警告を出す
+  const near = run({ destination: "TW", itemPriceJpy: 8000, weightG: 500 });    // 8,000+1,450 = 9,450
+  check(
+    "台湾: しきい値付近では為替の警告を出す",
+    near.results[0].warnings.some((w) => /duty-free limit/.test(w)),
+    near.results[0].warnings.join(" | ") || "(警告なし)"
+  );
+  // 免税枠が無い/廃止済みの国には影響しない
+  const us = run({ destination: "US", itemPriceJpy: 3000, weightG: 500 });
+  check("米国: 免税枠ロジックの影響を受けない", us.results[0].payOnDelivery.total >= 0);
+}
+
+// 9. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
 {
   const withR = run({});
   const withoutR = calculateAll({ ...baseInput }, { proxies, ems, importTax });

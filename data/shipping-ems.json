@@ -3,36 +3,181 @@
     "carrier": "ems",
     "carrierName": "EMS（日本郵便 国際スピード郵便）",
     "source": "https://www.post.japanpost.jp/send/oversea/charge/list-ems/all_en.html",
-    "updated": "2026-08-07",
+    "updated": "2026-08-09",
     "currency": "JPY",
     "status": "partial",
-    "note": "第2〜第4地帯の代表的な重量のみ取得済み。第1・第5地帯と、中間の重量刻み（600g〜900g等）は未取得。v1は取得済み重量から線形補間せず、直近上位の重量で計算する（実際のEMSは重量帯ごとの階段状料金のため）。"
+    "note": "第1〜第4地帯を取得済み。第5地帯と中間の重量刻み（600g〜900g等）は未取得。v1は取得済み重量から線形補間せず、直近上位の重量で計算する（実際のEMSは重量帯ごとの階段状料金のため）。第1地帯=中国・韓国・台湾、第2地帯=それ以外のアジア（香港・シンガポール等）。"
   },
-
   "zones": {
-    "1": { "label": "第1地帯", "areas": ["中国", "韓国", "台湾"], "countries": ["CN", "KR", "TW"] },
-    "2": { "label": "第2地帯", "areas": ["アジア（中国・韓国・台湾を除く）"], "countries": ["SG", "MY", "TH", "VN", "PH", "ID", "HK", "IN"] },
-    "3": { "label": "第3地帯", "areas": ["オセアニア", "カナダ", "メキシコ", "中東", "ヨーロッパ"], "countries": ["CA", "GB", "AU", "NZ", "DE", "FR", "IT", "ES", "NL", "MX"] },
-    "4": { "label": "第4地帯", "areas": ["アメリカ（グアム等の米領土を含む）"], "countries": ["US"] },
-    "5": { "label": "第5地帯", "areas": ["中南米（メキシコを除く）", "アフリカ"], "countries": ["BR", "AR", "CL", "ZA"] }
+    "1": {
+      "label": "第1地帯",
+      "areas": [
+        "中国",
+        "韓国",
+        "台湾"
+      ],
+      "countries": [
+        "CN",
+        "KR",
+        "TW"
+      ]
+    },
+    "2": {
+      "label": "第2地帯",
+      "areas": [
+        "アジア（中国・韓国・台湾を除く）"
+      ],
+      "countries": [
+        "SG",
+        "MY",
+        "TH",
+        "VN",
+        "PH",
+        "ID",
+        "HK",
+        "IN"
+      ]
+    },
+    "3": {
+      "label": "第3地帯",
+      "areas": [
+        "オセアニア",
+        "カナダ",
+        "メキシコ",
+        "中東",
+        "ヨーロッパ"
+      ],
+      "countries": [
+        "CA",
+        "GB",
+        "AU",
+        "NZ",
+        "DE",
+        "FR",
+        "IT",
+        "ES",
+        "NL",
+        "MX"
+      ]
+    },
+    "4": {
+      "label": "第4地帯",
+      "areas": [
+        "アメリカ（グアム等の米領土を含む）"
+      ],
+      "countries": [
+        "US"
+      ]
+    },
+    "5": {
+      "label": "第5地帯",
+      "areas": [
+        "中南米（メキシコを除く）",
+        "アフリカ"
+      ],
+      "countries": [
+        "BR",
+        "AR",
+        "CL",
+        "ZA"
+      ]
+    }
   },
-
   "rates": [
-    { "weightG": 500,  "1": null, "2": 1900, "3": 3150,  "4": 3900,  "5": null },
-    { "weightG": 1000, "1": null, "2": 3150, "3": 4400,  "4": 5300,  "5": null },
-    { "weightG": 1500, "1": null, "2": 3850, "3": 5550,  "4": 6600,  "5": null },
-    { "weightG": 2000, "1": null, "2": 4550, "3": 6700,  "4": 7900,  "5": null },
-    { "weightG": 3000, "1": null, "2": 5750, "3": 8800,  "4": 10300, "5": null },
-    { "weightG": 5000, "1": null, "2": 8150, "3": 13000, "4": 15100, "5": null }
+    {
+      "1": 1450,
+      "2": 1900,
+      "3": 3150,
+      "4": 3900,
+      "5": null,
+      "weightG": 500
+    },
+    {
+      "1": 2200,
+      "2": 3150,
+      "3": 4400,
+      "4": 5300,
+      "5": null,
+      "weightG": 1000
+    },
+    {
+      "1": 2800,
+      "2": 3850,
+      "3": 5550,
+      "4": 6600,
+      "5": null,
+      "weightG": 1500
+    },
+    {
+      "1": 3400,
+      "2": 4550,
+      "3": 6700,
+      "4": 7900,
+      "5": null,
+      "weightG": 2000
+    },
+    {
+      "1": 4400,
+      "2": 5750,
+      "3": 8800,
+      "4": 10300,
+      "5": null,
+      "weightG": 3000
+    },
+    {
+      "1": 6400,
+      "2": 8150,
+      "3": 13000,
+      "4": 15100,
+      "5": null,
+      "weightG": 5000
+    }
   ],
-
   "targetCountries": [
-    { "code": "US", "name": "United States", "zone": 4 },
-    { "code": "CA", "name": "Canada",        "zone": 3 },
-    { "code": "GB", "name": "United Kingdom","zone": 3 },
-    { "code": "AU", "name": "Australia",     "zone": 3 },
-    { "code": "DE", "name": "Germany",       "zone": 3 },
-    { "code": "FR", "name": "France",        "zone": 3 },
-    { "code": "SG", "name": "Singapore",     "zone": 2 }
+    {
+      "code": "US",
+      "name": "United States",
+      "zone": 4
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "zone": 3
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "zone": 3
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "zone": 3
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "zone": 3
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "zone": 3
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "zone": 2
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "zone": 1
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong",
+      "zone": 2
+    }
   ]
 }

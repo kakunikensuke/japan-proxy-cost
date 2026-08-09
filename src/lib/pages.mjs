@@ -23,6 +23,7 @@ import { calculateAll } from "./calc.mjs";
 export const COUNTRY_SLUGS = {
   US: "united-states", CA: "canada", GB: "united-kingdom",
   AU: "australia", DE: "germany", FR: "france", SG: "singapore",
+  TW: "taiwan", HK: "hong-kong",
 };
 
 export const SOURCE_LABELS = {
@@ -235,13 +236,24 @@ export function buildPages(data) {
   ${countryNotice(c)}
   <h2>The numbers</h2>
   <ul>
-    <li>Import VAT / GST: ${c.vatRate != null ? `${(c.vatRate * 100).toFixed(c.vatRate * 100 % 1 ? 1 : 0)}% on goods plus shipping` : c.vatNote ? esc(c.vatNote) : "not applicable"}</li>
-    <li>Duty-free threshold: ${c.deMinimis?.status === "active" ? `${c.deMinimis.dutyThreshold} ${c.deMinimis.currency}` : c.deMinimis?.status === "suspended" ? "suspended — duty applies to every parcel" : c.deMinimis?.status === "removed" ? "abolished" : "unknown"}</li>
+    <li>Import VAT / GST: ${c.vatRate === 0 ? "none — there is no general consumption tax on imports" : c.vatRate != null ? `${(c.vatRate * 100).toFixed(c.vatRate * 100 % 1 ? 1 : 0)}% on goods plus shipping` : c.vatNote ? esc(c.vatNote) : "not applicable"}</li>
+    <li>Duty-free threshold: ${
+      c.deMinimis?.status === "active" ? `${c.deMinimis.dutyThreshold} ${c.deMinimis.currency}`
+      : c.deMinimis?.status === "suspended" ? "suspended — duty applies to every parcel"
+      : c.deMinimis?.status === "removed" ? "abolished"
+      : c.deMinimis?.status === "not-applicable" ? "not applicable — nothing is taxed in the first place"
+      : "unknown"}</li>
   </ul>
-  <h2>Which proxies collect this tax up front</h2>
+  ${/* 税がそもそも無い国に「到着時に払う」と書くと嘘になる（香港） */""}
+  ${c.vatRate === 0 && c.deMinimis?.status === "not-applicable"
+    ? `<h2>Nothing to pay on arrival</h2>
+  <p>There is no tax for a proxy to collect and none for you to pay at the door, so the question of who charges
+  it up front does not arise. The total you pay the proxy is the total, and you avoid the courier customs
+  handling fees that apply almost everywhere else.</p>`
+    : `<h2>Which proxies collect this tax up front</h2>
   ${prepayers.length
     ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} collect it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
-    : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}
+    : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
   ${links([
     { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
     { href: `/ship-scale-figure-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cost to ship a boxed figure to ${cn}` },
