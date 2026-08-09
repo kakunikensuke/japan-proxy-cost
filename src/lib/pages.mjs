@@ -245,5 +245,134 @@ export function buildPages(data) {
     });
   }
 
+  // ---- 6. 属性 × 配送先「これは送れるのか」 ----
+  // 検索意図が実在する6属性に絞る。8属性すべてを機械的に展開しない。
+  const SEO_ATTRS = ["replica_gun", "flammable_liquid", "aerosol", "lithium_battery", "adult", "food"];
+  const { restrictions } = data;
+
+  const VERDICT = {
+    ok: "Yes",
+    conditional: "With conditions",
+    carrier_limited: "With conditions",
+    unknown: "Not stated",
+    prohibited: "No",
+  };
+
+  /** 各社の可否を公式原文つきで並べる。原文が会社ごとに違うのでページ固有性が担保される。 */
+  function verdictTable(results) {
+    const rows = results.map((r) => {
+      const b = r.shippable.blockers[0];
+      return `
+      <tr>
+        <td>${esc(r.name)}</td>
+        <td><strong>${VERDICT[r.shippable.level]}</strong></td>
+        <td>${b?.quoteEn ? `&ldquo;${esc(b.quoteEn)}&rdquo;` : b?.reasonEn ? esc(b.reasonEn) : "No restriction published for this."}</td>
+        <td>${r.shippable.level === "prohibited" ? "&mdash;" : yen(r.grandTotal)}</td>
+      </tr>`;
+    }).join("");
+
+    return `<table>
+    <thead><tr><th>Service</th><th>Can it ship?</th><th>What they actually say</th><th>Total if it ships</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+  }
+
+  for (const attrId of SEO_ATTRS) {
+    const attr = restrictions.attributes.find((a) => a.id === attrId);
+    for (const cc of countries) {
+      const input = {
+        source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: 1000,
+        destination: cc, domesticShippingJpy: 700, buyeePlan: "light",
+        category: "other", attributes: [attrId],
+      };
+      const { results, allBlocked, noneConfirmed } = calculateAll(input, data);
+      const cn = countryName(importTax, cc);
+      const okOnes = results.filter((r) => r.shippable.level === "ok" || r.shippable.level === "conditional" || r.shippable.level === "carrier_limited");
+      const cheapestOk = okOnes[0];
+
+      const verdictLine = allBlocked
+        ? `<strong>No. None of the four services will ship ${esc(attr.seoLabelEn)} to ${esc(cn)}.</strong>`
+        : cheapestOk
+          ? `<strong>Yes, but only through some of them.</strong> ${esc(cheapestOk.name)} is the cheapest that will take it, landing at ${yen(cheapestOk.grandTotal)} on a ¥10,000 1kg order.`
+          : `<strong>No service confirms in writing that it will.</strong> Every provider either refuses ${esc(attr.seoLabelEn)} or has published no rule about it.`;
+
+      pages.push({
+        path: `/can-you-ship-${attr.slug}-from-japan-to-${COUNTRY_SLUGS[cc]}`,
+        title: `Can you ship ${attr.seoLabelEn} from Japan to ${cn}?`,
+        description: allBlocked
+          ? `No. All four Japan proxy services refuse ${attr.seoLabelEn} to ${cn}. Here is what each one says, and what to do instead.`
+          : `Buyee, ZenMarket, Neokyo and FROM JAPAN compared on ${attr.seoLabelEn} to ${cn}, quoting each company's own rules.`,
+        prefill: input,
+        body: `
+  <h1>Can you ship ${esc(attr.seoLabelEn)} from Japan to ${esc(cn)}?</h1>
+  <p>${verdictLine}</p>
+  <p class="muted">Covers ${esc(attr.helpEn.toLowerCase())} — for example ${attr.examplesEn.map((e) => esc(e)).join(", ")}.</p>
+  ${verdictTable(results)}
+  ${allBlocked
+    ? `<aside class="notice"><strong>What to do instead</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
+    : noneConfirmed
+      ? `<aside class="notice"><strong>Read this before you bid</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
+      : ""}
+  <h2>Why this matters before you bid</h2>
+  <p>A proxy will happily accept the order and buy the item for you. The refusal happens later, when the parcel
+  reaches their warehouse and is inspected. At that point you have already paid for the goods, the domestic
+  shipping inside Japan and the service fee, and none of it comes back. The item is disposed of or returned to
+  the seller at your cost.</p>
+  <p>Rules checked against each company's own prohibited-items page on ${esc(restrictions._meta.updated)}.
+  Where a company publishes nothing on a category we say so rather than guessing.</p>
+  ${links([
+    { href: "/what-you-cannot-ship-from-japan", text: "Everything you cannot ship out of Japan" },
+    { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
+    { href: `/cheapest-proxy-for-yahoo-auctions-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Yahoo! Auctions to ${cn}` },
+  ])}`,
+      });
+    }
+  }
+
+  // ハブページ。属性別ページへの入口であり、それ自体も一次情報の一覧として成立させる。
+  {
+    const attrRows = restrictions.attributes.map((a) => {
+      const verdicts = ids.map((p) => {
+        const cell = restrictions.byProxy[p.id]?.[a.id];
+        return `${esc(p.name)}: ${VERDICT[cell?.level ?? "unknown"]}`;
+      }).join(" · ");
+      const seo = SEO_ATTRS.includes(a.id);
+      return `
+      <tr>
+        <td>${seo ? `<a href="/can-you-ship-${a.slug}-from-japan-to-united-states">${esc(a.labelEn)}</a>` : esc(a.labelEn)}</td>
+        <td>${esc(a.helpEn)}</td>
+        <td>${verdicts}</td>
+      </tr>`;
+    }).join("");
+
+    pages.push({
+      path: "/what-you-cannot-ship-from-japan",
+      title: "What you cannot ship out of Japan with a proxy service",
+      description: "Airsoft, model paint, spray cans, lithium batteries and more — what each of the four major Japan proxy services actually refuses, quoted from their own rules.",
+      prefill: null,
+      body: `
+  <h1>What you cannot ship out of Japan with a proxy service</h1>
+  <p>Proxy services will let you buy almost anything on Yahoo! Auctions or Mercari. Shipping it out is a
+  different question, and you usually find out only after the parcel reaches their warehouse — when the money
+  is already spent. This table is taken from each company's own prohibited-items page, checked on
+  ${esc(restrictions._meta.updated)}.</p>
+  <table>
+    <thead><tr><th>Category</th><th>What it covers</th><th>What each service says</th></tr></thead>
+    <tbody>${attrRows}</tbody>
+  </table>
+  <h2>&ldquo;Not stated&rdquo; is not the same as allowed</h2>
+  <p>Where a company publishes no rule for a category we mark it <em>Not stated</em> rather than assuming it is
+  fine. It means the decision is made at the warehouse, after you have paid. Japan Post rules still apply on top
+  of whatever the proxy says, and those depend on the destination — lithium batteries, for instance, cannot be
+  posted to Germany or the United Kingdom at all.</p>
+  ${links([
+    ...SEO_ATTRS.map((id) => {
+      const a = restrictions.attributes.find((x) => x.id === id);
+      return { href: `/can-you-ship-${a.slug}-from-japan-to-united-states`, text: `Can you ship ${a.seoLabelEn} to the United States?` };
+    }),
+  ])}`,
+    });
+  }
+
   return pages;
 }

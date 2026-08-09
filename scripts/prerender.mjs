@@ -15,6 +15,7 @@ import path from "node:path";
 import proxies from "../data/proxies.json" with { type: "json" };
 import ems from "../data/shipping-ems.json" with { type: "json" };
 import importTax from "../data/import-tax.json" with { type: "json" };
+import restrictions from "../data/restrictions.json" with { type: "json" };
 import { buildPages } from "../src/lib/pages.mjs";
 
 const SITE_URL = (process.env.VITE_SITE_URL ?? "https://japanproxy.kakuni-lab.com").replace(/\/$/, "");
@@ -63,10 +64,12 @@ function writePage(routePath, html) {
   fs.writeFileSync(outPath, html);
 }
 
-const pages = buildPages({ proxies, ems, importTax });
+const pages = buildPages({ proxies, ems, importTax, restrictions });
 
 // ---- トップページ: 全ページへの入口を持たせる ----
 const grouped = {
+  // 「そもそも送れるのか」を最上部に置く。金額より先に知る必要がある情報なので。
+  "Can you even ship it?": pages.filter((p) => p.path.startsWith("/can-you-ship-") || p.path === "/what-you-cannot-ship-from-japan"),
   "Compare two services": pages.filter((p) => p.path.includes("-vs-")),
   "Cheapest proxy by marketplace": pages.filter((p) => p.path.startsWith("/cheapest-proxy-for-")),
   "Shipping cost by item": pages.filter((p) => p.path.startsWith("/ship-")),

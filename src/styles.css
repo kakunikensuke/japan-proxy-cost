@@ -197,3 +197,56 @@ input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); out
   .card-head { flex-direction: column; }
   .card-total { text-align: left; }
 }
+
+/* ---- 配送不可判定 ---- */
+
+/* カテゴリのプリセットで拾えない属性を、利用者が自分で足すための開閉領域 */
+.attr-details {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 14px;
+}
+.attr-details summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.attr-grid { display: grid; gap: 8px; margin-top: 12px; }
+
+/* 送れない会社。金額は消さず（比較情報として意味がある）、推薦だけをやめる */
+.card-blocked { opacity: 0.72; border-style: dashed; }
+.card-blocked .card-total strong { color: var(--muted); font-weight: 600; }
+
+.badge-blocked     { color: #a3372a; background: var(--high-bg); }
+.badge-unknown     { color: #8a6d1f; background: var(--warn-bg); }
+.badge-conditional { color: var(--muted); background: var(--bg); }
+@media (prefers-color-scheme: dark) {
+  .badge-blocked { color: #f0a08e; }
+  .badge-unknown { color: #d8bd72; }
+}
+
+.blockers { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.blocker {
+  border-left: 3px solid var(--high-border);
+  padding: 2px 0 2px 12px;
+}
+.blocker-head { margin: 0; font-size: 0.88rem; }
+.blocker-reason { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); }
+.blocker-quote {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-style: italic;
+  border: 0;
+  padding: 0;
+}
+.blocker-src { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); }
+
+.blocked-banner .blocked-alt {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--text);
+}

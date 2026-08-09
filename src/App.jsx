@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import proxies from "../data/proxies.json";
 import ems from "../data/shipping-ems.json";
 import importTax from "../data/import-tax.json";
+import restrictions from "../data/restrictions.json";
 import { calculateAll } from "./lib/calc.mjs";
 
 const SOURCES = [
@@ -50,14 +51,51 @@ function Tier({ num, title, amount, unquantified, children }) {
   );
 }
 
-function ResultCard({ r, rank }) {
+const LEVEL_BADGE = {
+  prohibited:      { text: "Cannot ship",        cls: "badge-blocked" },
+  unknown:         { text: "No published rule",  cls: "badge-unknown" },
+  conditional:     { text: "Extra conditions",   cls: "badge-conditional" },
+  carrier_limited: { text: "Extra conditions",   cls: "badge-conditional" },
+};
+
+/** 送れない理由を、公式原文つきで出す。「なぜ」が無いと利用者は判断できない。 */
+function Blockers({ shippable }) {
+  if (!shippable.blockers.length) return null;
+  return (
+    <div className="blockers">
+      {shippable.blockers.map((b, i) => (
+        <div key={i} className="blocker">
+          <p className="blocker-head">
+            <strong>{b.attributeLabelEn}</strong>{" "}
+            {b.axis === "destination" ? "— restricted by the destination country" : "— refused by this proxy"}
+          </p>
+          {b.reasonEn && <p className="blocker-reason">{b.reasonEn}</p>}
+          {b.quoteEn && <blockquote className="blocker-quote">“{b.quoteEn}”</blockquote>}
+          {b.sourceUrl && (
+            <p className="blocker-src">
+              <a href={b.sourceUrl} target="_blank" rel="noopener noreferrer">
+                Official source
+              </a>
+              {b.verifiedAt ? ` · checked ${b.verifiedAt}` : ""}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResultCard({ r, rank, isBest }) {
   const [open, setOpen] = useState(rank === 0);
+  const blocked = r.shippable.level === "prohibited";
+  const badge = LEVEL_BADGE[r.shippable.level];
 
   return (
-    <article className={`card${rank === 0 ? " card-best" : ""}`}>
+    <article className={`card${isBest ? " card-best" : ""}${blocked ? " card-blocked" : ""}`}>
       <header className="card-head">
         <div>
-          {rank === 0 && <span className="badge">Cheapest overall</span>}
+          {isBest && <span className="badge">Cheapest that can actually ship</span>}
+          {badge && <span className={`badge ${badge.cls}`}>{badge.text}</span>}
           <h3>{r.name}</h3>
           {r.includes.length > 0 && (
             <p className="includes">
@@ -77,11 +115,15 @@ function ResultCard({ r, rank }) {
           )}
         </div>
         <div className="card-total">
-          <span className="card-total-label">Final total</span>
+          <span className="card-total-label">{blocked ? "Would have cost" : "Final total"}</span>
           <strong>{yen(r.grandTotal)}</strong>
-          {r.grandTotalIsMinimum && <span className="card-total-note">+ import duty</span>}
+          {blocked
+            ? <span className="card-total-note">for reference only</span>
+            : r.grandTotalIsMinimum && <span className="card-total-note">+ import duty</span>}
         </div>
       </header>
+
+      <Blockers shippable={r.shippable} />
 
       <button className="toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         {open ? "Hide the breakdown" : "Show me where this money goes"}
@@ -137,9 +179,12 @@ function ResultCard({ r, rank }) {
         </div>
       )}
 
-      <a className="cta" href={r.url} target="_blank" rel="noopener noreferrer sponsored">
-        Go to {r.name} →
-      </a>
+      {/* 送れないと分かっている会社へ送客しない。落札されたら損をするのは利用者。 */}
+      {!blocked && (
+        <a className="cta" href={r.url} target="_blank" rel="noopener noreferrer sponsored">
+          Go to {r.name} →
+        </a>
+      )}
     </article>
   );
 }
@@ -153,6 +198,8 @@ const DEFAULT_FORM = {
   destination: "US",
   domesticShippingJpy: 700,
   buyeePlan: "light",
+  category: "scale_figure",
+  attributes: [],
 };
 
 export default function App() {
@@ -169,12 +216,36 @@ export default function App() {
     setForm((f) => ({ ...f, [k]: ["itemPriceJpy", "itemCount", "weightG", "domesticShippingJpy"].includes(k) ? Number(v) : v }));
   };
 
-  const { results, country, shipping } = useMemo(
-    () => calculateAll(form, { proxies, ems, importTax }),
+  // カテゴリを選ぶと属性が入れ替わる。プリセットで拾えないケースは
+  // 下のチェックボックスで足せるようにしてあるので、上書きではなく置き換えにする。
+  const setCategory = (e) => {
+    const id = e.target.value;
+    const preset = restrictions.categoryPresets.find((c) => c.id === id);
+    setForm((f) => ({ ...f, category: id, attributes: [...(preset?.attributes ?? [])] }));
+  };
+
+  const toggleAttribute = (id) => (e) => {
+    const on = e.target.checked;
+    setForm((f) => ({
+      ...f,
+      attributes: on ? [...new Set([...f.attributes, id])] : f.attributes.filter((a) => a !== id),
+    }));
+  };
+
+  const { results, country, shipping, allBlocked, noneConfirmed } = useMemo(
+    () => calculateAll(form, { proxies, ems, importTax, restrictions }),
     [form]
   );
 
   const isShopping = !["yahoo_auction", "mercari", "rakuma"].includes(form.source);
+
+  // 「送れると公式に確認できている中で最安」だけをおすすめとして立てる。
+  const bestIndex = results.findIndex((r) => r.shippable.level === "ok");
+
+  const blockedAttributes = restrictions.attributes.filter((a) =>
+    form.attributes.includes(a.id) &&
+    results.some((r) => r.shippable.blockers.some((b) => b.attribute === a.id && b.level === "prohibited"))
+  );
 
   return (
     <div className="page">
@@ -195,6 +266,38 @@ export default function App() {
             ))}
           </select>
         </Field>
+
+        <Field
+          label="What are you buying?"
+          hint="Some things simply cannot leave Japan by post. We check this before showing you a price."
+        >
+          <select value={form.category} onChange={setCategory}>
+            {restrictions.categoryPresets.map((c) => (
+              <option key={c.id} value={c.id}>{c.labelEn}</option>
+            ))}
+          </select>
+        </Field>
+
+        {/* プリセットは目安でしかない。同じ「フィギュア」でもLED入りなら電池扱いになるので、
+            利用者が自分で足せる逃げ道を必ず用意する。 */}
+        <details className="attr-details">
+          <summary>Does any of this apply? Tick anything that does</summary>
+          <div className="attr-grid">
+            {restrictions.attributes.map((a) => (
+              <label key={a.id} className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.attributes.includes(a.id)}
+                  onChange={toggleAttribute(a.id)}
+                />
+                <span>
+                  {a.labelEn}
+                  <em> — {a.helpEn}</em>
+                </span>
+              </label>
+            ))}
+          </div>
+        </details>
 
         <Field label="Item price (¥, total, tax included)">
           <input type="number" min="0" step="100" value={form.itemPriceJpy} onChange={set("itemPriceJpy")} />
@@ -252,9 +355,31 @@ export default function App() {
 
       {shipping.error && <aside className="notice notice-high"><p>{shipping.error}</p></aside>}
 
+      {/* 買えないと分かった瞬間が、利用者が代替を最も探している場面。
+          ここで黙って価格表だけ出すのは不親切なので、理由と次の一手を先に出す。 */}
+      {(allBlocked || noneConfirmed) && (
+        <aside className="notice notice-high blocked-banner">
+          <strong>
+            {allBlocked
+              ? "None of these services can ship this item"
+              : "No service confirms in writing that it can ship this"}
+          </strong>
+          <p>
+            {allBlocked
+              ? "Every provider below refuses it. The prices are shown only so you can see what it would have cost — do not buy expecting it to arrive."
+              : "At least one provider has no published rule for this, so it may be accepted at checkout and then refused at the warehouse. You would still be charged for the item and the domestic shipping."}
+          </p>
+          {blockedAttributes.map((a) => (
+            <p key={a.id} className="blocked-alt">
+              <strong>{a.labelEn}:</strong> {a.whenBlockedEn}
+            </p>
+          ))}
+        </aside>
+      )}
+
       <section className="results">
         {results.map((r, i) => (
-          <ResultCard key={r.proxyId} r={r} rank={i} />
+          <ResultCard key={r.proxyId} r={r} rank={i} isBest={i === bestIndex} />
         ))}
       </section>
 

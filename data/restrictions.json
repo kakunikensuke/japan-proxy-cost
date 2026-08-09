@@ -1,0 +1,449 @@
+{
+  "_meta": {
+    "updated": "2026-08-09",
+    "note": "各社公式の禁制品ページからの転記。記載がないマスは level:'unknown' とし、ok に丸めない。quoteEn は公式原文の抜粋。",
+    "levels": {
+      "ok": "公式に扱えると読める、または禁制品リストに該当がなく他社の記載とも矛盾しない",
+      "conditional": "扱えるが条件付き（部品の廃棄、開封検品、追加料金など）",
+      "carrier_limited": "特定の配送手段でのみ可。本ツールはEMSのみ扱うため、EMS不可なら実質prohibited",
+      "prohibited": "公式に不可",
+      "unknown": "公式ページに記載が見当たらない。okに丸めず警告を出す"
+    },
+    "carrierScope": "本ツールの国際配送はEMS（日本郵便）のみ。DHL/FedEx/UPS限定で可の項目はEMS基準ではprohibited扱いになる。"
+  },
+  "attributes": [
+    {
+      "id": "flammable_liquid",
+      "labelEn": "Flammable liquid",
+      "slug": "model-paint",
+      "seoLabelEn": "model paint and thinner",
+      "helpEn": "Model paint, lacquer thinner, nail polish, perfume, alcohol-based liquids",
+      "examplesEn": [
+        "Mr. Color",
+        "Tamiya acrylic",
+        "Gaia Notes",
+        "lacquer thinner"
+      ],
+      "whenBlockedEn": "No proxy and no Japanese shop can put this on a plane — it is an air transport rule, not a company policy. Buy the same paint from a hobby retailer in your own country; Mr. Hobby, Tamiya and Gaia Notes are all distributed internationally."
+    },
+    {
+      "id": "aerosol",
+      "labelEn": "Aerosol / pressurised can",
+      "slug": "spray-cans",
+      "seoLabelEn": "spray cans and topcoat",
+      "helpEn": "Spray paint, matte topcoat, air duster, spray deodorant",
+      "examplesEn": [
+        "Mr. Super Clear",
+        "spray primer",
+        "air duster"
+      ],
+      "whenBlockedEn": "Pressurised cans cannot fly, so no proxy or Japanese store can send one. Buy the spray locally and import only the parts that are not aerosols."
+    },
+    {
+      "id": "lithium_battery",
+      "labelEn": "Contains a lithium battery",
+      "slug": "lithium-batteries",
+      "seoLabelEn": "items with lithium batteries",
+      "helpEn": "LED or sound figures, handheld consoles, electronics, power banks",
+      "examplesEn": [
+        "Nintendo Switch",
+        "LED figure base",
+        "power bank"
+      ],
+      "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping — the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route."
+    },
+    {
+      "id": "replica_gun",
+      "labelEn": "Airsoft / model gun",
+      "slug": "airsoft",
+      "seoLabelEn": "airsoft and model guns",
+      "helpEn": "Anything shaped like a real firearm, including toys",
+      "examplesEn": [
+        "Tokyo Marui airsoft",
+        "model gun",
+        "gas blowback"
+      ],
+      "whenBlockedEn": "Buyee and Neokyo refuse airsoft and model guns outright. ZenMarket does not ban them, but publishes a handling procedure instead — any cartridges are destroyed on arrival and the package is opened for inspection, with disposal and handling fees on top. Before you bid, check that your own country allows the import: in Victoria, Queensland, South Australia and Tasmania, owning one is illegal regardless of how it was shipped."
+    },
+    {
+      "id": "lighter",
+      "labelEn": "Lighter",
+      "slug": "lighters",
+      "seoLabelEn": "lighters",
+      "helpEn": "Zippo and other lighters, refill gas, matches",
+      "examplesEn": [
+        "anime collab Zippo",
+        "butane refill"
+      ],
+      "whenBlockedEn": "Lighters and lighter fuel cannot be carried by air. If it is a collectible Zippo, look for the same design from a seller already located in your country."
+    },
+    {
+      "id": "food",
+      "labelEn": "Food or drink",
+      "slug": "food",
+      "seoLabelEn": "snacks and food",
+      "helpEn": "Character snacks, prize sweets, instant food, tea",
+      "examplesEn": [
+        "Ichiban Kuji sweets",
+        "instant ramen",
+        "matcha"
+      ],
+      "whenBlockedEn": "Where a proxy blocks food it is usually the destination country refusing it, not the proxy. Check your own customs rules before buying."
+    },
+    {
+      "id": "adult",
+      "labelEn": "Adult (R18) material",
+      "slug": "adult-doujinshi",
+      "seoLabelEn": "adult doujinshi",
+      "helpEn": "Doujinshi, games and goods with adult content",
+      "examplesEn": [
+        "R18 doujinshi",
+        "adult visual novel"
+      ],
+      "whenBlockedEn": "Where this is blocked it is the destination country refusing it at customs. The parcel is seized, not returned, so the loss is total."
+    },
+    {
+      "id": "blade",
+      "labelEn": "Blade / replica sword",
+      "slug": "replica-swords",
+      "seoLabelEn": "replica swords and knives",
+      "helpEn": "Katana replicas, knives, sharp props",
+      "examplesEn": [
+        "iaito",
+        "replica katana",
+        "cosplay prop blade"
+      ],
+      "whenBlockedEn": "Blades are refused by most proxies regardless of destination. A licensed importer in your own country is the realistic route for an iaito or replica katana."
+    }
+  ],
+  "categoryPresets": [
+    {
+      "id": "scale_figure",
+      "labelEn": "Scale figure",
+      "attributes": []
+    },
+    {
+      "id": "figure_led",
+      "labelEn": "Figure with LED / sound",
+      "attributes": [
+        "lithium_battery"
+      ]
+    },
+    {
+      "id": "model_kit",
+      "labelEn": "Plastic model kit (kit only)",
+      "attributes": []
+    },
+    {
+      "id": "model_paint",
+      "labelEn": "Model paint / thinner",
+      "attributes": [
+        "flammable_liquid"
+      ]
+    },
+    {
+      "id": "spray_paint",
+      "labelEn": "Spray paint / topcoat",
+      "attributes": [
+        "aerosol"
+      ]
+    },
+    {
+      "id": "airsoft",
+      "labelEn": "Airsoft / model gun",
+      "attributes": [
+        "replica_gun"
+      ]
+    },
+    {
+      "id": "doujinshi_r18",
+      "labelEn": "Adult doujinshi",
+      "attributes": [
+        "adult"
+      ]
+    },
+    {
+      "id": "game_console",
+      "labelEn": "Game console / handheld",
+      "attributes": [
+        "lithium_battery"
+      ]
+    },
+    {
+      "id": "trading_cards",
+      "labelEn": "Trading cards",
+      "attributes": []
+    },
+    {
+      "id": "manga",
+      "labelEn": "Manga / artbook",
+      "attributes": []
+    },
+    {
+      "id": "character_food",
+      "labelEn": "Character snacks / food",
+      "attributes": [
+        "food"
+      ]
+    },
+    {
+      "id": "replica_sword",
+      "labelEn": "Replica sword / prop blade",
+      "attributes": [
+        "blade"
+      ]
+    },
+    {
+      "id": "other",
+      "labelEn": "Something else",
+      "attributes": []
+    }
+  ],
+  "byProxy": {
+    "buyee": {
+      "_source": {
+        "sourceUrl": "https://buyee.jp/helpcenter/guide/prohibited?lang=en",
+        "verifiedAt": "2026-08-09"
+      },
+      "flammable_liquid": {
+        "level": "prohibited",
+        "quoteEn": "Oil Paints / Nail Polish / Alcohol / Paint Thinner / Paints / Lacquer / Perfume"
+      },
+      "aerosol": {
+        "level": "prohibited",
+        "quoteEn": "Aerosol Spray Cans / Dust Remover Spray. \"The amount of arriving aerosol spray cans have increased in recent period; however, this kind of items are considered dangerous that cannot be shipped out.\""
+      },
+      "lithium_battery": {
+        "level": "unknown",
+        "quoteEn": "The all-country prohibited list names \"Lead-acid Batteries\" but does not mention lithium batteries either way.",
+        "noteEn": "Buyee does not publish its own lithium battery rule. Japan Post rules still apply — see the destination check."
+      },
+      "replica_gun": {
+        "level": "prohibited",
+        "quoteEn": "Airguns / Gas Gun / Gun Parts(Metal) / Ammunition"
+      },
+      "lighter": {
+        "level": "prohibited",
+        "quoteEn": "Lighters / Oil Lighters / Lighter Fuel / Butane Lighter Fuel / Matches"
+      },
+      "food": {
+        "level": "unknown",
+        "quoteEn": "Food is not named in the all-country prohibited list.",
+        "noteEn": "Buyee points to the destination country's own rules instead of publishing a food policy."
+      },
+      "adult": {
+        "level": "conditional",
+        "quoteEn": "Obscene Articles",
+        "noteEn": "\"Obscene Articles\" is listed as prohibited, but Buyee does not define where ordinary R18 doujinshi falls. Judged case by case at the warehouse."
+      },
+      "blade": {
+        "level": "prohibited",
+        "quoteEn": "Sword Replica"
+      }
+    },
+    "zenmarket": {
+      "_source": {
+        "sourceUrl": "https://zenmarket.jp/en/prohibited_items.aspx",
+        "verifiedAt": "2026-08-09"
+      },
+      "flammable_liquid": {
+        "level": "prohibited",
+        "quoteEn": "Any flammable liquids (Gasoline, oil, alcohol, other) ... Other examples of products that cannot be shipped are: lighters, lighter liquids, dry Fuel Tablets, flammable paint"
+      },
+      "aerosol": {
+        "level": "prohibited",
+        "quoteEn": "Any sprays or otherwise condensed air, gases ... deodorant sprays, aroma-sprays"
+      },
+      "lithium_battery": {
+        "level": "carrier_limited",
+        "allowedCarriers": [
+          "ems"
+        ],
+        "quoteEn": "If shipping with EMS, Airmail, no more than 2 li-ion batteries per parcel allowed in some countries. ... EMS, Airmail, and Surface cannot be used for the following countries: Germany, Italy, ... the United Kingdom ... (as of Oct 2025).",
+        "noteEn": "Batteries must be inside the device. Separate batteries and power banks are refused outright."
+      },
+      "replica_gun": {
+        "level": "conditional",
+        "quoteEn": "Model gun with bullets (cartridges) — Partial Disposal Required: Bullets cannot be shipped overseas and will be disposed of upon arrival at the warehouse. Opening Required.",
+        "noteEn": "Real guns and gun parts are prohibited, but ZenMarket publishes a handling procedure for model guns rather than banning them. Disposal work is charged from ¥300, plus a handling fee from ¥1,000 per 15 minutes."
+      },
+      "lighter": {
+        "level": "prohibited",
+        "quoteEn": "lighters, lighter liquids"
+      },
+      "food": {
+        "level": "unknown",
+        "quoteEn": "Food is not addressed in the prohibited list. Only \"Beverages with alcoholic content above 24%\" appear, restricted to DHL only.",
+        "noteEn": "Because our tool only prices EMS, an alcohol purchase would not be shippable at all — but ordinary snacks are simply not covered by the published rules."
+      },
+      "adult": {
+        "level": "conditional",
+        "quoteEn": "Any illegal adult products, violence encouraging products etc",
+        "noteEn": "Only \"illegal\" adult products are named. Ordinary R18 material is not addressed, and \"Any other items defined as inappropriate by ZenMarket\" leaves the decision with them."
+      },
+      "blade": {
+        "level": "unknown",
+        "quoteEn": "Examples of products that cannot be shipped: guns, gunpowder, gun parts, any weapons",
+        "noteEn": "\"Any weapons\" is listed, but replica swords and iaito are not named either way."
+      }
+    },
+    "neokyo": {
+      "_source": {
+        "sourceUrl": "https://neokyo.com/en/forbidden-items",
+        "verifiedAt": "2026-08-09"
+      },
+      "flammable_liquid": {
+        "level": "prohibited",
+        "quoteEn": "Flammables substances and liquids: lighters, oils, paints, alcohols, engine parts, etc. ... Paint / Nail polish / Ink cartridges / Hair dyes"
+      },
+      "aerosol": {
+        "level": "prohibited",
+        "quoteEn": "Gas: gas stoves, spray cans, aerosols"
+      },
+      "lithium_battery": {
+        "level": "carrier_limited",
+        "allowedCarriers": [
+          "ems"
+        ],
+        "quoteEn": "Only two batteries per package. Prohibited via Japan Post for: Algeria, Argentina, Chile, Colombia, El Salvador, Germany, Iraq, Italy, Kuwait, Moldova, Mongolia, Morocco, Norway, Portugal, Saudi Arabia, South Africa, Spain, Thailand, and United Kingdom.",
+        "noteEn": "Nintendo Switch is FedEx-only except the Lite version, so it is not shippable on the EMS pricing this tool covers."
+      },
+      "replica_gun": {
+        "level": "prohibited",
+        "quoteEn": "Airsoft replicas (gas and electric - airsoft batteries are also prohibited!)"
+      },
+      "lighter": {
+        "level": "prohibited",
+        "quoteEn": "Flammables substances and liquids: lighters, oils, paints, alcohols"
+      },
+      "food": {
+        "level": "ok",
+        "quoteEn": "PROHIBITED TO MEXICO / SPAIN / BELGIUM — Food and Drink Product (Chocolate, Dry snack, Tea, Coffee, Food Supplement, Etc.)",
+        "noteEn": "Food is blocked only for Mexico, Spain and Belgium. None of the destinations this tool covers are on that list."
+      },
+      "adult": {
+        "level": "ok",
+        "quoteEn": "CHINESE MAINLAND, HONG KONG, SAUDI ARABIA — Item related to pornography (Books, Video game, Figure, Bed sheets…)",
+        "noteEn": "Restricted only for those three destinations. Child sexual abuse material, and adult items depicting minors, are banned worldwide."
+      },
+      "blade": {
+        "level": "prohibited",
+        "quoteEn": "Firearms and explosives: Katana blades, fireworks, weapon like items"
+      }
+    },
+    "fromjapan": {
+      "_source": {
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": null,
+        "blocked": true,
+        "noteEn": "FROM JAPAN's official pages reject automated access (HTTP 403 / connection timeout, four attempts on 2026-08-09). Rather than copy a second-hand summary, every cell is left unknown until the official text is read."
+      },
+      "flammable_liquid": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "aerosol": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "lithium_battery": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "replica_gun": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "lighter": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "food": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "adult": {
+        "level": "unknown",
+        "pendingVerification": true
+      },
+      "blade": {
+        "level": "unknown",
+        "pendingVerification": true
+      }
+    }
+  },
+  "byDestination": {
+    "DE": {
+      "lithium_battery": {
+        "level": "prohibited",
+        "noteEn": "Japan Post does not accept lithium batteries for Germany by EMS, air mail or surface mail, so no proxy can send them on this route.",
+        "quoteEn": "Japan Post's list of countries that accept equipment containing lithium batteries by air does not include Germany (ドイツ).",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09",
+        "corroboratedBy": [
+          "https://zenmarket.jp/en/prohibited_items.aspx",
+          "https://neokyo.com/en/forbidden-items"
+        ]
+      }
+    },
+    "GB": {
+      "lithium_battery": {
+        "level": "prohibited",
+        "noteEn": "Japan Post does not accept lithium batteries for the United Kingdom by EMS, air mail or surface mail, so no proxy can send them on this route.",
+        "quoteEn": "Japan Post's list of countries that accept equipment containing lithium batteries by air does not include the United Kingdom (英国).",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09",
+        "corroboratedBy": [
+          "https://zenmarket.jp/en/prohibited_items.aspx",
+          "https://neokyo.com/en/forbidden-items"
+        ]
+      }
+    },
+    "US": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for the United States by air when they are installed in the device. Proxies cap this at two batteries per parcel and refuse loose batteries and power banks.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "CA": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Canada by air when installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "AU": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Australia by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "FR": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for France by air when installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    },
+    "SG": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Singapore by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-08-09"
+      }
+    }
+  },
+  "openQuestions": [
+    "FROM JAPAN の禁制品ページ（https://www.fromjapan.co.jp/japan/en/help/important/）は自動アクセスを弾かれるため8属性すべて未確認。料金データのときと同様、ユーザーに本文を貼ってもらって埋める。",
+    "Buyee のリチウム電池の自社ルールが未公開。日本郵便の国別可否でしか判定できていない。",
+    "Buyee / ZenMarket の食品の扱いが未記載。",
+    "ZenMarket の模造刀・居合刀の扱いが未記載（『any weapons』としか書かれていない）。"
+  ]
+}

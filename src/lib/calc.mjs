@@ -121,11 +121,75 @@ function taxBaseAmount(base, { itemTotal, intlShipping, otherCosts }) {
   return itemTotal + otherCosts; // charge1+charge2
 }
 
-export function calculateAll(input, { proxies, ems, importTax }) {
+/** 深刻な順。数字が大きいほど「送れない」に近い。 */
+const LEVEL_SEVERITY = { ok: 0, conditional: 1, carrier_limited: 1, unknown: 2, prohibited: 3 };
+
+/** 順位付け用。unknown を prohibited より前に置くのは「送れないと断定はできない」ため。 */
+const LEVEL_RANK = { ok: 0, conditional: 1, carrier_limited: 1, unknown: 2, prohibited: 3 };
+
+function worse(a, b) {
+  return LEVEL_SEVERITY[a] >= LEVEL_SEVERITY[b] ? a : b;
+}
+
+/**
+ * この商品を、この代行会社で、この配送先へ送れるか。
+ *
+ * 「送れない」を黙って通すと、利用者は落札してから知ることになる。
+ * そのとき商品代・国内送料・キャンセル料だけ取られて商品は手に入らないので、
+ * 金額を間違えるより深刻。判定できない場合は ok ではなく unknown を返す。
+ *
+ * 判定は2軸の重ね合わせ。
+ *   軸1 byProxy       … 代行会社が自社ポリシーで拒否するか
+ *   軸2 byDestination … 配送先の国（＝日本郵便の引受可否）が拒否するか
+ * 輸入税と同じ考え方で、国側の制限は代行会社の性質ではないため全社に同条件で乗せる。
+ *
+ * carrier_limited は「その配送手段なら可」の意味だが、本ツールはEMSしか扱わないので、
+ * allowedCarriers に現在の carrier が無ければ prohibited に落とす。
+ */
+export function checkShippable(attributes, { proxyId, destination, carrier = "ems" }, restrictions) {
+  const blockers = [];
+  let level = "ok";
+
+  for (const attrId of attributes ?? []) {
+    const attr = restrictions.attributes.find((a) => a.id === attrId);
+    const labelEn = attr?.labelEn ?? attrId;
+
+    for (const [axis, cell] of [
+      ["proxy", restrictions.byProxy?.[proxyId]?.[attrId]],
+      ["destination", restrictions.byDestination?.[destination]?.[attrId]],
+    ]) {
+      if (!cell) continue;
+
+      let cellLevel = cell.level;
+      if (cellLevel === "carrier_limited" && cell.allowedCarriers && !cell.allowedCarriers.includes(carrier)) {
+        cellLevel = "prohibited";
+      }
+      if (cellLevel === "ok") continue;
+
+      blockers.push({
+        attribute: attrId,
+        attributeLabelEn: labelEn,
+        axis,
+        level: cellLevel,
+        reasonEn: cell.noteEn ?? null,
+        quoteEn: cell.quoteEn ?? null,
+        sourceUrl: cell.sourceUrl ?? restrictions.byProxy?.[proxyId]?._source?.sourceUrl ?? null,
+        verifiedAt: cell.verifiedAt ?? restrictions.byProxy?.[proxyId]?._source?.verifiedAt ?? null,
+      });
+      level = worse(level, cellLevel);
+    }
+  }
+
+  // 深刻な順に並べる。UIは先頭だけ出しても意味が通るようにしておく。
+  blockers.sort((a, b) => LEVEL_SEVERITY[b.level] - LEVEL_SEVERITY[a.level]);
+  return { level, blockers };
+}
+
+export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
   const {
     source, itemPriceJpy, itemCount, weightG, destination,
     domesticShippingJpy, carrier = "ems", sameShop = false,
-    buyeePlan = "light",
+    buyeePlan = "light", attributes = [],
   } = input;
 
   const shipping = lookupEmsRate(ems, destination, weightG);
@@ -210,7 +274,19 @@ export function calculateAll(input, { proxies, ems, importTax }) {
     const payNowTotal = payNowLines.reduce((s, l) => s + l.amount, 0);
     const payOnDeliveryTotal = payOnDeliveryLines.reduce((s, l) => s + l.amount, 0);
 
+    // 配送可否。restrictions が渡されない呼び出し（既存の試算スクリプト等）では判定しない。
+    const shippable = restrictions
+      ? checkShippable(attributes, { proxyId: proxy.id, destination, carrier }, restrictions)
+      : { level: "ok", blockers: [] };
+
+    if (shippable.level === "prohibited") {
+      push(`${proxy.shortName ?? proxy.name} cannot ship this item — the price below is for reference only`);
+    } else if (shippable.level === "unknown") {
+      push(`${proxy.shortName ?? proxy.name} does not publish a rule for this kind of item; it may be refused after you buy`);
+    }
+
     return {
+      shippable,
       proxyId: proxy.id,
       name: proxy.shortName ?? proxy.name,
       url: proxy.url,
@@ -235,6 +311,15 @@ export function calculateAll(input, { proxies, ems, importTax }) {
     };
   });
 
-  results.sort((a, b) => a.grandTotal - b.grandTotal);
-  return { shipping, country, results };
+  // 配送可否を第1キーにする。
+  // 金額だけで並べると「送れないが安い会社」が1位＝おすすめとして出てしまい、
+  // 元のバグ（送れない商品に見積もりを出す）より悪い結果になる。
+  results.sort((a, b) =>
+    LEVEL_RANK[a.shippable.level] - LEVEL_RANK[b.shippable.level] || a.grandTotal - b.grandTotal
+  );
+
+  const allBlocked = results.length > 0 && results.every((r) => r.shippable.level === "prohibited");
+  const noneConfirmed = results.length > 0 && results.every((r) => r.shippable.level !== "ok");
+
+  return { shipping, country, results, allBlocked, noneConfirmed };
 }
