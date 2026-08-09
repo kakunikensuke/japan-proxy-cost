@@ -102,29 +102,40 @@ const run = (extra) =>
   );
 }
 
-// 2. prohibited の会社が1位（＝おすすめ枠）に来ない
+// 2. 送れる会社が存在するとき、prohibited の会社が1位（＝おすすめ枠）に来ない
+//    成人向けは FROM JAPAN だけが全面禁止で、Neokyo は対象国が限定されているため ok。
+//    「安いが送れない会社」を推薦しないことを、この非対称なケースで確かめる。
 {
-  const { results, allBlocked, noneConfirmed } = run({ attributes: ["aerosol"] });
+  const { results } = run({ attributes: ["adult"] });
+  const fj = results.find((r) => r.proxyId === "fromjapan");
   check(
-    "スプレー缶: 送れない会社が最安1位に出ない",
-    results[0].shippable.level !== "prohibited" || allBlocked,
+    "成人向け: FROM JAPAN だけが全面禁止",
+    fj.shippable.level === "prohibited",
+    `level=${fj.shippable.level}`
+  );
+  check(
+    "成人向け: 送れない FROM JAPAN が最安1位に出ない（属性なしでは1位の会社）",
+    results[0].proxyId !== "fromjapan",
     `1位=${results[0].name}(${results[0].shippable.level})`
   );
-  // FROM JAPAN は禁制品データが未取得（unknown）なので allBlocked にはならない。
-  // 「1社も ok が無い」= noneConfirmed で、UIはこの場合も警告を出す。
   check(
-    "スプレー缶: 公式に可と言っている会社が1社も無い",
-    noneConfirmed === true,
-    results.map((r) => `${r.name}:${r.shippable.level}`).join(" ")
+    "成人向け: 1位は公式に可と言っている会社",
+    results[0].shippable.level === "ok",
+    `1位=${results[0].name}(${results[0].shippable.level})`
   );
-  check(
-    "スプレー缶: 記載のある3社は prohibited",
-    results.filter((r) => r.proxyId !== "fromjapan").every((r) => r.shippable.level === "prohibited")
-  );
-  void allBlocked;
 }
 
-// 3. unknown を ok に丸めていない（＝警告が出る）
+// 3. 全社不可のときは allBlocked が立つ（UIが警告に切り替わる）
+{
+  const { results, allBlocked } = run({ attributes: ["aerosol"] });
+  check(
+    "スプレー缶: 4社とも不可なので allBlocked が立つ",
+    allBlocked === true,
+    results.map((r) => `${r.name}:${r.shippable.level}`).join(" ")
+  );
+}
+
+// 4. unknown を ok に丸めていない（＝警告が出る）
 {
   const { results } = run({ attributes: ["food"] });
   const buyee = results.find((r) => r.proxyId === "buyee");
@@ -146,7 +157,7 @@ const run = (extra) =>
   );
 }
 
-// 4. 配送先の国だけで結果が変わる（軸2が効いている）
+// 5. 配送先の国だけで結果が変わる（軸2が効いている）
 {
   const us = run({ attributes: ["lithium_battery"], destination: "US" });
   const de = run({ attributes: ["lithium_battery"], destination: "DE" });
@@ -162,7 +173,7 @@ const run = (extra) =>
   );
 }
 
-// 5. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
+// 6. 属性なしなら判定を足す前と完全に同じ（リグレッションなし）
 {
   const withR = run({});
   const withoutR = calculateAll({ ...baseInput }, { proxies, ems, importTax });

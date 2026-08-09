@@ -12,7 +12,11 @@
  *   3. 重量 × 配送先の総額             7 × 7        = 49
  *   4. 各社の料金解説                                = 4
  *   5. 配送先ごとの輸入税ガイド                       = 7
- *   合計 151ページ
+ *   6. 属性 × 配送先「これは送れるのか」6属性 × 7か国 = 42（＋ハブ1）
+ *   合計 194ページ（トップと404を足して196ファイル）
+ *
+ * 6 は金額より先に知る必要がある情報。送れない商品の見積もりを出すと、
+ * 利用者は落札後に商品代・国内送料・キャンセル料だけ失う。
  */
 import { calculateAll } from "./calc.mjs";
 
@@ -259,14 +263,19 @@ export function buildPages(data) {
   };
 
   /** 各社の可否を公式原文つきで並べる。原文が会社ごとに違うのでページ固有性が担保される。 */
-  function verdictTable(results) {
+  function verdictTable(results, attrId) {
     const rows = results.map((r) => {
+      // blockers は ok のマスを含まないので、可の場合は元データから原文を引く。
+      // 「制限を明記した上で対象外」と「そもそも何も書いていない」を混同しない。
       const b = r.shippable.blockers[0];
+      const cell = restrictions.byProxy[r.proxyId]?.[attrId];
+      const says = b?.quoteEn ?? b?.reasonEn ?? cell?.quoteEn ?? cell?.noteEn;
+
       return `
       <tr>
         <td>${esc(r.name)}</td>
         <td><strong>${VERDICT[r.shippable.level]}</strong></td>
-        <td>${b?.quoteEn ? `&ldquo;${esc(b.quoteEn)}&rdquo;` : b?.reasonEn ? esc(b.reasonEn) : "No restriction published for this."}</td>
+        <td>${says ? `&ldquo;${esc(says)}&rdquo;` : "Nothing published about this category."}</td>
         <td>${r.shippable.level === "prohibited" ? "&mdash;" : yen(r.grandTotal)}</td>
       </tr>`;
     }).join("");
@@ -307,7 +316,7 @@ export function buildPages(data) {
   <h1>Can you ship ${esc(attr.seoLabelEn)} from Japan to ${esc(cn)}?</h1>
   <p>${verdictLine}</p>
   <p class="muted">Covers ${esc(attr.helpEn.toLowerCase())} — for example ${attr.examplesEn.map((e) => esc(e)).join(", ")}.</p>
-  ${verdictTable(results)}
+  ${verdictTable(results, attrId)}
   ${allBlocked
     ? `<aside class="notice"><strong>What to do instead</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
     : noneConfirmed
