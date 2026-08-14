@@ -20,6 +20,23 @@
  */
 import { calculateAll } from "./calc.mjs";
 
+/**
+ * お問い合わせはサイト内のフォームで受ける。
+ *
+ * バックエンドを持たない方針なので、送信先は FormSubmit（登録不要の中継サービス）。
+ * **メールアドレスそのものではなく、有効化後に発行されるランダムな別名を入れること。**
+ * アドレスを直接書くとHTMLに個人のメールアドレスが載り、収集ボットに拾われる。
+ *
+ * 有効化の手順:
+ *   1. 一度だけ https://formsubmit.co/kakuniadao7@gmail.com 宛に送信する
+ *   2. 届いた確認メールのリンクを押す
+ *   3. 表示されるランダム文字列の URL（https://formsubmit.co/xxxxxxxx）をここに入れる
+ *
+ * ★空のままだとビルドが落ちる（scripts/prerender.mjs の自己点検）。
+ * 連絡手段の無いサイトはAdSenseの審査で落ちるので、未設定のまま本番へ出さない。
+ */
+export const CONTACT_FORM_ENDPOINT = "https://formsubmit.co/21c6f56659051072bab367d0af9fb0bc";
+
 export const COUNTRY_SLUGS = {
   US: "united-states", CA: "canada", GB: "united-kingdom",
   AU: "australia", DE: "germany", FR: "france", SG: "singapore",
@@ -51,6 +68,213 @@ const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 
 function countryName(importTax, code) {
   return importTax.countries[code]?.name ?? code;
+}
+
+// ---------------------------------------------------------------------------
+// ページ固有の解説を組み立てる部品
+//
+// AdSense に「有用性の低いコンテンツ」で落とされた。原因は本文が平均155語しかなく、
+// しかもその多くが全ページ共通の定型文だったこと。
+// 文字数を埋めるだけの水増しは同じ判定を招くので、**そのページの計算結果からしか
+// 導けないこと**を書く。下の関数はどれも実数を受け取って文章を作る。
+// ---------------------------------------------------------------------------
+
+const LINE_LABELS = {
+  service: "service fee",
+  plan: "protection plan",
+  packing: "packing charge",
+  domestic: "domestic postage",
+  intl: "international postage",
+  clearance: "export clearance fee",
+  payment: "deposit / payment fee",
+  tax: "tax collected up front",
+};
+
+const lineOf = (r, k) => r.payNow.lines.find((l) => l.key === k)?.amount ?? 0;
+
+const INCLUDE_LABELS = {
+  storage60d: "60 days of free storage",
+  consolidation: "consolidation of several purchases into one parcel",
+  inspection: "an inspection of the item on arrival",
+  international_insurance: "insurance on the international leg",
+  domestic_trade_guarantee: "a guarantee on the domestic purchase",
+};
+
+/** 2社の差額がどの費目から出ているかを実数で説明する。ページごとに必ず違う文になる。 */
+function gapExplanation(win, lose) {
+  const diffs = Object.keys(LINE_LABELS)
+    .map((k) => ({ k, d: lineOf(lose, k) - lineOf(win, k) }))
+    .filter((x) => x.d !== 0)
+    .sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+
+  if (!diffs.length) {
+    return `<p>The two come out level on this order: every line — service fee, packing, postage and tax —
+    lands on the same figure. Where they differ is in what you get for it, which is covered below.</p>`;
+  }
+
+  const top = diffs[0];
+  const sameService = lineOf(win, "service") === lineOf(lose, "service");
+  const parts = diffs.slice(0, 3).map((x) =>
+    `${esc(x.d > 0 ? lose.name : win.name)} pays ${yen(Math.abs(x.d))} more in ${LINE_LABELS[x.k]}`);
+
+  return `<p>${sameService
+    ? `The gap is not the service fee — both charge ${yen(lineOf(win, "service"))} for this marketplace.`
+    : `Part of it is the service fee: ${esc(win.name)} charges ${yen(lineOf(win, "service"))} against ${esc(lose.name)}'s ${yen(lineOf(lose, "service"))}.`}
+  The largest single difference on this order is the ${LINE_LABELS[top.k]}, worth ${yen(Math.abs(top.d))}.
+  Line by line: ${parts.join("; ")}.</p>`;
+}
+
+/** 条件を変えたら結論が変わるかを実際に計算して書く。「場合による」で終わらせない。 */
+function flipCheck(baseInput, data, ids) {
+  const pick = (input) => {
+    const { results } = calculateAll(input, data);
+    const only = results.filter((r) => ids.includes(r.proxyId));
+    return only.sort((a, b) => a.grandTotal - b.grandTotal)[0];
+  };
+  const base = pick(baseInput);
+  const variants = [
+    { label: "the parcel is 3kg rather than 1kg", input: { ...baseInput, weightG: 3000 } },
+    { label: "you buy three separate items instead of one", input: { ...baseInput, itemCount: 3 } },
+    { label: "the item costs ¥50,000 rather than ¥10,000", input: { ...baseInput, itemPriceJpy: 50000 } },
+  ];
+
+  const flipped = variants.map((v) => ({ ...v, win: pick(v.input) })).filter((v) => v.win.proxyId !== base.proxyId);
+
+  if (!flipped.length) {
+    return `<p>The answer is stable for this pair: ${esc(base.name)} stays ahead if the parcel is three times
+    heavier, if you buy three items instead of one, or if the item costs five times as much. That is not true
+    of every pairing on this site, which is why each combination is calculated separately rather than assumed.</p>`;
+  }
+
+  const f = flipped[0];
+  return `<p><strong>This flips.</strong> If ${f.label}, ${esc(f.win.name)} becomes the cheaper of the two at
+  ${yen(f.win.grandTotal)}. The companies charge on different units — per item, per order, by weight, or as a
+  percentage of the whole transaction — so a result for one basket does not carry over to another. Change the
+  figures in the calculator above and the ranking recalculates.</p>`;
+}
+
+/** EMSの重量帯の位置関係を書く。あと何gで1段上がるか、1段下げるといくら浮くか。 */
+function weightBandNote(ems, cc, weightG, shipping) {
+  const zone = String(shipping.zone);
+  const bands = ems.rates.filter((r) => r[zone] != null).sort((a, b) => a.weightG - b.weightG);
+  const idx = bands.findIndex((b) => b.weightG === shipping.appliedWeightG);
+  if (idx < 0) return "";
+
+  const cur = bands[idx];
+  const next = bands[idx + 1];
+  const prev = bands[idx - 1];
+  const headroom = cur.weightG - weightG;
+
+  const bits = [];
+  bits.push(`At ${weightG}g you are billed at the ${cur.weightG}g band, so you are paying for
+  ${headroom > 0 ? `${headroom}g you are not using` : "exactly the weight you have"}.`);
+  if (next) {
+    bits.push(`Going over ${cur.weightG}g moves you to the ${next.weightG}g band and adds
+    ${yen(next[zone] - cur[zone])} — a single extra ${headroom > 0 ? "item" : "gram"} can cost that much.`);
+  }
+  if (prev && headroom > 0) {
+    bits.push(`Dropping under ${prev.weightG}g would save ${yen(cur[zone] - prev[zone])}, which is worth
+    knowing if you are close to the line and can leave something out of the box.`);
+  }
+  return `<h2>Where this sits in the EMS weight bands</h2><p>${bits.join(" ")}</p>
+  <p>This is why consolidating matters in one direction and hurts in the other: putting four small purchases
+  in one box usually keeps you inside a single band and saves three lots of postage, but pushing one gram over
+  a boundary costs the full step.</p>`;
+}
+
+/** 課金単位の違いを、点数を変えた実計算で示す。 */
+function unitOfChargeNote(baseInput, data, sourceLabel) {
+  const one = calculateAll(baseInput, data);
+  const three = calculateAll({ ...baseInput, itemCount: 3 }, data);
+  const threeSame = calculateAll({ ...baseInput, itemCount: 3, sameShop: true }, data);
+
+  const rows = one.results.map((r) => {
+    const t3 = three.results.find((x) => x.proxyId === r.proxyId);
+    const t3s = threeSame.results.find((x) => x.proxyId === r.proxyId);
+    const perOrder = t3s.payNow.total !== t3.payNow.total;
+    return `<tr><td>${esc(r.name)}</td><td>${yen(lineOf(r, "service"))}</td><td>${yen(lineOf(t3, "service"))}</td><td>${perOrder ? yen(lineOf(t3s, "service")) : "same"}</td></tr>`;
+  }).join("");
+
+  const bestOne = one.results[0];
+  const bestThree = three.results[0];
+
+  return `<h2>What happens when you buy more than one thing</h2>
+  <p>Service fees are not charged on the same unit, so the ranking above is only the answer for a single item.
+  Here is the same ${esc(sourceLabel)} order at one item, at three separate items, and at three items bought
+  from the same shop:</p>
+  <table>
+    <thead><tr><th>Service</th><th>1 item</th><th>3 items</th><th>3 from one shop</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p>${bestOne.proxyId === bestThree.proxyId
+    ? `${esc(bestOne.name)} stays cheapest at three items (${yen(bestThree.grandTotal)} in total).`
+    : `<strong>The cheapest option changes at three items:</strong> ${esc(bestThree.name)} takes over at ${yen(bestThree.grandTotal)}, against ${esc(bestOne.name)}'s ${yen(three.results.find((r) => r.proxyId === bestOne.proxyId).grandTotal)}.`}
+  Buying several things at once also shares one parcel and one lot of postage between them, which usually
+  matters more than the service fee does.</p>`;
+}
+
+/**
+ * その代行会社が「どういう買い方のときに一番安いか」を実際に計算して書く。
+ * 各社ページで結論が変わるので、ページ固有性が保てる。
+ */
+function whenThisWins(proxy, data) {
+  const base = { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: "US", domesticShippingJpy: 700, buyeePlan: "light" };
+  const cases = [
+    { label: "one ¥10,000 item, 1kg, to the United States", input: base },
+    { label: "three separate items from one shop", input: { ...base, source: "amazon_jp", itemCount: 3, sameShop: true } },
+    { label: "a heavy 3kg parcel", input: { ...base, weightG: 3000 } },
+    { label: "an expensive ¥100,000 item", input: { ...base, itemPriceJpy: 100000 } },
+    { label: "a light 200g order to Taiwan", input: { ...base, weightG: 200, destination: "TW" } },
+  ];
+
+  const rows = cases.map((c) => {
+    const { results } = calculateAll(c.input, data);
+    const rank = results.findIndex((r) => r.proxyId === proxy.id) + 1;
+    const mine = results.find((r) => r.proxyId === proxy.id);
+    return { ...c, rank, total: mine.grandTotal, winner: results[0], mine };
+  });
+
+  const wins = rows.filter((r) => r.rank === 1);
+  const name = esc(proxy.shortName ?? proxy.name);
+
+  const table = rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${r.rank === 1 ? "<strong>1st</strong>" : `${r.rank}${["", "st", "nd", "rd", "th"][Math.min(r.rank, 4)]}`}</td><td>${yen(r.total)}</td><td>${r.rank === 1 ? "&mdash;" : esc(r.winner.name) + " " + yen(r.winner.grandTotal)}</td></tr>`).join("");
+
+  return `<h2>When ${name} is actually the cheapest</h2>
+  <p>Fee tables do not answer that on their own, so here is the same set of orders priced through all four
+  services, showing where ${name} lands:</p>
+  <table>
+    <thead><tr><th>Order</th><th>${name}</th><th>Total</th><th>Beaten by</th></tr></thead>
+    <tbody>${table}</tbody>
+  </table>
+  <p>${wins.length === 0
+    ? `${name} does not come out cheapest on any of these five, which does not make it a bad choice — what it bundles in for the money is covered above — but if price is the only thing you care about, the comparison pages below will show you which service to use instead.`
+    : wins.length === cases.length
+      ? `${name} is cheapest on all five. That is unusual, and worth checking against your own order rather than assumed.`
+      : `${name} wins ${wins.length} of the five: ${wins.map((w) => esc(w.label)).join("; ")}. It loses the others, which is the whole reason this site calculates rather than recommends a single service.`}</p>`;
+}
+
+/** 輸入税ページ用の実例計算。制度の説明だけでなく金額を出す。 */
+function taxWorkedExample(cc, data, cn) {
+  const runs = [10000, 50000].map((price) => ({
+    price,
+    r: calculateAll({ source: "mercari", itemPriceJpy: price, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" }, data),
+  }));
+
+  const rows = runs.map(({ price, r }) => {
+    const best = r.results[0];
+    return `<tr><td>${yen(price)}</td><td>${yen(best.payNow.total)}</td><td>${best.payOnDelivery.quantified ? yen(best.payOnDelivery.total) : "not estimable"}</td><td><strong>${yen(best.grandTotal)}</strong>${best.grandTotalIsMinimum ? " +duty" : ""}</td><td>${esc(best.name)}</td></tr>`;
+  }).join("");
+
+  const notes = [...new Set(runs.flatMap(({ r }) => r.results[0].payOnDelivery.notes))];
+
+  return `<h2>What that means in money</h2>
+  <p>Two orders to ${esc(cn)} — both from Mercari Japan, both about 1&nbsp;kg packed, both with ¥700 of
+  domestic postage inside Japan — priced through the cheapest service available for each:</p>
+  <table>
+    <thead><tr><th>Item price</th><th>Pay the proxy</th><th>Pay on arrival</th><th>Total</th><th>Cheapest via</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  ${notes.map((n) => `<p>${esc(n)}</p>`).join("")}`;
 }
 
 /** 比較表。ページ固有の実数値が必ずここに入る。 */
@@ -85,7 +309,7 @@ function links(items) {
 }
 
 export function buildPages(data) {
-  const { proxies, importTax } = data;
+  const { proxies, importTax, ems } = data;
   const pages = [];
   const ids = proxies.proxies.map((p) => ({ id: p.id, name: p.shortName ?? p.name }));
   const countries = Object.keys(COUNTRY_SLUGS);
@@ -124,6 +348,22 @@ export function buildPages(data) {
   <p>Totals include the proxy's service fee, packing, domestic shipping inside Japan, international postage,
   any deposit or payment fee, and import tax. Where a service collects tax up front it appears in the
   &ldquo;pay the proxy&rdquo; column instead of &ldquo;pay on delivery&rdquo; — the tax is the same either way.</p>
+
+  <h2>Where the ${yen(diff)} actually goes</h2>
+  ${gapExplanation(win, lose)}
+
+  <h2>Does this hold for other orders?</h2>
+  ${flipCheck(input, data, [A.id, B.id])}
+
+  <h2>What each includes for the money</h2>
+  <p>${esc(win.name)}: ${win.includes.length ? esc(win.includes.map((i) => INCLUDE_LABELS[i] ?? i).join(", ")) : "no extras bundled at this plan level"}${win.planName ? ` (${esc(win.planName)})` : ""}.
+  ${esc(lose.name)}: ${lose.includes.length ? esc(lose.includes.map((i) => INCLUDE_LABELS[i] ?? i).join(", ")) : "no extras bundled at this plan level"}${lose.planName ? ` (${esc(lose.planName)})` : ""}.
+  A cheaper total with no inspection and no insurance is not the same product as a dearer one that includes
+  both — on a second-hand auction item, where the seller's description is the only thing you have to go on,
+  that difference is worth more than the gap above.</p>
+  ${(win.warnings.length || lose.warnings.length)
+    ? `<h2>What we could not confirm</h2>${[...new Set([...win.warnings, ...lose.warnings])].map((w) => `<p>${esc(w)}</p>`).join("")}`
+    : ""}
   ${links([
     { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
@@ -156,6 +396,18 @@ export function buildPages(data) {
   ${resultsTable(results)}
   <p>Service fees are charged differently by each company — per item, per order, or by weight — so the ranking
   changes with what you buy. Run your own numbers with the calculator above.</p>
+
+  ${unitOfChargeNote(input, data, meta.label)}
+
+  <h2>What the winning total is made of</h2>
+  <p>${esc(best.name)}'s ${yen(best.grandTotal)} breaks down as
+  ${best.payNow.lines.filter((l) => l.key !== "item").map((l) => `${esc(l.labelEn.toLowerCase())} ${yen(l.amount)}`).join(", ")},
+  on top of the ¥10,000 item itself${best.payOnDelivery.quantified && best.payOnDelivery.total > 0
+    ? `, plus ${yen(best.payOnDelivery.total)} of import tax when it arrives`
+    : best.payOnDelivery.quantified ? ", with nothing further to pay on arrival" : ", plus import charges that cannot be estimated in advance"}.
+  The item is ${Math.round((10000 / best.grandTotal) * 100)}% of what you actually spend — the rest is the cost
+  of getting it out of Japan and through customs.</p>
+  ${best.warnings.length ? `<h2>What we could not confirm</h2>${best.warnings.map((w) => `<p>${esc(w)}</p>`).join("")}` : ""}
   ${links([
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
     ...ids.slice(0, 2).map((p) => ({ href: `/${p.id}-fees`, text: `${p.name} fees explained` })),
@@ -184,8 +436,18 @@ export function buildPages(data) {
   import tax sit on top.</p>
   ${countryNotice(country)}
   ${resultsTable(results)}
-  <p>EMS is priced in weight bands, so a parcel just over a band boundary costs the same as one at the top of it.
-  Consolidating several purchases into one parcel is usually cheaper than sending them separately.</p>
+
+  ${weightBandNote(ems, cc, w.g, shipping)}
+
+  <h2>How much of the bill is the weight?</h2>
+  <p>On this order the postage alone is ${shipping.amount ? yen(shipping.amount) : "—"}, against a ¥10,000
+  item and ${yen(best.grandTotal - 10000 - (shipping.amount ?? 0))} of everything else — service fee, packing,
+  domestic postage inside Japan, payment fees and tax. ${shipping.amount && shipping.amount > 10000
+    ? "Postage costs more than the item itself here, which is the usual reason a purchase from Japan stops making sense."
+    : "Weight is the one input you can still change after you have chosen what to buy, by having the box packed tighter or by leaving the outer packaging behind."}</p>
+  <p>The four services differ on how they treat weight. One charges for packing by weight on top of postage;
+  the others fold packing into the service fee. That is why the ranking at ${w.g}g is not automatically the
+  ranking at a different weight — the table above is recalculated for this weight specifically.</p>
   ${links([
     { href: `/cheapest-proxy-for-yahoo-auctions-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Yahoo! Auctions to ${cn}` },
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
@@ -220,6 +482,28 @@ export function buildPages(data) {
     <li>Free storage: ${p.storage?.freeDays ? `${p.storage.freeDays} days` : "not published"}</li>
     <li>Export clearance fee: ${p.exportClearanceFee ? `${yen(p.exportClearanceFee.amount)} above ${yen(p.exportClearanceFee.thresholdJpy)}` : "not published"}</li>
   </ul>
+  ${whenThisWins(p, data)}
+  <h2>Storage, and what happens if you leave things too long</h2>
+  <p>${p.storage?.freeDays
+    ? `${esc(name)} stores a purchase free for ${p.storage.freeDays} days from the moment it reaches their warehouse${p.storage.maxDays ? `, and will hold it for at most ${p.storage.maxDays} days in total` : ""}.`
+    : `${esc(name)} does not publish a free storage period.`}
+  ${p.storage?.overstayPerDayPerItem ? `After that it is ${yen(p.storage.overstayPerDayPerItem)} per item per day.` : ""}
+  ${p.storage?.overstayDailyByWeightG ? `After that it is charged daily by weight, from ${yen(p.storage.overstayDailyByWeightG[0].amount)} a day for a parcel under ${(p.storage.overstayDailyByWeightG[0].maxWeightG / 1000)}kg.` : ""}
+  ${p.storage?.weeklyBySize ? `After that it is charged weekly by parcel size, from ${yen(p.storage.weeklyBySize.small.parcel)} to ${yen(p.storage.weeklyBySize.large.order)} a week.` : ""}
+  This matters more than it sounds: the free window is what lets you win several auctions over a few weeks and
+  ship them together in one box, which saves far more in postage than the storage costs.
+  ${p.storage?.maxDays || p.storage?.disposeAfterDays ? `Leave it past the limit and the item is disposed of, with no compensation.` : ""}</p>
+  <h2>Optional services you may end up paying for</h2>
+  <ul>
+    ${p.photoService ? `<li>Photographs of the item before it ships: ${yen(p.photoService.amount)} for ${p.photoService.photos}. On a second-hand auction purchase this is often the only way to find out what you actually bought before it leaves Japan.</li>` : ""}
+    ${p.repackFee ? `<li>Repacking after the parcel is made up: ${Array.isArray(p.repackFee) ? `${yen(p.repackFee[0].amount)}–${yen(p.repackFee[p.repackFee.length - 1].amount)} depending on weight` : `from ${yen(p.repackFee.min)}`}.</li>` : ""}
+    ${p.reinforcementFee ? `<li>Reinforced packing: ${yen(p.reinforcementFee.amount)} per box.</li>` : ""}
+    ${p.packingFee?.optionalStrictPacking ? `<li>Heavy-duty packing: ${yen(p.packingFee.optionalStrictPacking)} per parcel, optional.</li>` : ""}
+    ${p.cancelFee ? `<li>Cancelling after the item has reached the warehouse: ${yen(p.cancelFee.amount)}, and not possible at all for auction or flea-market purchases.</li>` : ""}
+    ${p.disposalFee ? `<li>Disposing of something that cannot be exported: ${yen(p.disposalFee.perKg)} per kg, plus ${yen(p.disposalFee.laborPer15min)} per 15 minutes of work. Batteries are ${yen(p.disposalFee.batteryPerUnitMin)}–${yen(p.disposalFee.batteryPerUnitMax)} each.</li>` : ""}
+    ${p.intangibleGoodsFee ? `<li>Digital goods such as game codes: an extra ${(p.intangibleGoodsFee.rate * 100).toFixed(0)}% of the item price.</li>` : ""}
+    ${p.openParcelFee ? `<li>Opening a sealed parcel to add or remove something: ${yen(p.openParcelFee.amount)} plus packing.</li>` : ""}
+  </ul>
   ${p.taxPrepay?.length ? `<h2>Import tax collected up front</h2><ul>${
     p.taxPrepay.filter((t) => t.rate).map((t) => `<li>${esc(t.country)}: ${esc(t.tax)} ${(t.rate * 100).toFixed(t.rate * 100 % 1 ? 1 : 0)}%</li>`).join("")
   }</ul><p>Where tax is collected up front you pay nothing extra when the parcel arrives, and you usually avoid the courier's own customs handling charge.</p>` : ""}
@@ -246,6 +530,10 @@ export function buildPages(data) {
       body: `
   <h1>Importing from Japan into ${esc(cn)}</h1>
   ${countryNotice(c)}
+  <p>Import tax is set by ${esc(cn)}, not by the proxy service you choose. All the proxy decides is whether it
+  takes the money at checkout or leaves you to settle with the courier at the door — the amount owed is the
+  same either way. That is why the totals on this site are split into what you pay now and what you pay on
+  arrival, rather than merged into one figure that would make the companies who collect honestly look dearer.</p>
   <h2>The numbers</h2>
   <ul>
     ${/* vatNote は日本語の社内メモなので絶対に出さない。英語ページに日本語が出た事故がある */""}
@@ -267,9 +555,17 @@ export function buildPages(data) {
   ${prepayers.length
     ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
     : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
+  ${taxWorkedExample(cc, data, cn)}
+  <h2>The handling fee nobody quotes</h2>
+  <p>Where tax is not collected up front, the courier or postal operator pays it for you at the border and
+  then charges a fee for having done so. It is commonly ¥1,000–3,000 and it is not part of the tax itself.
+  None of the four services publish it and it varies by carrier, so it is deliberately left out of the totals
+  here rather than guessed at — but it is a real reason to prefer a service that collects at checkout where
+  you have the choice.</p>
   ${links([
     { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
     { href: `/ship-scale-figure-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cost to ship a boxed figure to ${cn}` },
+    { href: "/how-we-calculate", text: "How these numbers are worked out" },
   ])}`,
     });
   }
@@ -368,6 +664,19 @@ export function buildPages(data) {
   reaches their warehouse and is inspected. At that point you have already paid for the goods, the domestic
   shipping inside Japan and the service fee, and none of it comes back. The item is disposed of or returned to
   the seller at your cost.</p>
+  <p>On the ¥10,000 order priced above that is <strong>${yen(10000 + 700 + (results[0] ? lineOf(results[0], "service") : 0))}
+  gone before the parcel ever leaves Japan</strong> — the item, ¥700 of domestic postage and the service fee —
+  with disposal charged on top at some services. The international postage is the only part you save, because
+  the parcel never ships. It is the one mistake on this site that costs you the whole purchase rather than
+  a few hundred yen of margin.</p>
+  ${restrictions.byDestination?.[cc]?.[attrId]
+    ? `<h2>${esc(cn)} specifically</h2><p>${esc(restrictions.byDestination[cc][attrId].noteEn ?? "")}
+       This is a Japan Post rule about the destination, so it applies whichever of the four services you use —
+       switching companies does not get around it.</p>`
+    : `<h2>${esc(cn)} specifically</h2><p>Japan Post publishes no route-level restriction on
+       ${esc(attr.seoLabelEn)} to ${esc(cn)}, so where a service refuses it here, that is the company's own
+       policy rather than a postal rule — and a different company may well accept it. That is not true of every
+       destination: the same item cannot be posted to some countries at all, regardless of proxy.</p>`}
   <p>Rules checked against each company's own prohibited-items page on ${esc(restrictions._meta.updated)}.
   Where a company publishes nothing on a category we say so rather than guessing.</p>
   ${links([
@@ -415,6 +724,24 @@ export function buildPages(data) {
   fine. It means the decision is made at the warehouse, after you have paid. Japan Post rules still apply on top
   of whatever the proxy says, and those depend on the destination — lithium batteries, for instance, cannot be
   posted to Germany or the United Kingdom at all.</p>
+
+  <h2>Two separate rules have to pass, not one</h2>
+  <p>Whether a parcel can leave Japan is decided twice. The proxy applies its own policy, which differs
+  between companies and is a commercial decision — one of the four publishes a handling procedure for model
+  guns where the others simply refuse them. Then Japan Post applies the rules for the country you are sending
+  to, and those apply to everyone equally. A company being willing to take your money does not mean the post
+  office will take the box.</p>
+  <p>This is why the pages here check both, and why the answer for the same item can differ by destination.
+  Changing proxy gets you past a company policy; nothing gets you past a postal restriction except a private
+  courier, which is a different price list altogether.</p>
+
+  <h2>It is not the item that is restricted — it is a property of it</h2>
+  <p>The categories above are written as attributes rather than product types on purpose. A scale figure is
+  ordinarily unrestricted, but the same figure with an illuminated base contains a lithium battery and is
+  judged on that. A plastic model kit ships freely; the same kit bundled with a pot of paint is a flammable
+  liquid. Buying &ldquo;a figure&rdquo; tells you nothing — what is in the box does.</p>
+  <p>If you are unsure, assume the stricter reading. The cost of being wrong is not a delay: it is the item,
+  the domestic postage and the service fee, none of which is refunded.</p>
   ${links([
     ...SEO_ATTRS.map((id) => {
       const a = restrictions.attributes.find((x) => x.id === id);
@@ -424,5 +751,345 @@ export function buildPages(data) {
     });
   }
 
+  // ---- 7. 運営者情報・算出方法・プライバシー・問い合わせ ----
+  // AdSense の審査で「有用性の低いコンテンツ」として落ちた直接の原因のひとつが
+  // これらが1ページも無かったこと。広告の有無に関わらず、誰が何を根拠に書いているかを
+  // 示せないサイトは信用されない。
+  pages.push(...staticPages(data));
+
   return pages;
+}
+
+/**
+ * サイトそのものについて説明するページ群。
+ *
+ * 計算ページと違い、ここは「誰が」「何を根拠に」「どこまで保証するか」を書く。
+ * 算出方法のページは、利用者が数字を検算できるようにするためのものでもある。
+ */
+function staticPages(data) {
+  const { proxies, ems, importTax, restrictions } = data;
+  const proxyNames = proxies.proxies.map((p) => esc(p.shortName ?? p.name)).join(", ");
+  const countryCount = Object.keys(COUNTRY_SLUGS).length;
+
+  return [
+    {
+      path: "/how-we-calculate",
+      layout: "content-only",
+      title: "How these numbers are worked out — sources and method",
+      description: `Every fee, postage band and tax rate used on this site, where it came from, and the exact order the calculation runs in. Fee data checked ${proxies._meta.updated}.`,
+      prefill: null,
+      body: `
+  <h1>How these numbers are worked out</h1>
+  <p>Most proxy comparisons quote a service fee and stop there. The service fee is rarely the largest number
+  on the bill, and it is never the one that decides which company is cheapest. This page sets out exactly what
+  goes into the totals on this site so you can check them against your own quote.</p>
+
+  <h2>The three tiers</h2>
+  <p>Import tax is a rule of the country you live in, not a property of the proxy company. What a proxy decides
+  is only <em>when</em> you pay it — some collect it at checkout, some leave you to pay the courier on the
+  doorstep. Add tax straight into one number and the honest companies that collect up front look expensive.
+  So every total on this site is split three ways:</p>
+  <ol>
+    <li><strong>What you pay the proxy now</strong> — goods, service fee, packing, domestic postage inside
+    Japan, international postage, payment or deposit fees, and tax if that company pre-collects it.</li>
+    <li><strong>What you pay on delivery</strong> — import VAT, GST or business tax charged when the parcel
+    lands, where it was not already collected.</li>
+    <li><strong>The final total</strong> — the two added together. This is the only figure worth ranking on.</li>
+  </ol>
+
+  <h2>Where each number comes from</h2>
+  <table>
+    <thead><tr><th>Input</th><th>Source</th><th>Checked</th></tr></thead>
+    <tbody>
+      <tr><td>Service fees, packing, deposit fees, storage</td><td>Each company's own published fee pages (${proxyNames})</td><td>${esc(proxies._meta.updated)}</td></tr>
+      <tr><td>International postage</td><td>Japan Post's official EMS rate table</td><td>${esc(ems._meta.updated)}</td></tr>
+      <tr><td>Import tax and duty-free thresholds</td><td>Each destination's own customs or tax authority</td><td>${esc(importTax._meta.updated)}</td></tr>
+      <tr><td>Prohibited and restricted items</td><td>Each company's prohibited-items page, plus Japan Post's country-by-country acceptance list</td><td>${esc(restrictions._meta.updated)}</td></tr>
+    </tbody>
+  </table>
+  <p>Every figure carries the URL it came from and the date it was read. Nothing is estimated from memory or
+  copied from another comparison site.</p>
+
+  <h2>Rules we hold ourselves to</h2>
+  <ul>
+    <li><strong>An unknown fee is never silently treated as zero.</strong> A company with missing data would
+    otherwise look cheapest simply because we failed to find its price. Where something is unpublished the
+    total carries a warning saying so.</li>
+    <li><strong>Postage is charged in bands, not per gram.</strong> EMS prices step up at fixed weights, so a
+    parcel one gram over a boundary costs the same as one at the top of the next band. We always apply the
+    band your weight actually falls into rather than interpolating.</li>
+    <li><strong>A duty-free threshold is only applied where it is still in force.</strong> The United States
+    suspended its $800 exemption in 2025; the EU abolished its €150 threshold in July 2026. Taiwan's
+    NT$2,000 exemption is still live, and where an order sits close to a threshold we say that an exchange-rate
+    move can push it either side of the line.</li>
+    <li><strong>Shippability is checked before price.</strong> If a company will not export the item, we say so
+    and we do not present it as the cheapest option, however low its total would have been.</li>
+  </ul>
+
+  <h2>What is deliberately not included</h2>
+  <ul>
+    <li><strong>Courier customs handling fees.</strong> These are real and often ¥1,000–3,000, but they vary by
+    carrier and country and none of the four companies publish them. We say a fee is likely rather than invent
+    a figure.</li>
+    <li><strong>Customs duty by HS code.</strong> Duty depends on what the item is, and the rate for a resin
+    figure differs from that for a cotton shirt. Where duty applies but cannot be pinned down, the total is
+    marked as a minimum rather than padded with a guess.</li>
+    <li><strong>Optional extras.</strong> Photo services, reinforced packing, and repacking are all priced on
+    the individual company pages but are left out of the default comparison, because most orders do not use them.</li>
+    <li><strong>Carriers other than EMS.</strong> DHL, FedEx and UPS are cheaper on some routes and are the only
+    option for some restricted goods. Their rate tables are not public in a usable form, so this site prices EMS only.</li>
+  </ul>
+
+  <h2>How to check us</h2>
+  <p>Open the breakdown on any result and you will see every line that makes up the total. Put the same order
+  into the company's own quote tool and the two should agree, allowing for the exchange rate they use on the
+  day and for domestic postage, which depends on the individual seller and is entered by you as an estimate.</p>
+  <p>If a number is wrong, we would rather know. There is a form on the <a href="/contact">contact page</a>.</p>
+  ${links([
+    { href: "/about", text: "About this site" },
+    { href: "/what-you-cannot-ship-from-japan", text: "What you cannot ship out of Japan" },
+    { href: "/import-tax-united-states", text: "Import tax from Japan to the United States" },
+  ])}`,
+    },
+
+    {
+      path: "/about",
+      layout: "content-only",
+      title: "About Japan Proxy Cost",
+      description: "Who runs this site, why it exists, how it is paid for, and what it will and will not tell you. An independent calculator, not a proxy service.",
+      prefill: null,
+      body: `
+  <h1>About this site</h1>
+  <p>Japan Proxy Cost is an independent calculator that works out what buying from Japan through a proxy
+  shopping service actually costs, once every fee and the import tax at your end are counted. It covers
+  ${proxyNames}, and ${countryCount} destination countries.</p>
+
+  <h2>Why it exists</h2>
+  <p>Proxy services publish their service fee prominently and everything else somewhere else. The fee is
+  ¥300–800; the parts that decide the bill are packing, weight-based postage, deposit fees charged as a
+  percentage, and the tax your own country charges on arrival. Because the companies charge on different
+  units — per item, per order, by weight, as a percentage — no single one of them is cheapest for every
+  order. Which one wins genuinely changes with what you buy, how heavy it is and where you live.</p>
+  <p>The existing comparisons are mostly lists of service fees, which is the one number that does not settle
+  the question. This site runs the whole calculation instead.</p>
+
+  <h2>Who runs it</h2>
+  <p>It is written and maintained by <strong>kakuni</strong>, an independent developer based in Japan. It is
+  not operated by, affiliated with, or endorsed by any of the proxy services it compares. Being in Japan is
+  the reason the source material is usable: the fee pages, Japan Post's rate tables and the prohibited-item
+  lists are read in Japanese, where they are fuller and more current than the English versions.</p>
+
+  <h2>How it is paid for</h2>
+  <p>The site carries advertising, and some outbound links to shops and services may earn a commission if you
+  buy. That money never changes the ranking. The calculation is run first and the results are ordered by what
+  you would actually pay, with items that cannot legally be exported pushed down regardless of price. It is
+  routinely the case that the cheapest result is a company that pays us nothing, and we publish that result.
+  A comparison that sold its ordering would not be worth reading, and would not survive contact with anyone
+  who checked it.</p>
+  <p>Where an item does not need a proxy at all — something new and in stock that a Japanese retailer already
+  ships overseas — we would rather say so, because that saves you the entire proxy fee.</p>
+
+  <h2>What it will not tell you</h2>
+  <p>It is an estimate, not a quote. Companies change their pricing, exchange rates move, and your customs
+  authority has the final say on what you owe. Domestic postage inside Japan depends on the individual seller
+  and is a figure you supply. The <a href="/how-we-calculate">method page</a> sets out exactly what is counted
+  and what is deliberately left out.</p>
+  <p>It is also not a shop. We do not buy anything, hold anything, or ship anything. If an order goes wrong,
+  the company you paid is the one who can help.</p>
+
+  <h2>Corrections</h2>
+  <p>Fee pages change without notice. Every number here records the date it was checked, and if you find one
+  that no longer matches the company's own page, please tell us — see <a href="/contact">contact</a>.</p>
+  ${links([
+    { href: "/how-we-calculate", text: "How these numbers are worked out" },
+    { href: "/privacy-policy", text: "Privacy and cookies" },
+    { href: "/contact", text: "Contact and corrections" },
+  ])}`,
+    },
+
+    {
+      path: "/privacy-policy",
+      layout: "content-only",
+      title: "Privacy and cookie policy",
+      description: "What this site collects, the cookies used for analytics and advertising, how to opt out, and how affiliate links are disclosed.",
+      prefill: null,
+      body: `
+  <h1>Privacy and cookies</h1>
+  <p>This page explains what happens to data when you use Japan Proxy Cost.</p>
+
+  <h2>What you type into the calculator</h2>
+  <p>Nothing you enter is sent to us. The prices, weights and destinations you choose are processed entirely
+  inside your own browser — the site has no server that receives them, no account system and no database of
+  users. Close the tab and it is gone.</p>
+
+  <h2>Analytics</h2>
+  <p>We use Google Analytics 4 to count visits and see which pages are read. It sets cookies and records
+  things like the pages you open, roughly where in the world you are, and what kind of device you use. It is
+  used in aggregate to decide what to write next. We do not attempt to identify individual visitors.</p>
+
+  <h2>Advertising</h2>
+  <p>This site shows advertising supplied by Google AdSense.</p>
+  <ul>
+    <li>Google and its partners use cookies to serve ads based on your prior visits to this and other sites.</li>
+    <li>Google's use of advertising cookies enables it and its partners to serve ads to you based on your
+    visit to this site and/or other sites on the internet.</li>
+    <li>You may opt out of personalised advertising by visiting
+    <a href="https://www.google.com/settings/ads" rel="nofollow noopener noreferrer" target="_blank">Google Ads Settings</a>.</li>
+    <li>You can opt out of third-party vendors' use of cookies for personalised advertising at
+    <a href="https://www.aboutads.info/choices/" rel="nofollow noopener noreferrer" target="_blank">aboutads.info</a>.</li>
+    <li>More detail on how Google handles data is at
+    <a href="https://policies.google.com/technologies/partner-sites" rel="nofollow noopener noreferrer" target="_blank">How Google uses information from sites that use its services</a>.</li>
+  </ul>
+
+  <h2>Affiliate links</h2>
+  <p>Some links out of this site are affiliate links. If you follow one and buy something, we may receive a
+  commission at no extra cost to you. Those links are marked in the page source with
+  <code>rel="sponsored"</code>.</p>
+  <p>Commission does not affect the comparison. Results are ordered by what you would actually pay and by
+  whether the item can legally be exported, never by what a company pays us. Where the cheapest option earns
+  us nothing, it is still shown as the cheapest option.</p>
+
+  <h2>Cookies set by this site itself</h2>
+  <p>None. The site stores no preferences and requires no login. Every cookie you receive is set by Google's
+  analytics or advertising code described above.</p>
+
+  <h2>Links to other sites</h2>
+  <p>When you follow a link to a proxy service, a shop, a postal operator or a customs authority, you are on
+  their site under their privacy policy, not this one.</p>
+
+  <h2>Children</h2>
+  <p>This site is aimed at adults buying goods internationally and is not directed at children under 13. We do
+  not knowingly collect information from them.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the revised version will appear on this page.</p>
+  <p>Questions about any of the above: see <a href="/contact">contact</a>.</p>
+  ${links([
+    { href: "/about", text: "About this site" },
+    { href: "/contact", text: "Contact" },
+  ])}`,
+    },
+
+    {
+      path: "/contact",
+      layout: "content-only",
+      title: "Contact and corrections",
+      description: "How to report a fee that has changed, a rule we have wrong, or a destination you would like added. Corrections are welcome and are checked against primary sources.",
+      prefill: null,
+      body: `
+  <h1>Contact</h1>
+  <p>Everything goes straight to the person who maintains the site. There is no support desk behind it, so
+  expect a few days. Messages in English or Japanese are both fine.</p>
+
+  <form class="contact-form" action="${esc(CONTACT_FORM_ENDPOINT)}" method="POST">
+    <input type="hidden" name="_subject" value="Japan Proxy Cost — message from the contact form" />
+    <input type="hidden" name="_captcha" value="false" />
+    <input type="hidden" name="_template" value="table" />
+    <input type="hidden" name="_next" value="https://japanproxy.kakuni-lab.com/contact-received" />
+    ${/* ボット除け。人間には見えない欄で、埋まっていたら送信を捨てる */""}
+    <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+
+    <label>
+      <span>What is this about?</span>
+      <select name="Topic" required>
+        <option value="A number is wrong or out of date">A number is wrong or out of date</option>
+        <option value="Request a country or marketplace">Request a country or marketplace</option>
+        <option value="I run one of the services listed here">I run one of the services listed here</option>
+        <option value="Something else">Something else</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Which page? <em>(paste the address if it is about a specific one)</em></span>
+      <input type="url" name="Page" placeholder="https://japanproxy.kakuni-lab.com/..." />
+    </label>
+
+    <label>
+      <span>Details</span>
+      <textarea name="Details" rows="6" required placeholder="What did you see, and what should it say instead?"></textarea>
+    </label>
+
+    <label>
+      <span>Source you are going by <em>(optional, but it gets things fixed faster)</em></span>
+      <input type="url" name="Source" placeholder="https://..." />
+    </label>
+
+    <label>
+      <span>Your email <em>(optional — only if you want a reply)</em></span>
+      <input type="email" name="email" placeholder="you@example.com" />
+    </label>
+
+    <button type="submit">Send</button>
+  </form>
+  <p class="muted">Your message is delivered by FormSubmit, a third-party relay. Nothing you type is stored on
+  this site. See <a href="/privacy-policy">privacy and cookies</a>.</p>
+
+  <h2>Reporting a number that is wrong</h2>
+  <p>This is the most useful thing you can send. Fee pages change without announcement, and the date each
+  figure was last checked is printed on the relevant page. If something no longer matches, the company's own
+  URL is the single most helpful thing to include — corrections are checked against the company's published
+  page before anything changes, and the check date is updated when they are.</p>
+
+  <h2>Asking for a destination or a marketplace</h2>
+  <p>Adding a country means finding its postage band, its import tax rules and any items it refuses — so it is
+  not instant, but requests are what decide the order things get added in. The same goes for marketplaces and
+  for proxy services not currently covered.</p>
+
+  <h2>What we cannot help with</h2>
+  <p>We are not a proxy service and have no access to anyone's orders. If a parcel is late, an item was
+  refused at a warehouse, or a refund has not arrived, the company you paid is the only party who can act.
+  Their own support pages are linked from each of their fee pages here.</p>
+
+  <h2>For the companies compared here</h2>
+  <p>If you operate one of the services on this site and a figure is out of date, or you would like to supply
+  a rate table we have marked as unpublished, please get in touch. Corrections from a company about its own
+  pricing are applied quickly and the source is credited.</p>
+  ${links([
+    { href: "/about", text: "About this site" },
+    { href: "/how-we-calculate", text: "How these numbers are worked out" },
+    { href: "/privacy-policy", text: "Privacy and cookies" },
+  ])}`,
+    },
+
+    {
+      path: "/contact-received",
+      layout: "content-only",
+      title: "Message received — Japan Proxy Cost",
+      description: "Your message has been sent. What happens next, and how corrections to the fee data are handled.",
+      prefill: null,
+      body: `
+  <h1>Thank you — your message has been sent</h1>
+  <p>It goes to one person rather than a support queue, so a reply may take a few days. If you did not leave an
+  email address there will not be a reply, but the message is still read.</p>
+
+  <h2>If you reported a number</h2>
+  <p>Corrections are not applied on trust. The company's own published page is opened and read first, and only
+  then is the figure changed and the check date on the relevant page updated. If the company has genuinely
+  changed its pricing, that usually moves the rankings on several pages at once, because the same fee data
+  drives every comparison on this site.</p>
+  <p>If the page turns out to be right after all, that is worth knowing too — it usually means something on
+  the page is worded confusingly, which is its own bug.</p>
+
+  <h2>If you asked for a country or a marketplace</h2>
+  <p>Adding a destination means finding three separate things: its EMS postage band, its import tax rules and
+  duty-free threshold, and any items it refuses to accept from Japan. None of that can be guessed, so it takes
+  a while — but requests are what decide the order things get added in.</p>
+
+  <h2>If you run one of the services listed here</h2>
+  <p>Corrections from a company about its own pricing are treated as authoritative and applied quickly, with
+  the source credited and the check date updated. The same goes for a rate table we have marked as
+  unpublished — several figures on this site carry a visible warning saying a company does not publish
+  something, and we would much rather replace that warning with a real number than keep it.</p>
+  <p>What will not change is the ordering. Results are ranked by what the buyer actually pays and by whether
+  the item can legally be exported, never by any commercial arrangement.</p>
+
+  <h2>In the meantime</h2>
+  <ul>
+    <li><a href="/">Back to the calculator</a></li>
+    <li><a href="/how-we-calculate">How these numbers are worked out</a> — every source, and what is deliberately excluded</li>
+    <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a> — worth reading before you bid on anything</li>
+    <li><a href="/about">About this site</a></li>
+  </ul>`,
+    },
+  ];
 }

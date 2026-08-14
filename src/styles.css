@@ -245,6 +245,52 @@ input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); out
 }
 .blocker-src { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); }
 
+/* 解説本文。#root の外にあり React は触らない（触らせると本文が消える） */
+.page-wrap { max-width: 780px; margin: 0 auto; padding: 24px 16px 40px; }
+.page-content { line-height: 1.7; }
+.page-content h1 { font-size: 1.6rem; line-height: 1.3; margin: 0 0 16px; }
+.page-content h2 { font-size: 1.15rem; margin: 28px 0 10px; }
+.page-content p, .page-content li { font-size: 0.95rem; }
+.page-content ul, .page-content ol { padding-left: 20px; }
+.page-content li { margin-bottom: 6px; }
+.page-content table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.88rem; }
+.page-content th, .page-content td { border-bottom: 1px solid var(--line, #ddd); padding: 7px 8px; text-align: left; vertical-align: top; }
+.page-content tr.best td { background: var(--best-bg, #f2f8f2); }
+.page-content .notice { border-left: 3px solid var(--accent, #666); padding: 10px 12px; margin: 14px 0; background: var(--notice-bg, #fafafa); }
+.page-content .related ul { list-style: none; padding: 0; }
+.page-content .muted { color: var(--muted); font-size: 0.85rem; }
+.page-content blockquote { margin: 8px 0; padding-left: 12px; border-left: 2px solid var(--line, #ddd); color: var(--muted); }
+/* 横に長い表はページごとスクロールさせない */
+.page-content table { display: block; overflow-x: auto; white-space: normal; }
+
+/* お問い合わせフォーム（送信先は FormSubmit。サイト側にサーバは無い） */
+.contact-form { display: flex; flex-direction: column; gap: 14px; margin: 18px 0 10px; }
+.contact-form label { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
+.contact-form label span em { font-style: normal; color: var(--muted); font-weight: normal; }
+.contact-form input, .contact-form select, .contact-form textarea {
+  font: inherit; padding: 9px 10px; border: 1px solid var(--line, #ccc); border-radius: 6px; background: inherit; color: inherit;
+}
+.contact-form textarea { resize: vertical; }
+.contact-form button {
+  align-self: flex-start; font: inherit; font-weight: 600; padding: 10px 22px;
+  border: 0; border-radius: 6px; cursor: pointer; background: var(--accent, #1a1a1a); color: #fff;
+}
+
+/* 全ページ共通フッター（運営者・算出方法・プライバシー・連絡先への導線） */
+.site-foot {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line, #ddd);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.site-foot nav,
+.site-foot-nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 10px; }
+.site-foot nav a,
+.site-foot-nav a { color: var(--muted); }
+.site-foot-nav { margin-top: 12px; font-size: 0.85rem; }
+.site-foot p { margin: 0; }
+
 /* 静的ページの可否表: 公式原文と、こちらの補足を見分けられるようにする */
 .prerender .says-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85em; }
 

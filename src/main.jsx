@@ -17,8 +17,14 @@ if (GA4_ID) {
   window.gtag("config", GA4_ID);
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// 解説ページの本文は #root の外（article.page-content）にあり、Reactは触らない。
+// 運営者情報やプライバシーのように計算機を出さないページには #root 自体が無いので、
+// 存在チェックをしてから描く。
+const root = document.getElementById("root");
+if (root) {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}

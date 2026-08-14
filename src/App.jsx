@@ -211,6 +211,9 @@ export default function App() {
     ...(typeof window !== "undefined" ? window.__PAGE__?.prefill ?? {} : {}),
   }));
 
+  // トップページ以外は、計算機の上にそのページの解説本文がある（#root の外）。
+  const toolFirst = typeof window === "undefined" || (window.__PAGE__?.layout ?? "tool-first") === "tool-first";
+
   const set = (k) => (e) => {
     const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setForm((f) => ({ ...f, [k]: ["itemPriceJpy", "itemCount", "weightG", "domesticShippingJpy"].includes(k) ? Number(v) : v }));
@@ -256,14 +259,23 @@ export default function App() {
 
   return (
     <div className="page">
-      <header className="hero">
-        <h1>What does a Japan proxy service actually cost?</h1>
-        <p>
-          Buyee, ZenMarket, Neokyo and FROM JAPAN all charge differently — per item, per order, by weight,
-          or as a percentage. The cheapest one changes depending on what you buy. This works out the real
-          landed total, including the import tax most comparisons leave out.
-        </p>
-      </header>
+      {/* 解説ページでは本文が上にあり、そちらに固有の h1 がある。
+          ここで毎回同じ h1 を出すと h1 が2つになり、どのページも同じ書き出しに見える。 */}
+      {toolFirst ? (
+        <header className="hero">
+          <h1>What does a Japan proxy service actually cost?</h1>
+          <p>
+            Buyee, ZenMarket, Neokyo and FROM JAPAN all charge differently — per item, per order, by weight,
+            or as a percentage. The cheapest one changes depending on what you buy. This works out the real
+            landed total, including the import tax most comparisons leave out.
+          </p>
+        </header>
+      ) : (
+        <header className="hero hero-compact">
+          <h2>Work out your own order</h2>
+          <p>The figures above are for one example order. Change anything here and everything recalculates.</p>
+        </header>
+      )}
 
       <section className="form">
         <Field label="Where are you buying from?">
@@ -403,6 +415,8 @@ export default function App() {
           Estimates only. Providers change their pricing, and customs authorities have the final say on
           duty and tax. Always confirm on the provider's own site before you buy.
         </p>
+        {/* 運営者・算出方法・プライバシー・連絡先への導線は、プリレンダ側の
+            共通フッター（#root の外）が全ページに出す。ここでは重複させない。 */}
       </footer>
     </div>
   );
