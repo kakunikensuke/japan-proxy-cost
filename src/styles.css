@@ -292,7 +292,7 @@ input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); out
 .site-foot p { margin: 0; }
 
 /* 静的ページの可否表: 公式原文と、こちらの補足を見分けられるようにする */
-.prerender .says-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85em; }
+.page-content .says-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85em; }
 
 .blocked-banner .blocked-alt {
   margin-top: 10px;
