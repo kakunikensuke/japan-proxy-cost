@@ -104,7 +104,7 @@ const grouped = {
   // 「そもそも送れるのか」を最上部に置く。金額より先に知る必要がある情報なので。
   "Can you even ship it?": pages.filter((p) => p.path.startsWith("/can-you-ship-") || p.path === "/what-you-cannot-ship-from-japan"),
   "Compare two services": pages.filter((p) => p.path.includes("-vs-")),
-  "Cheapest proxy by marketplace": pages.filter((p) => p.path.startsWith("/cheapest-proxy-for-")),
+  "Cheapest proxy by marketplace": pages.filter((p) => p.path.startsWith("/cheapest-proxy-")),
   "Shipping cost by item": pages.filter((p) => p.path.startsWith("/ship-")),
   "Fees by service": pages.filter((p) => p.path.endsWith("-fees")),
   "Import tax by country": pages.filter((p) => p.path.startsWith("/import-tax-")),
@@ -196,8 +196,8 @@ const homeBody = `
   <h2>Start here</h2>
   <ul>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a> — read before you bid</li>
-    <li><a href="/cheapest-proxy-for-mercari-to-united-states">Cheapest proxy for Mercari to the United States</a></li>
-    <li><a href="/cheapest-proxy-for-yahoo-auctions-to-united-states">Cheapest proxy for Yahoo! Auctions to the United States</a></li>
+    <li><a href="/cheapest-proxy-from-japan-to-united-states">Cheapest proxy to the United States, by marketplace</a></li>
+    <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a></li>
     ${proxies.proxies.map((p) => `<li><a href="/${p.id}-fees">${esc(p.shortName ?? p.name)} fees explained</a></li>`).join("")}
     <li><a href="/how-we-calculate">How these numbers are worked out</a> — sources, method, and what is deliberately left out</li>
     <li><a href="/all-pages">Every page on this site</a></li>

@@ -53,14 +53,16 @@ export const SOURCE_LABELS = {
   other_shop: { label: "any Japanese online shop", slug: "japanese-shops" },
 };
 
+// EMS は重量帯で課金される（500 / 1000 / 1500 / 2000 / 3000 / 5000g）。
+// 以前は7商品 × 9か国 = 63本を出していたが、trading cards(60g)・manga(200g)・
+// prize figure(400g) は3本とも同じ500g帯に落ちるため EMS 料金も総額も完全に同一で、
+// model kit(800g) と scale figure(1000g) も同じ1000g帯だった。実質4帯しかない。
+// 帯ごとに1本にし、同じ帯に入る商品は本文で列挙して検索語を拾う。
 export const WEIGHTS = [
-  { g: 60, label: "trading cards", slug: "trading-cards" },
-  { g: 200, label: "a manga volume", slug: "manga" },
-  { g: 400, label: "a prize figure", slug: "prize-figure" },
-  { g: 800, label: "a model kit", slug: "model-kit" },
-  { g: 1000, label: "a boxed scale figure", slug: "scale-figure" },
-  { g: 2000, label: "a 2kg parcel", slug: "2kg" },
-  { g: 3000, label: "a 3kg parcel", slug: "3kg" },
+  { g: 200, label: "a manga volume", slug: "manga", band: 500, alsoCovers: ["trading cards", "a doujinshi", "a prize figure", "a CD"] },
+  { g: 1000, label: "a boxed scale figure", slug: "scale-figure", band: 1000, alsoCovers: ["a model kit", "a boxed game console accessory"] },
+  { g: 2000, label: "a 2kg parcel", slug: "2kg", band: 2000, alsoCovers: ["two boxed figures packed together"] },
+  { g: 3000, label: "a 3kg parcel", slug: "3kg", band: 3000, alsoCovers: ["a large model kit", "a multi-item haul"] },
 ];
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -365,7 +367,7 @@ export function buildPages(data) {
     ? `<h2>What we could not confirm</h2>${[...new Set([...win.warnings, ...lose.warnings])].map((w) => `<p>${esc(w)}</p>`).join("")}`
     : ""}
   ${links([
-    { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
+    { href: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy to ${cn}, by marketplace` },
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
     { href: `/${A.id}-fees`, text: `${A.name} fees explained` },
     { href: `/${B.id}-fees`, text: `${B.name} fees explained` },
@@ -375,45 +377,85 @@ export function buildPages(data) {
     }
   }
 
-  // ---- 2. 仕入れ元 × 配送先 ----
-  for (const [src, meta] of Object.entries(SOURCE_LABELS)) {
-    for (const cc of countries) {
-      const input = { source: src, itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" };
-      const { results, country } = calculateAll(input, data);
-      const cn = countryName(importTax, cc);
-      const best = results[0];
+  // ---- 2. 仕入れ元 × 配送先 → 配送先ごとに1本へ統合 ----
+  // 仕入れ元ごとに9本ずつ割っていたが、実測すると 7つの仕入れ元は proxies.json 上で
+  // 実質3パターンしかなかった（FROM JAPAN と Neokyo は仕入れ元で料金が変わらず、
+  // Buyee は課金単位だけが変わり、差を作っているのは ZenMarket の 800/500/300 だけ）。
+  // その結果 rakuten 版と rakuma 版は本文が94%一致していた。
+  // 配送先ごとに1本へ寄せ、「仕入れ元で順位がどう入れ替わるか」を1枚の表で見せる。
+  // 情報としてはこちらのほうが多い ― 以前は7本を開かないと比べられなかった。
+  for (const cc of countries) {
+    const cn = countryName(importTax, cc);
+    const baseInput = { source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" };
+    const { results: baseResults, country } = calculateAll(baseInput, data);
 
-      pages.push({
-        path: `/cheapest-proxy-for-${meta.slug}-to-${COUNTRY_SLUGS[cc]}`,
-        title: `Cheapest proxy for ${meta.label} to ${cn} (${data.proxies._meta.updated})`,
-        description: `All four major Japan proxy services priced on the same ${meta.label} order to ${cn}. ${best.name} comes out cheapest at ${yen(best.grandTotal)}.`,
-        prefill: input,
-        body: `
-  <h1>Cheapest proxy for ${esc(meta.label)} shipping to ${esc(cn)}</h1>
-  <p>Same order through all four services: ¥10,000 of goods from ${esc(meta.label)}, roughly 1kg packed, EMS to ${esc(cn)}.
-  <strong>${esc(best.name)} is cheapest at ${yen(best.grandTotal)}.</strong></p>
+    const perSource = Object.entries(SOURCE_LABELS).map(([src, meta]) => {
+      const input = { ...baseInput, source: src };
+      const { results } = calculateAll(input, data);
+      return { src, meta, results, best: results[0] };
+    });
+
+    const winners = [...new Set(perSource.map((r) => r.best.name))];
+    const cheapest = perSource.reduce((a, b) => (b.best.grandTotal < a.best.grandTotal ? b : a));
+    const dearest = perSource.reduce((a, b) => (b.best.grandTotal > a.best.grandTotal ? b : a));
+
+    const sourceRows = perSource.map((r) => `
+      <tr>
+        <td>${esc(r.meta.label)}</td>
+        <td>${esc(r.best.name)}</td>
+        <td>${yen(r.best.grandTotal)}</td>
+        <td>${r.results.slice(1).map((x) => `${esc(x.name)} ${yen(x.grandTotal)}`).join(" &middot; ")}</td>
+      </tr>`).join("");
+
+    pages.push({
+      path: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`,
+      title: `Cheapest Japan proxy service to ${cn}, by where you buy (${data.proxies._meta.updated})`,
+      description: `All four proxy services priced on the same ¥10,000 1kg order to ${cn}, from seven Japanese marketplaces. ${cheapest.best.name} is cheapest at ${yen(cheapest.best.grandTotal)}${winners.length > 1 ? ", but the winner changes with the marketplace" : ""}.`,
+      prefill: baseInput,
+      body: `
+  <h1>Cheapest proxy service from Japan to ${esc(cn)}</h1>
+  <p>The same order &mdash; &yen;10,000 of goods, roughly 1kg packed, EMS to ${esc(cn)} &mdash; priced through all four
+  services, from each of the seven places a proxy can buy from.
+  <strong>${winners.length > 1
+    ? `There is no single cheapest service: ${winners.map((w) => esc(w)).join(" and ")} each win depending on where you buy.`
+    : `${esc(winners[0])} is cheapest wherever you buy${dearest.best.grandTotal > cheapest.best.grandTotal ? `, from ${yen(cheapest.best.grandTotal)} to ${yen(dearest.best.grandTotal)}` : ` &mdash; and at ${yen(cheapest.best.grandTotal)} the marketplace makes no difference to the total`}.`}</strong></p>
   ${countryNotice(country)}
-  ${resultsTable(results)}
-  <p>Service fees are charged differently by each company — per item, per order, or by weight — so the ranking
-  changes with what you buy. Run your own numbers with the calculator above.</p>
 
-  ${unitOfChargeNote(input, data, meta.label)}
+  <h2>Cheapest service for each marketplace</h2>
+  <table>
+    <thead><tr><th>Where you buy</th><th>Cheapest</th><th>Total</th><th>The other three</th></tr></thead>
+    <tbody>${sourceRows}</tbody>
+  </table>
+  <p>${dearest.best.grandTotal > cheapest.best.grandTotal
+    ? `The spread between the best marketplace and the worst is
+      <strong>${yen(dearest.best.grandTotal - cheapest.best.grandTotal)}</strong> on an identical &yen;10,000 item
+      (${esc(cheapest.meta.label)} at ${yen(cheapest.best.grandTotal)} against ${esc(dearest.meta.label)} at
+      ${yen(dearest.best.grandTotal)}). That gap is service fees alone &mdash; postage, packing and import tax are
+      the same in every row.`
+    : `The cheapest total is <strong>${yen(cheapest.best.grandTotal)}</strong> from every marketplace on this list.
+      ${esc(cheapest.best.name)} charges one flat service fee regardless of where it buys, so on a single-item
+      order the marketplace changes nothing. It starts to matter once you order more than one item, or once a
+      service that charges per order rather than per item becomes the cheapest &mdash; the table below shows
+      where the ranking actually moves.`}</p>
 
-  <h2>What the winning total is made of</h2>
-  <p>${esc(best.name)}'s ${yen(best.grandTotal)} breaks down as
-  ${best.payNow.lines.filter((l) => l.key !== "item").map((l) => `${esc(l.labelEn.toLowerCase())} ${yen(l.amount)}`).join(", ")},
-  on top of the ¥10,000 item itself${best.payOnDelivery.quantified && best.payOnDelivery.total > 0
-    ? `, plus ${yen(best.payOnDelivery.total)} of import tax when it arrives`
-    : best.payOnDelivery.quantified ? ", with nothing further to pay on arrival" : ", plus import charges that cannot be estimated in advance"}.
-  The item is ${Math.round((10000 / best.grandTotal) * 100)}% of what you actually spend — the rest is the cost
+  ${unitOfChargeNote(baseInput, data, "Yahoo! Auctions")}
+
+  <h2>What the cheapest total is made of</h2>
+  <p>${esc(baseResults[0].name)}'s ${yen(baseResults[0].grandTotal)} on a Yahoo! Auctions order breaks down as
+  ${baseResults[0].payNow.lines.filter((l) => l.key !== "item").map((l) => `${esc(l.labelEn.toLowerCase())} ${yen(l.amount)}`).join(", ")},
+  on top of the &yen;10,000 item itself${baseResults[0].payOnDelivery.quantified && baseResults[0].payOnDelivery.total > 0
+    ? `, plus ${yen(baseResults[0].payOnDelivery.total)} of import tax when it arrives`
+    : baseResults[0].payOnDelivery.quantified ? ", with nothing further to pay on arrival" : ", plus import charges that cannot be estimated in advance"}.
+  The item is ${Math.round((10000 / baseResults[0].grandTotal) * 100)}% of what you actually spend &mdash; the rest is the cost
   of getting it out of Japan and through customs.</p>
-  ${best.warnings.length ? `<h2>What we could not confirm</h2>${best.warnings.map((w) => `<p>${esc(w)}</p>`).join("")}` : ""}
+  ${resultsTable(baseResults)}
+  ${baseResults[0].warnings.length ? `<h2>What we could not confirm</h2>${baseResults[0].warnings.map((w) => `<p>${esc(w)}</p>`).join("")}` : ""}
   ${links([
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
+    { href: "/what-you-cannot-ship-from-japan", text: "What you cannot ship out of Japan" },
     ...ids.slice(0, 2).map((p) => ({ href: `/${p.id}-fees`, text: `${p.name} fees explained` })),
   ])}`,
-      });
-    }
+    });
   }
 
   // ---- 3. 重量 × 配送先 ----
@@ -437,6 +479,10 @@ export function buildPages(data) {
   ${countryNotice(country)}
   ${resultsTable(results)}
 
+  <p>EMS charges by weight band, not by the gram, so this same
+  ${shipping.amount ? yen(shipping.amount) : '—'} postage applies to anything up to ${w.band}g —
+  ${w.alsoCovers.length ? w.alsoCovers.map((x) => esc(x)).join(', ') + ' all land in the same band' : 'there is no cheaper band below this one for a parcel this size'}.
+  Going one gram over moves you to the next band.</p>
   ${weightBandNote(ems, cc, w.g, shipping)}
 
   <h2>How much of the bill is the weight?</h2>
@@ -449,7 +495,7 @@ export function buildPages(data) {
   the others fold packing into the service fee. That is why the ranking at ${w.g}g is not automatically the
   ranking at a different weight — the table above is recalculated for this weight specifically.</p>
   ${links([
-    { href: `/cheapest-proxy-for-yahoo-auctions-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Yahoo! Auctions to ${cn}` },
+    { href: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy to ${cn}, by marketplace` },
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
   ])}`,
       });
@@ -563,7 +609,7 @@ export function buildPages(data) {
   here rather than guessed at — but it is a real reason to prefer a service that collects at checkout where
   you have the choice.</p>
   ${links([
-    { href: `/cheapest-proxy-for-mercari-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Mercari to ${cn}` },
+    { href: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy to ${cn}, by marketplace` },
     { href: `/ship-scale-figure-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cost to ship a boxed figure to ${cn}` },
     { href: "/how-we-calculate", text: "How these numbers are worked out" },
   ])}`,
@@ -620,72 +666,120 @@ export function buildPages(data) {
   </table>`;
   }
 
+  // 国別に展開しない。実測した結果、判定が国でほとんど変わらなかったため。
+  //   model-paint / spray-cans / food / airsoft … 全9か国で4社の判定が完全に同一
+  //   adult … 8か国が同一（香港だけ Neokyo が名指しで拒否）
+  //   lithium_battery … 独・英が日本郵便の引受停止で別判定。国別に割る根拠があるのはこれだけ
+  // 9本に割ると1本あたりの違いが国名と金額だけになり、Google に
+  // 「クロール済み - インデックス未登録」で全部落とされた（2026-08 に実際に落ちた）。
+  // 属性ごとに1本へ統合し、国差は本文の表で見せる。そのほうが情報量はむしろ増える。
   for (const attrId of SEO_ATTRS) {
     const attr = restrictions.attributes.find((a) => a.id === attrId);
-    for (const cc of countries) {
-      const input = {
-        source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: 1000,
-        destination: cc, domesticShippingJpy: 700, buyeePlan: "light",
-        category: "other", attributes: [attrId],
-      };
-      const { results, allBlocked, noneConfirmed } = calculateAll(input, data);
-      const cn = countryName(importTax, cc);
-      const okOnes = results.filter((r) => r.shippable.level === "ok" || r.shippable.level === "conditional" || r.shippable.level === "carrier_limited");
-      const cheapestOk = okOnes[0];
 
-      const verdictLine = allBlocked
-        ? `<strong>No. None of the four services will ship ${esc(attr.seoLabelEn)} to ${esc(cn)}.</strong>`
-        : cheapestOk
-          ? `<strong>Yes, but only through some of them.</strong> ${esc(cheapestOk.name)} is the cheapest that will take it, landing at ${yen(cheapestOk.grandTotal)} on a ¥10,000 1kg order.`
-          : `<strong>No service confirms in writing that it will.</strong> Every provider either refuses ${esc(attr.seoLabelEn)} or has published no rule about it.`;
+    const inputFor = (cc) => ({
+      source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: 1000,
+      destination: cc, domesticShippingJpy: 700, buyeePlan: "light",
+      category: "other", attributes: [attrId],
+    });
 
-      pages.push({
-        path: `/can-you-ship-${attr.slug}-from-japan-to-${COUNTRY_SLUGS[cc]}`,
-        title: `Can you ship ${attr.seoLabelEn} from Japan to ${cn}?`,
-        description: allBlocked
-          ? `No. All four Japan proxy services refuse ${attr.seoLabelEn} to ${cn}. Here is what each one says, and what to do instead.`
-          : `Buyee, ZenMarket, Neokyo and FROM JAPAN compared on ${attr.seoLabelEn} to ${cn}, quoting each company's own rules.`,
-        prefill: input,
-        body: `
-  <h1>Can you ship ${esc(attr.seoLabelEn)} from Japan to ${esc(cn)}?</h1>
+    const byCountry = countries.map((cc) => ({
+      cc, cn: countryName(importTax, cc), ...calculateAll(inputFor(cc), data),
+    }));
+
+    // 4社の可否の並びでグループ化し、多数派を本文の代表にする。
+    const patternOf = (x) => x.results
+      .map((r) => `${r.proxyId}:${VERDICT[r.shippable.level]}`)
+      .sort()
+      .join("|");
+    const groups = new Map();
+    for (const x of byCountry) {
+      const k = patternOf(x);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(x);
+    }
+    const tiers = [...groups.values()].sort((a, b) => b.length - a.length);
+    const main = tiers[0];
+    const exceptions = tiers.slice(1);
+    const rep = main.find((x) => x.cc === "US") ?? main[0];
+
+    const okOf = (x) => x.results.filter((r) => ["ok", "conditional", "carrier_limited"].includes(r.shippable.level));
+    const cheapestOk = okOf(rep)[0];
+
+    const verdictLine = rep.allBlocked
+      ? `<strong>No. None of the four services will ship ${esc(attr.seoLabelEn)} out of Japan.</strong>`
+      : cheapestOk
+        ? `<strong>Yes, but only through some of them.</strong> ${esc(cheapestOk.name)} is the cheapest that will take it, landing at ${yen(cheapestOk.grandTotal)} on a &yen;10,000 1kg order.`
+        : `<strong>No service confirms in writing that it will.</strong> Every provider either refuses ${esc(attr.seoLabelEn)} or has published no rule about it.`;
+
+    // 「どの国でも同じ」なのか「この国だけ違う」なのかを、9本に割らずに1枚で見せる。
+    const countryRows = byCountry.map((x) => {
+      const ok = okOf(x);
+      const differs = exceptions.some((g) => g.includes(x));
+      return `
+      <tr${differs ? ` class="row-exception"` : ""}>
+        <td>${esc(x.cn)}${differs ? " <strong>(different)</strong>" : ""}</td>
+        <td>${x.allBlocked ? "<strong>No service will</strong>" : ok.length === 4 ? "All four will" : `${ok.length} of 4 will`}</td>
+        <td>${ok[0] ? `${esc(ok[0].name)} &mdash; ${yen(ok[0].grandTotal)}` : "&mdash;"}</td>
+      </tr>`;
+    }).join("");
+
+    const sameEverywhere = exceptions.length === 0;
+
+    pages.push({
+      path: `/can-you-ship-${attr.slug}-from-japan`,
+      title: `Can you ship ${attr.seoLabelEn} from Japan?`,
+      description: rep.allBlocked
+        ? `No. All four Japan proxy services refuse ${attr.seoLabelEn}. Here is what each one says, and what to do instead.`
+        : `Buyee, ZenMarket, Neokyo and FROM JAPAN compared on ${attr.seoLabelEn}, quoting each company's own rules, with the answer for nine destinations.`,
+      prefill: inputFor(rep.cc),
+      body: `
+  <h1>Can you ship ${esc(attr.seoLabelEn)} from Japan?</h1>
   <p>${verdictLine}</p>
-  <p class="muted">Covers ${esc(attr.helpEn.toLowerCase())} — for example ${attr.examplesEn.map((e) => esc(e)).join(", ")}.</p>
-  ${verdictTable(results, attrId)}
-  ${/* 「全社不可」向けの文言を「誰も明言していないだけ」の状況に流用すると、
-        自分の表と矛盾する（リチウム電池で実際に起きた: 表はEMSで送れると示しているのに
-        「日本郵便はこの経路では運ばない」と書いていた）。文言を分けて持つ。 */""}
-  ${allBlocked
+  <p class="muted">Covers ${esc(attr.helpEn.toLowerCase())} &mdash; for example ${attr.examplesEn.map((e) => esc(e)).join(", ")}.</p>
+  ${verdictTable(rep.results, attrId)}
+  ${rep.allBlocked
     ? `<aside class="notice"><strong>What to do instead</strong><p>${esc(attr.whenBlockedEn)}</p></aside>`
-    : noneConfirmed
+    : rep.noneConfirmed
       ? `<aside class="notice"><strong>Read this before you bid</strong><p>${esc(attr.whenUnconfirmedEn ?? attr.whenBlockedEn)}</p></aside>`
       : ""}
+
+  <h2>Does the destination change the answer?</h2>
+  <p>${sameEverywhere
+    ? `No. We checked all nine destinations this site covers and the four services give the same answer to every one of them, because the rule is about the item rather than the route.`
+    : `Yes, for ${exceptions.flat().length} of the nine destinations we cover. The rows marked <strong>(different)</strong> below do not follow the table above.`}</p>
+  <table>
+    <thead><tr><th>Destination</th><th>Can it ship?</th><th>Cheapest that will take it</th></tr></thead>
+    <tbody>${countryRows}</tbody>
+  </table>
+  ${exceptions.map((g) => {
+    const x = g[0];
+    const note = restrictions.byDestination?.[x.cc]?.[attrId]?.noteEn;
+    const refused = x.results.filter((r) => r.shippable.level === "prohibited").map((r) => esc(r.name));
+    return `<h3>${g.map((y) => esc(y.cn)).join(", ")}</h3>
+    <p>${note ? esc(note) + " " : ""}${refused.length ? `${refused.join(" and ")} refuse${refused.length === 1 ? "s" : ""} ${esc(attr.seoLabelEn)} on this route specifically.` : ""}
+    ${restrictions.byDestination?.[x.cc]?.[attrId]
+      ? `This is a Japan Post rule about the destination, so it applies whichever of the four services you use &mdash; switching companies does not get around it.`
+      : `This is the company's own policy rather than a postal rule, so a different service may still accept it.`}</p>`;
+  }).join("")}
+
   <h2>Why this matters before you bid</h2>
   <p>A proxy will happily accept the order and buy the item for you. The refusal happens later, when the parcel
   reaches their warehouse and is inspected. At that point you have already paid for the goods, the domestic
   shipping inside Japan and the service fee, and none of it comes back. The item is disposed of or returned to
   the seller at your cost.</p>
-  <p>On the ¥10,000 order priced above that is <strong>${yen(10000 + 700 + (results[0] ? lineOf(results[0], "service") : 0))}
-  gone before the parcel ever leaves Japan</strong> — the item, ¥700 of domestic postage and the service fee —
+  <p>On the &yen;10,000 order priced above that is <strong>${yen(10000 + 700 + (rep.results[0] ? lineOf(rep.results[0], "service") : 0))}
+  gone before the parcel ever leaves Japan</strong> &mdash; the item, &yen;700 of domestic postage and the service fee &mdash;
   with disposal charged on top at some services. The international postage is the only part you save, because
   the parcel never ships. It is the one mistake on this site that costs you the whole purchase rather than
   a few hundred yen of margin.</p>
-  ${restrictions.byDestination?.[cc]?.[attrId]
-    ? `<h2>${esc(cn)} specifically</h2><p>${esc(restrictions.byDestination[cc][attrId].noteEn ?? "")}
-       This is a Japan Post rule about the destination, so it applies whichever of the four services you use —
-       switching companies does not get around it.</p>`
-    : `<h2>${esc(cn)} specifically</h2><p>Japan Post publishes no route-level restriction on
-       ${esc(attr.seoLabelEn)} to ${esc(cn)}, so where a service refuses it here, that is the company's own
-       policy rather than a postal rule — and a different company may well accept it. That is not true of every
-       destination: the same item cannot be posted to some countries at all, regardless of proxy.</p>`}
   <p>Rules checked against each company's own prohibited-items page on ${esc(restrictions._meta.updated)}.
   Where a company publishes nothing on a category we say so rather than guessing.</p>
   ${links([
     { href: "/what-you-cannot-ship-from-japan", text: "Everything you cannot ship out of Japan" },
-    { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
-    { href: `/cheapest-proxy-for-yahoo-auctions-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy for Yahoo! Auctions to ${cn}` },
+    { href: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[rep.cc]}`, text: `Cheapest proxy to ${rep.cn}` },
+    { href: `/import-tax-${COUNTRY_SLUGS[rep.cc]}`, text: `Import tax when shipping to ${rep.cn}` },
   ])}`,
-      });
-    }
+    });
   }
 
   // ハブページ。属性別ページへの入口であり、それ自体も一次情報の一覧として成立させる。
@@ -698,7 +792,7 @@ export function buildPages(data) {
       const seo = SEO_ATTRS.includes(a.id);
       return `
       <tr>
-        <td>${seo ? `<a href="/can-you-ship-${a.slug}-from-japan-to-united-states">${esc(a.labelEn)}</a>` : esc(a.labelEn)}</td>
+        <td>${seo ? `<a href="/can-you-ship-${a.slug}-from-japan">${esc(a.labelEn)}</a>` : esc(a.labelEn)}</td>
         <td>${esc(a.helpEn)}</td>
         <td>${verdicts}</td>
       </tr>`;
@@ -745,7 +839,7 @@ export function buildPages(data) {
   ${links([
     ...SEO_ATTRS.map((id) => {
       const a = restrictions.attributes.find((x) => x.id === id);
-      return { href: `/can-you-ship-${a.slug}-from-japan-to-united-states`, text: `Can you ship ${a.seoLabelEn} to the United States?` };
+      return { href: `/can-you-ship-${a.slug}-from-japan`, text: `Can you ship ${a.seoLabelEn} from Japan?` };
     }),
   ])}`,
     });
