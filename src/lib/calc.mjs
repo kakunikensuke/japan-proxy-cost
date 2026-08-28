@@ -211,7 +211,7 @@ export function checkShippable(attributes, { proxyId, destination, carrier = "em
   return { level, blockers };
 }
 
-export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
+export function calculateAll(input, { proxies, ems, importTax, restrictions, stores }) {
   const {
     source, itemPriceJpy, itemCount, weightG, destination,
     domesticShippingJpy, carrier = "ems", sameShop = false,
@@ -399,5 +399,58 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions }) {
   const allBlocked = results.length > 0 && results.every((r) => r.shippable.level === "prohibited");
   const noneConfirmed = results.length > 0 && results.every((r) => r.shippable.level !== "ok");
 
-  return { shipping, country, results, allBlocked, noneConfirmed };
+  const storeSuggestion = suggestStores(input, results, stores);
+
+  return { shipping, country, results, allBlocked, noneConfirmed, storeSuggestion };
+}
+
+/**
+ * 「そもそも代行が要らない」場合に、日本から直接海外発送する店を提案する。
+ *
+ * ■ 代行4社の順位には一切影響させない
+ * 報酬の大小で表示順を歪めないという鉄則の適用。直販を代行と同じ土俵で競わせず、
+ * 「代行手数料そのものが不要になりうる別の道」として横に置く。
+ *
+ * ■ 出さない条件を明示的に持つ
+ *   ① 中古・絶版が中心の仕入れ元（ヤフオク/メルカリ/ラクマ）… 直販に同じ物が無い
+ *   ② どの代行も送れない商品 … 直販でも送れない公算が高く、無責任な送客になる
+ *   ③ 未承認のプログラム（affiliateUrl が null）… 規約違反を避ける
+ *
+ * ■ 金額を断言しない
+ * 直販側の商品価格も送料も我々は持っていない。したがって「直販が安い」とは言わない。
+ * 言えるのは「代行を通すと最低 ¥N の手数料がかかる」という自分の計算結果だけ。
+ */
+export function suggestStores(input, results, stores) {
+  if (!stores || !Array.isArray(stores.stores) || stores.stores.length === 0) return null;
+
+  const source = input?.source;
+  const rule = stores.sourceRule ?? {};
+
+  if ((rule.doNotSuggestFor ?? []).includes(source)) {
+    return { applicable: false, reason: "secondhand-source" };
+  }
+  if (Array.isArray(rule.suggestFor) && !rule.suggestFor.includes(source)) {
+    return { applicable: false, reason: "source-not-listed" };
+  }
+
+  // 全社が送れない商品なら、直販でも送れない公算が高い。送れない先へ送客しない。
+  const sendable = results.filter((r) => r.shippable?.level !== "prohibited");
+  if (sendable.length === 0) return { applicable: false, reason: "all-blocked" };
+
+  // 未承認プログラムのリンクは出さない
+  const available = stores.stores.filter((s) => s.affiliateUrl);
+  if (available.length === 0) return { applicable: false, reason: "no-approved-store" };
+
+  // 商品代を除いた代行コストの最小値 ＝ 直販なら丸ごと不要になりうる額
+  const feesOnly = sendable.map((r) => r.proxyFeesOnly).filter((n) => Number.isFinite(n));
+  const proxyFeesMin = feesOnly.length ? Math.min(...feesOnly) : null;
+
+  return {
+    applicable: true,
+    proxyFeesMin,
+    stores: available,
+    headingEn: "You may not need a proxy at all",
+    caveatEn:
+      "Shipping availability and postage differ by store and by country. Check on the store's own site before ordering.",
+  };
 }

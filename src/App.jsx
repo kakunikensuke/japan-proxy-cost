@@ -3,6 +3,7 @@ import proxies from "../data/proxies.json";
 import ems from "../data/shipping-ems.json";
 import importTax from "../data/import-tax.json";
 import restrictions from "../data/restrictions.json";
+import stores from "../data/stores.json";
 import { calculateAll } from "./lib/calc.mjs";
 
 const SOURCES = [
@@ -235,8 +236,8 @@ export default function App() {
     }));
   };
 
-  const { results, country, shipping, allBlocked, noneConfirmed } = useMemo(
-    () => calculateAll(form, { proxies, ems, importTax, restrictions }),
+  const { results, country, shipping, allBlocked, noneConfirmed, storeSuggestion } = useMemo(
+    () => calculateAll(form, { proxies, ems, importTax, restrictions, stores }),
     [form]
   );
 
@@ -401,6 +402,36 @@ export default function App() {
           {results.map((r, i) => (
             <ResultCard key={r.proxyId} r={r} rank={i} isBest={i === bestIndex} />
           ))}
+        </section>
+      )}
+
+      {/* 代行の比較結果の“後”に置く。比較の順位には一切混ぜず、
+          「そもそも代行を使わない道」を別枠で示す。
+          直販側の商品価格も送料もこちらは持っていないので「直販が安い」とは言わない。
+          言えるのは自分で計算した「代行なら最低いくら手数料がかかるか」だけ。 */}
+      {!cannotPrice && storeSuggestion?.applicable && (
+        <section className="stores">
+          <h2>{storeSuggestion.headingEn}</h2>
+          {storeSuggestion.proxyFeesMin != null && (
+            <p>
+              Using a proxy adds at least{" "}
+              <strong>¥{storeSuggestion.proxyFeesMin.toLocaleString()}</strong> on top of the item
+              price. If what you want is new and in stock, the shops below sell direct from Japan and
+              ship overseas themselves — so those fees disappear entirely.
+            </p>
+          )}
+          {storeSuggestion.stores.map((s) => (
+            <a
+              key={s.id}
+              className="cta"
+              href={s.affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+            >
+              {s.name} — {s.sellsEn} →
+            </a>
+          ))}
+          <p className="disclaimer">{storeSuggestion.caveatEn}</p>
         </section>
       )}
 

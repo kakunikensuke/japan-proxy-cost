@@ -299,3 +299,16 @@ input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); out
   font-size: 0.88rem;
   color: var(--text);
 }
+
+/* 「そもそも代行が要らない」枠。
+   比較カードと同じ見た目にすると順位の一部に見えてしまうので、意図的に別の枠にする。 */
+.stores {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid var(--line, #d8dbe0);
+  border-radius: 10px;
+}
+.stores h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.stores p { margin: 0 0 14px; font-size: 0.9rem; line-height: 1.6; }
+.stores .cta { display: block; margin-bottom: 10px; }
+.stores .disclaimer { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); }

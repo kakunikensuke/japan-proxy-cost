@@ -16,6 +16,7 @@ import proxies from "../data/proxies.json" with { type: "json" };
 import ems from "../data/shipping-ems.json" with { type: "json" };
 import importTax from "../data/import-tax.json" with { type: "json" };
 import restrictions from "../data/restrictions.json" with { type: "json" };
+import stores from "../data/stores.json" with { type: "json" };
 import { buildPages, CONTACT_FORM_ENDPOINT } from "../src/lib/pages.mjs";
 import { calculateAll } from "../src/lib/calc.mjs";
 
@@ -97,7 +98,7 @@ function writePage(routePath, html) {
   fs.writeFileSync(outPath, html);
 }
 
-const pages = buildPages({ proxies, ems, importTax, restrictions });
+const pages = buildPages({ proxies, ems, importTax, restrictions, stores });
 
 // ---- トップページ: 全ページへの入口を持たせる ----
 const grouped = {
@@ -116,8 +117,8 @@ const grouped = {
 // 全ページへの一覧は /all-pages に移し、トップは実データで説明する読み物にする。
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const sample = { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: "US", domesticShippingJpy: 700, buyeePlan: "light" };
-const sampleRun = calculateAll(sample, { proxies, ems, importTax, restrictions });
-const heavyRun = calculateAll({ ...sample, weightG: 3000 }, { proxies, ems, importTax, restrictions });
+const sampleRun = calculateAll(sample, { proxies, ems, importTax, restrictions, stores });
+const heavyRun = calculateAll({ ...sample, weightG: 3000 }, { proxies, ems, importTax, restrictions, stores });
 
 const unitOf = (p) => {
   if (p.packingFee?.type === "weight") return "per item, plus packing charged by weight";

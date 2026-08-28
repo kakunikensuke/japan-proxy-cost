@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "updated": "2026-08-28",
+    "note": "代行を通さず日本から直接海外発送する店。proxies.json(代行4社)とは別枠で「そもそも代行が要らない場合」を示すために使う。",
+    "shippingCaveat": "各社とも配送可能国の一覧を公開していない。したがって国別の可否は未確認であり、断言してはならない。表示では必ず各店で確認するよう促すこと。",
+    "displayRule": "affiliateUrl が null の店は表示しない（未承認のプログラムのリンクを出さないため）。"
+  },
+
+  "sourceRule": {
+    "note": "中古・絶版が中心の仕入れ元では、直販に同じ物が存在しないため提案しない。",
+    "suggestFor": ["amazon_jp", "rakuten", "recommended", "other_shop"],
+    "doNotSuggestFor": ["yahoo_auction", "mercari", "rakuma"]
+  },
+
+  "stores": [
+    {
+      "id": "cdjapan",
+      "name": "CDJapan",
+      "url": "https://www.cdjapan.co.jp/",
+      "affiliateUrl": null,
+      "affiliateStatus": "pending",
+      "statusAt": "2026-08-28",
+      "sellsEn": "CDs, Blu-ray, books, magazines and official artist merchandise",
+      "categories": ["cd", "bluray", "book", "official_goods"],
+      "shippingNoteEn": null,
+      "countryListPublished": null,
+      "sourceUrl": null,
+      "verifiedAt": null,
+      "commissionNote": "5-7%（前月の確定売上で変動）",
+      "cookieHours": 720,
+      "unverified": true
+    },
+    {
+      "id": "solaris",
+      "name": "Solaris Japan",
+      "url": "https://solarisjapan.com/",
+      "affiliateUrl": "https://solarisjapan.com?aff=1166",
+      "affiliateStatus": "approved",
+      "statusAt": "2026-08-28",
+      "sellsEn": "figures, anime goods and model kits",
+      "categories": ["figure", "model_kit", "anime_goods"],
+      "shippingNoteEn": "Japan Post only (Saver / Regular / Express)",
+      "countryListPublished": false,
+      "sourceUrl": "https://solarisjapan.com/pages/shipping",
+      "verifiedAt": "2026-08-28",
+      "commissionNote": "3-8%（月の確定売上と商品種別で変動）",
+      "cookieHours": 24,
+      "unverified": true
+    }
+  ]
+}

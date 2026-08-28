@@ -399,6 +399,9 @@ export function buildPages(data) {
     const cheapest = perSource.reduce((a, b) => (b.best.grandTotal < a.best.grandTotal ? b : a));
     const dearest = perSource.reduce((a, b) => (b.best.grandTotal > a.best.grandTotal ? b : a));
 
+    // 新品が買える仕入れ元にだけ「そもそも代行が要らない」選択肢を出す
+    const storeBlock = buildStoreBlock(baseInput, data, perSource);
+
     const sourceRows = perSource.map((r) => `
       <tr>
         <td>${esc(r.meta.label)}</td>
@@ -449,6 +452,7 @@ export function buildPages(data) {
   The item is ${Math.round((10000 / baseResults[0].grandTotal) * 100)}% of what you actually spend &mdash; the rest is the cost
   of getting it out of Japan and through customs.</p>
   ${resultsTable(baseResults)}
+  ${storeBlock}
   ${baseResults[0].warnings.length ? `<h2>What we could not confirm</h2>${baseResults[0].warnings.map((w) => `<p>${esc(w)}</p>`).join("")}` : ""}
   ${links([
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax when shipping to ${cn}` },
@@ -1186,4 +1190,39 @@ function staticPages(data) {
   </ul>`,
     },
   ];
+}
+
+/**
+ * 「そもそも代行が要らない」ブロック（仕入れ元別ページ用）。
+ *
+ * 新品が買える仕入れ元（Amazon/楽天/推奨ストア/その他通販）にだけ出す。
+ * ヤフオク・メルカリ・ラクマは中古・一点物で、直販に同じ物が存在しないため出さない。
+ * 直販側の商品価格も送料もこちらは持っていないので「直販のほうが安い」とは書かない。
+ * 書けるのは自分で計算した「代行なら最低いくら手数料がかかるか」だけ。
+ */
+function buildStoreBlock(baseInput, data, perSource) {
+  const rule = data.stores?.sourceRule;
+  if (!rule) return "";
+
+  const newGoods = perSource.filter((r) => (rule.suggestFor ?? []).includes(r.src));
+  if (newGoods.length === 0) return "";
+
+  const sug = calculateAll({ ...baseInput, source: newGoods[0].src }, data).storeSuggestion;
+  if (!sug?.applicable) return "";
+
+  const fees = newGoods
+    .flatMap((r) => r.results.map((x) => x.proxyFeesOnly))
+    .filter((n) => Number.isFinite(n));
+  if (fees.length === 0) return "";
+
+  return `
+  <h2>${esc(sug.headingEn)}</h2>
+  <p>The Amazon, Rakuten, recommended-shop and other-store rows above are places selling
+  <strong>new, in-stock goods</strong>. For those a proxy is often unnecessary: some Japanese shops ship
+  overseas themselves, and the proxy fees in that table &mdash; from ${yen(Math.min(...fees))} on this order,
+  on top of the item price &mdash; disappear entirely.</p>
+  <p>This does not apply to Yahoo! Auctions, Mercari or Rakuma. Those listings are second-hand or one-off,
+  and no direct shop stocks the same item.</p>
+  ${sug.stores.map((s) => `<p><a href="${esc(s.affiliateUrl)}" target="_blank" rel="noopener noreferrer sponsored">${esc(s.name)}</a> &mdash; ${esc(s.sellsEn)}</p>`).join("")}
+  <p>${esc(sug.caveatEn)}</p>`;
 }
