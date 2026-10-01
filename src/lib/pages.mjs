@@ -26,6 +26,7 @@ import {
 } from "./enrich.mjs";
 import { buildGuides } from "./guides.mjs";
 import { buildGenreGuides } from "./genres.mjs";
+import { countryGuide } from "./countryguide.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
@@ -623,18 +624,27 @@ export function buildPages(data) {
     const cn = c.name;
     // 本ツールはEMSしか値付けしないので、FedEx限定の事前徴収（Neokyoの米国DDP等）を
     // 「この会社は事前徴収します」と書くと嘘になる。carrier を必ず見る。
+    // 国別ガイドの部品（要点・4社の総額・EMS・送れない物・ジャンル別・関連ページ）
+    const cg = countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName: (x) => countryName(importTax, x) });
     const prepayers = proxies.proxies.filter((p) => (p.taxPrepay ?? []).some(
       (t) => t.country === cc && t.rate && (!t.onlyCarriers || t.onlyCarriers.includes("ems"))
     ));
 
     pages.push({
       path: `/import-tax-${COUNTRY_SLUGS[cc]}`,
-      title: `Import tax on parcels from Japan to ${cn} (${data.proxies._meta.updated})`,
-      description: c.displayEn?.body?.slice(0, 155) ?? `What you pay in tax and duty when importing from Japan into ${cn}.`,
-      prefill: null,
+      // 2026-10-02 に「輸入税のページ」から「その国で日本から買うための総合ガイド」へ格上げ。URLは変えない
+      title: `Buying from Japan to ${cn}: import tax, shipping and the cheapest proxy`,
+      description: `${cg.best.name} is the cheapest of four proxy services on a typical order to ${cn}. Import tax, EMS postage, what cannot be sent, and costs for figures, manga, cards and more.`,
+      prefill: { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" },
       body: `
-  <h1>Importing from Japan into ${esc(cn)}</h1>
+  <h1>Buying from Japan to ${esc(cn)}</h1>
+  <p>Everything that changes what an order from Japan costs in ${esc(cn)}, on one page: which proxy service is cheapest, the import tax,
+  the postage, what cannot be sent, and what typical purchases come to.</p>
+  ${cg.glance}
   ${countryNotice(c)}
+  <h2>Which service is cheapest for ${esc(cn)}</h2>
+  ${cg.services}
+  <h2>Import tax in ${esc(cn)}</h2>
   <p>Import tax is set by ${esc(cn)}, not by the proxy service you choose. All the proxy decides is whether it
   takes the money at checkout or leaves you to settle with the courier at the door — the amount owed is the
   same either way. That is why the totals on this site are split into what you pay now and what you pay on
@@ -668,10 +678,18 @@ export function buildPages(data) {
   ${taxAmongCountries(cc, data, countries, (c) => countryName(importTax, c))}
   <h2>The handling fee nobody quotes</h2>
   <p>Where tax is not collected up front, the courier or postal operator pays it for you at the border and
-  then charges a fee for having done so. It is commonly ¥1,000–3,000 and it is not part of the tax itself.
+  then charges a fee for having done so. It is not part of the tax itself.
   None of the four services publish it and it varies by carrier, so it is deliberately left out of the totals
   here rather than guessed at — but it is a real reason to prefer a service that collects at checkout where
   you have the choice.</p>
+  <h2>EMS postage to ${esc(cn)}</h2>
+  ${cg.postage}
+  <h2>What cannot be sent to ${esc(cn)}</h2>
+  ${cg.restrictionsHtml}
+  <h2>By what you are buying</h2>
+  ${cg.genres}
+  <h2>More for ${esc(cn)}</h2>
+  ${cg.more}
   ${links([
     { href: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cheapest proxy to ${cn}, by marketplace` },
     { href: `/ship-scale-figure-from-japan-to-${COUNTRY_SLUGS[cc]}`, text: `Cost to ship a boxed figure to ${cn}` },
