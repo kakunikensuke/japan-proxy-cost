@@ -46,14 +46,17 @@ export function presetsAtWeight(slug, cc, cn, data) {
 export function sourcesAtWeight(input, data) {
   const rows = Object.entries(SOURCE_NAMES).map(([src, label]) => {
     const res = calculateAll({ ...input, source: src }, data);
-    return { label, best: res.results[0], second: res.results[1] };
+    const top = res.results.filter((r) => r.shippable.level === res.results[0].shippable.level && r.grandTotal === res.results[0].grandTotal);
+    const next = res.results.find((r) => r.grandTotal > res.results[0].grandTotal);
+    return { label, best: res.results[0], tiedNames: top.map((r) => r.name), second: next ?? res.results[0] };
   });
-  const names = [...new Set(rows.map((r) => r.best.name))];
-  const tr = rows.map((r) => `<tr><td>${r.label}</td><td>${esc(r.best.name)}</td><td class="num">${yen(r.best.grandTotal)}</td><td class="num">${r.second.grandTotal === r.best.grandTotal ? "tie" : yen(r.second.grandTotal - r.best.grandTotal)}</td></tr>`).join("");
+  const nameOf = (r) => listJoin(r.tiedNames.map(esc)) + (r.tiedNames.length > 1 ? " (tied)" : "");
+  const names = [...new Set(rows.map(nameOf))];
+  const tr = rows.map((r) => `<tr><td>${r.label}</td><td>${nameOf(r)}</td><td class="num">${yen(r.best.grandTotal)}</td><td class="num">${r.second.grandTotal === r.best.grandTotal ? "\u2014" : yen(r.second.grandTotal - r.best.grandTotal)}</td></tr>`).join("");
   return `<p>${names.length === 1
-    ? `${esc(names[0])} is cheapest at this weight whichever marketplace the item comes from.`
-    : `At this weight the cheapest service depends on the marketplace: ${listJoin(names.map((n) => `${esc(n)} on ${listJoin(rows.filter((r) => r.best.name === n).map((r) => r.label))}`))}.`}
-  The last column is how far ahead it is of the next cheapest; where the lead is a few hundred yen, what each includes may matter more than the price.</p>
+    ? `${names[0]} ${names[0].includes(" and ") ? "are" : "is"} cheapest at this weight whichever marketplace the item comes from.`
+    : `At this weight the cheapest service depends on the marketplace: ${listJoin(names.map((n) => `${n} on ${listJoin(rows.filter((r) => nameOf(r) === n).map((r) => r.label))}`))}.`}
+  The last column is how far ahead it is of the next cheapest service; where the lead is a few hundred yen, what each includes may matter more than the price.</p>
   <table><thead><tr><th>Buying from</th><th>Cheapest</th><th class="num">Total</th><th class="num">Lead over next</th></tr></thead><tbody>${tr}</tbody></table>`;
 }
 

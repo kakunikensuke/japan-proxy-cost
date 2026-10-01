@@ -13,6 +13,7 @@
 import { calculateAll, lookupEmsRate } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml, SOURCE_NAMES } from "./enrich.mjs";
+import { GENRES } from "./genres.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x, d = 0) => `${(x * 100).toFixed(d)}%`;
@@ -571,6 +572,9 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <h1>Guides</h1>
   <p>Longer reads on how the costs of buying from Japan work. Every number in them comes from the same fee, postage and tax data as the calculator.</p>
   <ul class="guide-list">${GUIDES.map((g) => `<li><a href="/guides/${g.slug}"><b>${esc(g.title)}</b><span>${esc(g.blurb)}</span></a></li>`).join("")}</ul>
+  <h2>By what you are buying</h2>
+  <p>The same calculations, worked through for one kind of item at a time: what it weighs, who will ship it, and what it costs to each country.</p>
+  <ul class="guide-list">${GENRES.map((g) => `<li><a href="/guides/${g.slug}"><b>${esc(g.h1)}</b><span>${esc(g.blurb)}</span></a></li>`).join("")}</ul>
   <h2>Where to start</h2>
   <p>If this is your first order through a proxy, read how it works first: it walks one real order from the purchase to the doorstep and
   shows what each step costs. If you already use a service and want to know whether another would be cheaper, the 1,512-order count

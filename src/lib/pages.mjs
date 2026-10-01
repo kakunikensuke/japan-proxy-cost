@@ -25,6 +25,7 @@ import {
   proxyAcrossCountries, proxyPriceCurve,
 } from "./enrich.mjs";
 import { buildGuides } from "./guides.mjs";
+import { buildGenreGuides } from "./genres.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
@@ -917,6 +918,8 @@ export function buildPages(data) {
   // 示せないサイトは信用されない。
   // 読み物（ガイド）と入口のハブ（/compare・/import-tax・/guides）。ナビゲーションから辿れる先。
   pages.push(...buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName: (c) => countryName(importTax, c) }));
+  // ジャンル別ガイド（フィギュア・プラモデル・漫画など8本）
+  pages.push(...buildGenreGuides(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
 
   pages.push(...staticPages(data));
 
