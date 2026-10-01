@@ -15,6 +15,7 @@ import { calculateAll, checkShippable, lookupEmsRate } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml, perServiceLines } from "./enrich.mjs";
 import { sourcesAtWeight } from "./enrich2.mjs";
+import { methodsTable } from "./shipmethods.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x) => `${Math.round(x * 100)}%`;
@@ -328,6 +329,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
   ${perServiceLines(shipped)}
   <h2>Where you buy it</h2>
   ${sourcesAtWeight(inputOf(o, "US"), data)}`; })()}
+  ${byCountry.find((x) => x.cc === "US")?.best ? `<h2>A cheaper way to send it?</h2>${methodsTable(inputOf(o, "US"), data, { lead: `To the United States: ` })}` : ""}
   <h2>What changes the answer</h2>
   ${variantHtml}
   ${bundleHtml}

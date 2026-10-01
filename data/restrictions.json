@@ -427,7 +427,10 @@
         "level": "conditional",
         "noteEn": "Japan Post accepts lithium batteries for Australia by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-08-09",
+        "excludedCarriers": [
+          "intl_parcel_sea"
+        ]
       }
     },
     "FR": {
@@ -443,7 +446,10 @@
         "level": "conditional",
         "noteEn": "Japan Post accepts lithium batteries for Singapore by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-08-09",
+        "excludedCarriers": [
+          "intl_parcel_sea"
+        ]
       }
     },
     "TW": {

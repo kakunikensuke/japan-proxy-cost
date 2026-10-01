@@ -39,7 +39,7 @@
       "taxPrepay": [
         { "country": "AU", "tax": "GST", "rate": 0.10, "base": "charge1+charge2", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "under" },
         { "country": "NZ", "tax": "GST", "rate": 0.15, "base": "charge1+charge2" },
-        { "country": "SG", "tax": "GST", "rate": 0.09, "base": "charge1+charge2", "thresholdValue": 400, "thresholdCurrency": "SGD", "thresholdRule": "under", "note": "Surface便は事前徴収なし" },
+        { "country": "SG", "tax": "GST", "rate": 0.09, "base": "charge1+charge2", "thresholdValue": 400, "thresholdCurrency": "SGD", "thresholdRule": "under", "note": "Surface便は事前徴収なし", "exceptCarriers": ["intl_parcel_sea"] },
         { "country": "MY", "tax": "SST", "rate": 0.10, "base": "charge1", "thresholdValue": 500, "thresholdCurrency": "MYR", "thresholdRule": "atOrUnder" }
       ],
       "paymentMethods": ["visa", "mastercard", "paypal", "alipay", "deposit", "fj_points"],

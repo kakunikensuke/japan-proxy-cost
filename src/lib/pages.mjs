@@ -27,6 +27,7 @@ import {
 import { buildGuides } from "./guides.mjs";
 import { buildGenreGuides } from "./genres.mjs";
 import { countryGuide } from "./countryguide.mjs";
+import { buildShippingGuide, methodsTable } from "./shipmethods.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
@@ -535,6 +536,9 @@ export function buildPages(data) {
   <p>The postage is identical for all four at this weight. These are the lines that are not:</p>
   ${perServiceLines(results)}
 
+  <h2>Cheaper than EMS?</h2>
+  ${methodsTable(input, data, { lead: `Everything above is priced by EMS. ` })}
+
   <h2>What can go in this box to ${esc(cn)}</h2>
   ${presetsAtWeight(w.slug, cc, cn, data)}
 
@@ -936,6 +940,8 @@ export function buildPages(data) {
   // 示せないサイトは信用されない。
   // 読み物（ガイド）と入口のハブ（/compare・/import-tax・/guides）。ナビゲーションから辿れる先。
   pages.push(...buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName: (c) => countryName(importTax, c) }));
+  // 配送方法の比較ガイド（EMS・小形包装物・航空小包・船便）
+  pages.push(buildShippingGuide(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
   // ジャンル別ガイド（フィギュア・プラモデル・漫画など8本）
   pages.push(...buildGenreGuides(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
 
@@ -1012,7 +1018,7 @@ function staticPages(data) {
 
   <h2>What is deliberately not included</h2>
   <ul>
-    <li><strong>Courier customs handling fees.</strong> These are real and often ¥1,000–3,000, but they vary by
+    <li><strong>Courier customs handling fees.</strong> These are real, but they vary by
     carrier and country and none of the four companies publish them. We say a fee is likely rather than invent
     a figure.</li>
     <li><strong>Customs duty by HS code.</strong> Duty depends on what the item is, and the rate for a resin
@@ -1020,8 +1026,11 @@ function staticPages(data) {
     marked as a minimum rather than padded with a guess.</li>
     <li><strong>Optional extras.</strong> Photo services, reinforced packing, and repacking are all priced on
     the individual company pages but are left out of the default comparison, because most orders do not use them.</li>
-    <li><strong>Carriers other than EMS.</strong> DHL, FedEx and UPS are cheaper on some routes and are the only
-    option for some restricted goods. Their rate tables are not public in a usable form, so this site prices EMS only.</li>
+    <li><strong>Couriers.</strong> DHL, FedEx and UPS are cheaper on some routes and are the only
+    option for some restricted goods. Their rate tables are not public in a usable form, so they are not priced.
+    Japan Post's other methods (airmail small packets, airmail parcels and surface parcels) are priced from Japan
+    Post's published tables; SAL is left out because Japan Post has suspended it. EMS remains the default because
+    every service offers it. See <a href="/guides/shipping-methods">the shipping methods guide</a>.</li>
   </ul>
 
   <h2>How to check us</h2>

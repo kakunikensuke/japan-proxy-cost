@@ -5,7 +5,16 @@ import ems from "../data/shipping-ems.json";
 import importTax from "../data/import-tax.json";
 import restrictions from "../data/restrictions.json";
 import stores from "../data/stores.json";
-import { calculateAll } from "./lib/calc.mjs";
+import post from "../data/shipping-post.json";
+import { calculateAll, CARRIER_LABELS } from "./lib/calc.mjs";
+
+// 選べる配送方法（日本郵便）。SAL便は引受が全面停止中なので出さない（data/shipping-post.json の salNote）
+const CARRIERS = [
+  { key: "ems", hint: "Fastest, tracked" },
+  { key: "small_packet_air", hint: "Up to 2 kg; usually much cheaper for small items" },
+  { key: "intl_parcel_air", hint: "Slower than EMS" },
+  { key: "intl_parcel_sea", hint: "Cheapest for heavy parcels; can take months" },
+];
 
 const SOURCES = [
   { key: "yahoo_auction", label: "Yahoo! Auctions (JDirectItems)" },
@@ -120,7 +129,8 @@ function timingNote(r) {
 function ResultRow({ r, isBest, best, max }) {
   const [open, setOpen] = useState(false);
   const blocked = r.shippable.level === "prohibited";
-  const tag = LEVEL_TAG[r.shippable.level];
+  // その配送方法を公式に挙げていない会社は、送れるかどうかとは別に印を付ける
+  const tag = LEVEL_TAG[r.shippable.level] ?? (r.methodListed === false ? { text: "Doesn't list this shipping method", cls: "tag-unknown" } : null);
   const later = r.payOnDelivery.total;
 
   return (
@@ -218,7 +228,7 @@ function ResultRow({ r, isBest, best, max }) {
 function summarize(results, bestIndex) {
   if (bestIndex < 0) return null;
   const best = results[bestIndex];
-  const okOnes = results.filter((r) => r.shippable.level === "ok");
+  const okOnes = results.filter((r) => r.shippable.level === "ok" && r.methodListed !== false);
   const ties = okOnes.filter((r) => r.grandTotal === best.grandTotal);
   const dearest = okOnes[okOnes.length - 1];
   const head = ties.length > 1
@@ -245,6 +255,7 @@ const DEFAULT_FORM = {
   destination: "US",
   domesticShippingJpy: 700,
   buyeePlan: "light",
+  carrier: "ems",
   category: "scale_figure",
   attributes: [],
 };
@@ -284,14 +295,14 @@ export default function App() {
   };
 
   const { results, country, shipping, allBlocked, noneConfirmed, storeSuggestion } = useMemo(
-    () => calculateAll(form, { proxies, ems, importTax, restrictions, stores }),
+    () => calculateAll(form, { proxies, ems, importTax, restrictions, stores, post }),
     [form]
   );
 
   const isShopping = !["yahoo_auction", "mercari", "rakuma"].includes(form.source);
 
   // 「送れると公式に確認できている中で最安」だけをおすすめとして立てる。
-  const bestIndex = results.findIndex((r) => r.shippable.level === "ok");
+  const bestIndex = results.findIndex((r) => r.shippable.level === "ok" && r.methodListed !== false);
   const best = bestIndex >= 0 ? results[bestIndex] : null;
   const max = Math.max(...results.map((r) => r.grandTotal), 1);
   const summary = summarize(results, bestIndex);
@@ -338,6 +349,12 @@ export default function App() {
 
         <Field label="Separate items" hint="Three of the same listing counts as one">
           <input type="number" inputMode="numeric" min="1" step="1" value={form.itemCount} onChange={set("itemCount")} />
+        </Field>
+
+        <Field label="Shipping method" className="span-2" hint={CARRIERS.find((c) => c.key === form.carrier)?.hint}>
+          <select value={form.carrier} onChange={set("carrier")}>
+            {CARRIERS.map((c) => <option key={c.key} value={c.key}>Japan Post {CARRIER_LABELS[c.key]}</option>)}
+          </select>
         </Field>
 
         <Field label="Postage inside Japan (¥)" hint="Seller to the warehouse. Usually ¥150–1,500">
@@ -459,7 +476,7 @@ export default function App() {
       <div className="calc-foot">
         {!cannotPrice && (
           <p>
-            Shipping shown is Japan Post EMS to zone {shipping.zone}, billed at the {shipping.appliedWeightG}g band.
+            Shipping shown is Japan Post {CARRIER_LABELS[form.carrier] ?? "EMS"} to zone {shipping.zone}, billed at the {shipping.appliedWeightG}g band.
             Fee data checked {proxies._meta.updated} against each provider's official pages.
           </p>
         )}

@@ -9,6 +9,7 @@ import { calculateAll, checkShippable, lookupEmsRate } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml } from "./enrich.mjs";
 import { GENRES } from "./genres.mjs";
+import { methodsTable } from "./shipmethods.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
@@ -63,6 +64,7 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
   const sameZone = ems.targetCountries.filter((c) => c.zone === zone && c.code !== cc).map((c) => esc(c.name));
   const postage = `<p>Japan Post puts ${esc(cn)} in EMS zone ${zone}${sameZone.length ? `, together with ${listJoin(sameZone)}, which pay the same prices` : ""}. EMS is charged by weight band, so a parcel pays for the whole band it falls in:</p>
   <table><thead><tr><th>Packed weight</th><th class="num">EMS to ${esc(cn)}</th><th class="num">Per kg</th></tr></thead><tbody>${bands.map((r) => `<tr><td>Up to ${kg(r.weightG)}</td><td class="num">${yen(r[String(zone)])}</td><td class="num">${yen(r[String(zone)] / (r.weightG / 1000))}</td></tr>`).join("")}</tbody></table>
+  ${methodsTable(base, data, { lead: `For the same 1\u00a0kg order, other Japan Post methods: ` })}
   <p>The first band costs ${yen(bands[0][String(zone)] / (bands[0].weightG / 1000))} per kg; the heaviest costs ${yen(bands.at(-1)[String(zone)] / (bands.at(-1).weightG / 1000))} per kg. That is why sending several purchases together in one box saves money. The <a href="/guides/ems-weight-bands">EMS guide</a> compares all nine countries.</p>`;
 
   // ---- 送れない物 ----

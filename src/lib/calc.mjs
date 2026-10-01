@@ -34,6 +34,33 @@ export function lookupEmsRate(emsData, countryCode, weightG) {
 }
 
 /**
+ * EMS 以外の日本郵便（小形包装物の航空便・国際小包の航空便/船便）の料金。2026-10-02 追加。
+ * 料金表は data/shipping-post.json。地帯は EMS と同じなので shipping-ems.json の targetCountries を使う。
+ * SAL便は日本郵便が引受を全面停止しているので収録していない（料金表にだけ残っている）。
+ */
+export const CARRIER_LABELS = {
+  ems: "EMS",
+  small_packet_air: "Airmail small packet",
+  intl_parcel_air: "Airmail parcel",
+  intl_parcel_sea: "Surface (sea) parcel",
+};
+
+export function lookupShippingRate({ ems, post }, carrier, countryCode, weightG) {
+  if (!carrier || carrier === "ems") return { ...lookupEmsRate(ems, countryCode, weightG), carrier: "ems" };
+  const method = post?.methods?.[carrier];
+  if (!method?.rates) return { amount: null, error: `No rate data for ${CARRIER_LABELS[carrier] ?? carrier}`, carrier };
+  const country = ems.targetCountries.find((c) => c.code === countryCode);
+  if (!country) return { amount: null, error: `No rate data for ${countryCode}`, carrier };
+  if (weightG > method.maxG) {
+    return { amount: null, error: `${method.labelEn} takes parcels up to ${method.maxG / 1000}kg; this one is ${weightG}g`, carrier };
+  }
+  const zone = String(country.zone);
+  const step = method.rates.find((r) => weightG <= r.weightG && r[zone] != null);
+  if (!step) return { amount: null, error: `${method.labelEn} rates for zone ${zone} are not in our data`, carrier };
+  return { amount: step[zone], appliedWeightG: step.weightG, zone: country.zone, carrier };
+}
+
+/**
  * ZenMarket の Deposit Fee は「入金したい額の3.5%」ではなく「取引総額の3.5%」。
  * 必要額 X を口座に入れるには X/(1-0.035) を払う必要があり、実質負担は 3.627%。
  */
@@ -102,7 +129,8 @@ function calcExportClearance(proxy, { itemTotal, carrier }) {
         : null,
     };
   }
-  if (itemTotal > ec.thresholdJpy && ec.carriers.includes(carrier)) return { amount: ec.amount };
+  const covered = ec.carriers.some((c) => c === carrier || String(carrier).startsWith(c + "_"));
+  if (itemTotal > ec.thresholdJpy && covered) return { amount: ec.amount };
   return { amount: 0 };
 }
 
@@ -118,6 +146,7 @@ function findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx }) {
   const rule = (proxy.taxPrepay ?? []).find((t) => t.country === destination);
   if (!rule) return null;
   if (rule.onlyCarriers && !rule.onlyCarriers.includes(carrier)) return null;
+  if (rule.exceptCarriers?.includes(carrier)) return null;
   if (rule.unverifiedRate || rule.rate == null) return { ...rule, unusable: true };
 
   const jpyPer = fx?.jpyPer?.[rule.thresholdCurrency];
@@ -184,6 +213,9 @@ export function checkShippable(attributes, { proxyId, destination, carrier = "em
       if (cellLevel === "carrier_limited" && cell.allowedCarriers && !cell.allowedCarriers.includes(carrier)) {
         cellLevel = "prohibited";
       }
+      if (cell.excludedCarriers?.includes(carrier)) {
+        cellLevel = "prohibited";
+      }
       // 「原則OKだが、この国宛だけ不可」を表現する。
       // 代行会社が国名を名指しで挙げているケース（例: Neokyo は成人向けを香港宛に禁止）は、
       // 配送先を1か国足しただけで判定がひっくり返るので、国リストとして持つ必要がある。
@@ -211,19 +243,27 @@ export function checkShippable(attributes, { proxyId, destination, carrier = "em
   return { level, blockers };
 }
 
-export function calculateAll(input, { proxies, ems, importTax, restrictions, stores }) {
+export function calculateAll(input, { proxies, ems, importTax, restrictions, stores, post }) {
   const {
     source, itemPriceJpy, itemCount, weightG, destination,
     domesticShippingJpy, carrier = "ems", sameShop = false,
     buyeePlan = "light", attributes = [],
   } = input;
 
-  const shipping = lookupEmsRate(ems, destination, weightG);
+  const shipping = lookupShippingRate({ ems, post }, carrier, destination, weightG);
   const country = importTax.countries[destination];
 
   const results = proxies.proxies.map((proxy) => {
     const warnings = [];
     const push = (w) => { if (w) warnings.push(w); };
+
+    // EMS以外は、その会社が公式ページでこの配送方法を挙げているかを見る。
+    // 挙げていない会社を黙って同じ料金で並べると、使えない配送方法の総額で最安に見えてしまう。
+    const offer = carrier === "ems" ? { status: "listed" } : post?.offeredBy?.[proxy.id]?.[carrier];
+    const methodListed = offer?.status === "listed";
+    if (!methodListed) {
+      push(`${proxy.shortName ?? proxy.name} does not list ${(CARRIER_LABELS[carrier] ?? carrier).toLowerCase()} among its shipping methods, so this total may not be available`);
+    }
 
     const service = calcServiceFee(proxy, { source, itemCount, sameShop });
     push(service.warning);
@@ -383,6 +423,7 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
       grandTotalIsMinimum: !deliveryQuantified,
 
       taxTiming,
+      methodListed,
       proxyFeesOnly: payNowTotal - itemPriceJpy,  // 商品代を除いた代行コスト（内部比較用）
       warnings,
       affiliate: proxy.affiliate,
@@ -392,8 +433,11 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
   // 配送可否を第1キーにする。
   // 金額だけで並べると「送れないが安い会社」が1位＝おすすめとして出てしまい、
   // 元のバグ（送れない商品に見積もりを出す）より悪い結果になる。
+  // 第1キー: 配送可否 / 第2キー: その配送方法を扱っているか / 第3キー: 総額
   results.sort((a, b) =>
-    LEVEL_RANK[a.shippable.level] - LEVEL_RANK[b.shippable.level] || a.grandTotal - b.grandTotal
+    LEVEL_RANK[a.shippable.level] - LEVEL_RANK[b.shippable.level]
+      || (a.methodListed ? 0 : 1) - (b.methodListed ? 0 : 1)
+      || a.grandTotal - b.grandTotal
   );
 
   const allBlocked = results.length > 0 && results.every((r) => r.shippable.level === "prohibited");

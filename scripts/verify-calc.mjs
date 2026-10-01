@@ -6,6 +6,7 @@ import proxies from "../data/proxies.json" with { type: "json" };
 import ems from "../data/shipping-ems.json" with { type: "json" };
 import importTax from "../data/import-tax.json" with { type: "json" };
 import restrictions from "../data/restrictions.json" with { type: "json" };
+import post from "../data/shipping-post.json" with { type: "json" };
 import { calculateAll } from "../src/lib/calc.mjs";
 
 const yen = (n) => "¥" + n.toLocaleString("ja-JP");
@@ -301,6 +302,57 @@ const run = (extra) =>
   const withoutR = calculateAll({ ...baseInput }, { proxies, ems, importTax });
   const same = withR.results.every((r, i) => r.proxyId === withoutR.results[i].proxyId && r.grandTotal === withoutR.results[i].grandTotal);
   check("属性なしのときは順位も総額も一切変わらない", same);
+}
+
+// ===========================================================================
+// 13. EMS以外の日本郵便（2026-10-02追加）。数値は日本郵便の料金表（第4地帯=米国など）を手で読んだもの
+// ===========================================================================
+console.log("\n\n=== EMS以外の配送方法 ===");
+{
+  const runP = (extra) => calculateAll({ ...baseInput, ...extra }, { proxies, ems, importTax, restrictions, post });
+  const base = { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: "US", domesticShippingJpy: 700, buyeePlan: "light" };
+
+  // 米国・1kg・小形包装物（航空便）= 2,720円（第4地帯 Up to 1.0kg）
+  const sp = runP({ ...base, carrier: "small_packet_air" });
+  check("米国1kg 小形包装物（航空便）は ¥2,720", sp.shipping.amount === 2720, `got ${sp.shipping.amount}`);
+  // Buyee: 10,000 + 500 + 700 + 2,720 = 13,920
+  const by = sp.results.find((r) => r.proxyId === "buyee");
+  check("Buyee 総額 ¥13,920（小形包装物・米国）", by.grandTotal === 13920, `got ${by.grandTotal}`);
+  // ZenMarket: 10,000 + 800 + 700 + 2,720 = 14,220 → 3.5%グロスアップ 14,220/0.965 = 14,735.75 → 手数料 516 → 14,736
+  const zm = sp.results.find((r) => r.proxyId === "zenmarket");
+  check("ZenMarket 総額 ¥14,736（小形包装物・米国）", zm.grandTotal === 14736, `got ${zm.grandTotal}`);
+  // 小形包装物を掲載していない会社（FROM JAPAN・Neokyo）は掲載している会社より後ろに並ぶ
+  const firstUnlisted = sp.results.findIndex((r) => !r.methodListed);
+  const lastListed = sp.results.map((r) => r.methodListed).lastIndexOf(true);
+  check("この配送方法を掲載していない会社は、掲載している会社より後ろ", firstUnlisted > lastListed,
+    sp.results.map((r) => `${r.name}:${r.methodListed ? "listed" : "unknown"}`).join(" "));
+
+  // 2kg を超える小形包装物は料金を出さない
+  const big = runP({ ...base, carrier: "small_packet_air", weightG: 3000 });
+  check("3kg の小形包装物は料金を出さずエラー", big.shipping.amount == null && /up to 2kg/.test(big.shipping.error ?? ""), big.shipping.error);
+
+  // 米国・1kg・国際小包の船便 = 2,600円 / 航空便 = 4,200円
+  check("米国1kg 船便小包は ¥2,600", runP({ ...base, carrier: "intl_parcel_sea" }).shipping.amount === 2600);
+  check("米国1kg 航空小包は ¥4,200", runP({ ...base, carrier: "intl_parcel_air" }).shipping.amount === 4200);
+
+  // 豪州宛ての電池は、航空なら条件付きで可、船便は日本郵便が不可
+  const auAir = runP({ ...base, destination: "AU", carrier: "intl_parcel_air", attributes: ["lithium_battery"] });
+  const auSea = runP({ ...base, destination: "AU", carrier: "intl_parcel_sea", attributes: ["lithium_battery"] });
+  check("豪州・電池・船便は全社不可（日本郵便の規則）", auSea.allBlocked === true);
+  check("豪州・電池・航空小包は全社不可ではない", auAir.allBlocked === false);
+
+  // FROM JAPAN はシンガポール宛ての船便では GST を事前徴収しない（EMSではする）
+  const fjOf = (r) => r.results.find((x) => x.proxyId === "fromjapan");
+  check("FROM JAPAN シンガポール EMS は事前徴収", fjOf(runP({ ...base, destination: "SG" })).taxTiming === "prepaid");
+  check("FROM JAPAN シンガポール 船便は到着時払い", fjOf(runP({ ...base, destination: "SG", carrier: "intl_parcel_sea" })).taxTiming === "on-delivery");
+
+  // FROM JAPAN の輸出通関料は "intl_parcel" とだけ書いてあるので、航空小包でも20万円超なら ¥2,800
+  const fjHigh = fjOf(runP({ ...base, itemPriceJpy: 250000, carrier: "intl_parcel_air" }));
+  check("FROM JAPAN 20万円超・航空小包で輸出通関料 ¥2,800", fjHigh.payNow.lines.some((l) => l.key === "clearance" && l.amount === 2800));
+
+  // EMS の結果は配送方法を足す前と完全に同じ
+  const a = runP({ ...base }), b = calculateAll({ ...base }, { proxies, ems, importTax, restrictions });
+  check("EMSの総額と順位は配送方法対応の前と同じ", a.results.every((r, i) => r.proxyId === b.results[i].proxyId && r.grandTotal === b.results[i].grandTotal));
 }
 
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);

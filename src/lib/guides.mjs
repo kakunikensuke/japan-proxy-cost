@@ -27,6 +27,7 @@ export const GUIDES = [
   { slug: "consolidating-parcels", title: "Consolidating parcels from Japan: when one box saves money", blurb: "What combining purchases saves in postage to each country, and what storage costs while you wait." },
   { slug: "ems-weight-bands", title: "EMS from Japan: the weight bands and what each step costs", blurb: "The full EMS price table for nine countries, and where a few grams cost a whole step." },
   { slug: "is-it-worth-it", title: "When is an item from Japan worth the shipping?", blurb: "How much the overhead adds at each item price, and where it drops below half the item's cost." },
+  { slug: "shipping-methods", title: "EMS, airmail or surface: the cheapest way to ship from Japan", blurb: "Every Japan Post method priced for nine countries, and which proxies offer which." },
   { slug: "paying-import-tax-up-front", title: "Paying import tax up front or on delivery: what each proxy does", blurb: "Which services collect VAT or GST at checkout for which countries, and the limits on it." },
 ];
 
@@ -412,7 +413,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       description: `Japan Post EMS prices for ${countries.length} countries in one table, and where a few grams over a band costs up to ${yen(Math.max(...steps.flatMap((s) => s.jumps.map((j) => j.add))))}.`,
       body: `
   <h1>EMS from Japan: the weight bands</h1>
-  <p>Every total on this site uses Japan Post's EMS, the service all four proxies offer. EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
+  <p>Totals on this site default to Japan Post's EMS, the one service all four proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
   <h2>The table</h2>
   <table><thead><tr><th>Weight</th>${zones.map((z) => `<th class="num">${zoneName(z)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
   <p class="cap">Japan Post EMS, checked ${esc(ems._meta.updated)}. Countries in the same column share a price zone. Bands between those shown are not used on this site; a parcel is priced at the next band up.</p>
@@ -582,7 +583,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   save you the most money.</p>
   <h2>What the guides found</h2>
   <p>Each guide runs the calculator across many orders rather than describing a single example. In one line each:</p>
-  <ul>${GUIDES.map((g) => `<li><a href="/guides/${g.slug}">${esc(g.title)}</a>: ${hl[g.slug] ?? ""}</li>`).join("")}</ul>
+  <ul>${GUIDES.filter((g) => hl[g.slug]).map((g) => `<li><a href="/guides/${g.slug}">${esc(g.title)}</a>: ${hl[g.slug]}</li>`).join("")}</ul>
   <p>All of them use the same fee, EMS and tax data as the rest of the site, checked against each company's and each authority's own pages.
   When a rule is not published, the guides say so rather than filling the gap with a guess. If you spot a figure that has changed, the
   <a href="/contact">contact page</a> is the quickest way to get it corrected.</p>
