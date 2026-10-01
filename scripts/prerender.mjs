@@ -59,7 +59,7 @@ const SITE_FOOTER = `
  *   AdSense に「有用性の低いコンテンツ」と判定された直接の原因である。
  *   本文は #root の外に置き、React に触らせないこと。
  */
-function renderPage({ title, description, canonicalPath, body, prefill, layout = "content-first" }) {
+function renderPage({ title, description, canonicalPath, body, prefill, layout = "content-first", noindex = false }) {
   let html = TEMPLATE;
 
   // テンプレート既定の title / description を消してページ固有のものに差し替える
@@ -74,6 +74,7 @@ function renderPage({ title, description, canonicalPath, body, prefill, layout =
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:url" content="${SITE_URL}${canonicalPath}" />
     <link rel="canonical" href="${SITE_URL}${canonicalPath}" />
+    ${noindex ? '<meta name="robots" content="noindex,follow" />' : ""}
     <script>window.__PAGE__=${JSON.stringify({ prefill: prefill ?? null, layout }).replace(/</g, "\\u003c")};</script>
   </head>`;
   html = html.replace("</head>", head);
@@ -250,6 +251,7 @@ writePage("/404", renderPage({
   description: "That page does not exist. Start from the calculator to compare Buyee, ZenMarket, Neokyo and FROM JAPAN.",
   canonicalPath: "/404",
   prefill: null,
+  noindex: true,
   layout: "content-only",
   body: `
   <h1>That page doesn't exist</h1>
@@ -262,7 +264,8 @@ writePage("/404", renderPage({
 }));
 
 // ---- sitemap.xml / robots.txt ----
-const urls = ["/", "/all-pages", ...pages.map((p) => p.path)];
+// noindex のページ（送信完了ページなど）は sitemap に載せない。載せておいて検索避けするのは矛盾する
+const urls = ["/", "/all-pages", ...pages.filter((p) => !p.noindex).map((p) => p.path)];
 const today = new Date().toISOString().slice(0, 10);
 fs.writeFileSync(path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

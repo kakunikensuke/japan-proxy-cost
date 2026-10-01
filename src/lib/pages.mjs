@@ -1152,6 +1152,8 @@ function staticPages(data) {
     {
       path: "/contact-received",
       layout: "content-only",
+      // 送信を終えた人だけが見る通過ページ。検索から来ても意味がないのでインデックスさせない
+      noindex: true,
       title: "Message received — Japan Proxy Cost",
       description: "Your message has been sent. What happens next, and how corrections to the fee data are handled.",
       prefill: null,
