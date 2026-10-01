@@ -19,6 +19,14 @@
  * 利用者は落札後に商品代・国内送料・キャンセル料だけ失う。
  */
 import { calculateAll } from "./calc.mjs";
+import {
+  pairGrid, verdictBox, heatTable, driverText, gapBreakdown, marketplaceDuel, shipRulesDuel, taxTimingDuel, termsDuel,
+  priceLadder, weightLadder, togetherOrApart, priceAtWeight, perServiceLines, taxLadder, thresholdsInYen,
+  proxyAcrossCountries, proxyPriceCurve,
+} from "./enrich.mjs";
+import { buildGuides } from "./guides.mjs";
+import { PHOTOS } from "./layout.mjs";
+import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
 /**
  * お問い合わせはサイト内のフォームで受ける。
@@ -335,6 +343,10 @@ export function buildPages(data) {
         const [win, lose] = pair.sort((x, y) => x.grandTotal - y.grandTotal);
         const diff = lose.grandTotal - win.grandTotal;
         const cn = countryName(importTax, cc);
+        // 24通りの注文で2社を比べた結果（条件を変えると結論が変わるかを、ページごとに実際に計算する）
+        const grid = pairGrid(input, data, A.id, B.id);
+        const aRes = pair.find((r) => r.proxyId === A.id);
+        const bRes = pair.find((r) => r.proxyId === B.id);
 
         pages.push({
           path: versusPath(A.id, B.id, cc),
@@ -344,18 +356,34 @@ export function buildPages(data) {
           body: `
   <h1>${esc(A.name)} vs ${esc(B.name)}: shipping to ${esc(cn)}</h1>
   <p>Taking a typical order — a ¥10,000 item from Mercari Japan, about 1kg once packed, sent to ${esc(cn)} by EMS —
-  <strong>${esc(win.name)} works out cheaper by ${yen(diff)}</strong>.</p>
+  ${diff > 0 ? `<strong>${esc(win.name)} works out cheaper by ${yen(diff)}</strong>` : `<strong>the two come out level</strong>`}.</p>
+  ${verdictBox(grid, A.name, B.name, aRes, bRes, cn)}
   ${countryNotice(country)}
   ${resultsTable(pair)}
   <p>Totals include the proxy's service fee, packing, domestic shipping inside Japan, international postage,
   any deposit or payment fee, and import tax. Where a service collects tax up front it appears in the
   &ldquo;pay the proxy&rdquo; column instead of &ldquo;pay on delivery&rdquo; — the tax is the same either way.</p>
 
-  <h2>Where the ${yen(diff)} actually goes</h2>
-  ${gapExplanation(win, lose)}
+  <h2>${diff > 0 ? `Where the ${yen(diff)} actually goes` : "Line by line"}</h2>
+  ${gapBreakdown(win, lose)}
 
-  <h2>Does this hold for other orders?</h2>
-  ${flipCheck(input, data, [A.id, B.id])}
+  <h2>Does it hold for your order?</h2>
+  <p>One example order proves little, so we priced the same pair on ${grid.cells.length} orders: four parcel weights,
+  three item prices, and one item against three separate items, all from Mercari Japan to ${esc(cn)}.</p>
+  ${heatTable(grid, A.name, B.name)}
+  ${driverText(grid, A.name, B.name)}
+
+  <h2>Depending on where you buy</h2>
+  ${marketplaceDuel(input, data, A, B)}
+
+  <h2>What each will ship to ${esc(cn)}</h2>
+  ${shipRulesDuel(cc, cn, data, A, B)}
+
+  <h2>When you pay the import tax</h2>
+  ${taxTimingDuel(cc, cn, data, input, A, B)}
+
+  <h2>Storage, packing and payment terms</h2>
+  ${termsDuel(data, A, B)}
 
   <h2>What each includes for the money</h2>
   <p>${esc(win.name)}: ${win.includes.length ? esc(win.includes.map((i) => INCLUDE_LABELS[i] ?? i).join(", ")) : "no extras bundled at this plan level"}${win.planName ? ` (${esc(win.planName)})` : ""}.
@@ -443,6 +471,12 @@ export function buildPages(data) {
 
   ${unitOfChargeNote(baseInput, data, "Yahoo! Auctions")}
 
+  <h2>When the item costs more, or less</h2>
+  ${priceLadder(baseInput, data, cn)}
+
+  <h2>When the parcel is heavier</h2>
+  ${weightLadder(baseInput, data)}
+
   <h2>What the cheapest total is made of</h2>
   <p>${esc(baseResults[0].name)}'s ${yen(baseResults[0].grandTotal)} on a Yahoo! Auctions order breaks down as
   ${baseResults[0].payNow.lines.filter((l) => l.key !== "item").map((l) => `${esc(l.labelEn.toLowerCase())} ${yen(l.amount)}`).join(", ")},
@@ -489,6 +523,22 @@ export function buildPages(data) {
   Going one gram over moves you to the next band.</p>
   ${weightBandNote(ems, cc, w.g, shipping)}
 
+  <h2>One box or several?</h2>
+  ${togetherOrApart(ems, cc, w.g, cn)}
+
+  <h2>The same weight at different prices</h2>
+  ${priceAtWeight(input, data, cn)}
+
+  <h2>Each service, line by line</h2>
+  <p>The postage is identical for all four at this weight. These are the lines that are not:</p>
+  ${perServiceLines(results)}
+
+  <h2>What can go in this box to ${esc(cn)}</h2>
+  ${presetsAtWeight(w.slug, cc, cn, data)}
+
+  <h2>Cheapest service by marketplace at this weight</h2>
+  ${sourcesAtWeight(input, data)}
+
   <h2>How much of the bill is the weight?</h2>
   <p>On this order the postage alone is ${shipping.amount ? yen(shipping.amount) : "—"}, against a ¥10,000
   item and ${yen(best.grandTotal - 10000 - (shipping.amount ?? 0))} of everything else — service fee, packing,
@@ -533,6 +583,10 @@ export function buildPages(data) {
     <li>Export clearance fee: ${p.exportClearanceFee ? `${yen(p.exportClearanceFee.amount)} above ${yen(p.exportClearanceFee.thresholdJpy)}` : "not published"}</li>
   </ul>
   ${whenThisWins(p, data)}
+  <h2>${esc(name)} in each of the ${countries.length} destinations</h2>
+  ${proxyAcrossCountries(p, data, countries, (c) => countryName(importTax, c))}
+  <h2>As the item gets more expensive</h2>
+  ${proxyPriceCurve(p, data)}
   <h2>Storage, and what happens if you leave things too long</h2>
   <p>${p.storage?.freeDays
     ? `${esc(name)} stores a purchase free for ${p.storage.freeDays} days from the moment it reaches their warehouse${p.storage.maxDays ? `, and will hold it for at most ${p.storage.maxDays} days in total` : ""}.`
@@ -606,6 +660,11 @@ export function buildPages(data) {
     ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
     : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
   ${taxWorkedExample(cc, data, cn)}
+  <h2>Tax at six different prices</h2>
+  ${taxLadder(cc, data)}
+  ${thresholdsInYen(cc, data) ? `<h2>The limits that matter, in yen</h2>${thresholdsInYen(cc, data)}` : ""}
+  <h2>How ${esc(cn)} compares</h2>
+  ${taxAmongCountries(cc, data, countries, (c) => countryName(importTax, c))}
   <h2>The handling fee nobody quotes</h2>
   <p>Where tax is not collected up front, the courier or postal operator pays it for you at the border and
   then charges a fee for having done so. It is commonly ¥1,000–3,000 and it is not part of the tax itself.
@@ -766,6 +825,9 @@ export function buildPages(data) {
       : `This is the company's own policy rather than a postal rule, so a different service may still accept it.`}</p>`;
   }).join("")}
 
+  <h2>What you lose if it is refused</h2>
+  ${refusalCost(data, attrId)}
+
   <h2>Why this matters before you bid</h2>
   <p>A proxy will happily accept the order and buy the item for you. The refusal happens later, when the parcel
   reaches their warehouse and is inspected. At that point you have already paid for the goods, the domestic
@@ -853,6 +915,9 @@ export function buildPages(data) {
   // AdSense の審査で「有用性の低いコンテンツ」として落ちた直接の原因のひとつが
   // これらが1ページも無かったこと。広告の有無に関わらず、誰が何を根拠に書いているかを
   // 示せないサイトは信用されない。
+  // 読み物（ガイド）と入口のハブ（/compare・/import-tax・/guides）。ナビゲーションから辿れる先。
+  pages.push(...buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName: (c) => countryName(importTax, c) }));
+
   pages.push(...staticPages(data));
 
   return pages;
@@ -998,6 +1063,11 @@ function staticPages(data) {
   <h2>Corrections</h2>
   <p>Fee pages change without notice. Every number here records the date it was checked, and if you find one
   that no longer matches the company's own page, please tell us — see <a href="/contact">contact</a>.</p>
+
+  <h2 id="photo-credits">Photo credits</h2>
+  <p>The photographs behind the page headings come from Wikimedia Commons and are used under the licences shown.
+  They are resized and darkened so the text over them stays readable; nothing else is changed.</p>
+  <ul>${Object.values(PHOTOS).map((p) => `<li><a href="${p.source}" rel="noopener" target="_blank">${esc(p.what)}</a> by ${esc(p.author)}, <a href="${p.licenseUrl}" rel="license noopener" target="_blank">${p.license}</a></li>`).join("")}</ul>
   ${links([
     { href: "/how-we-calculate", text: "How these numbers are worked out" },
     { href: "/privacy-policy", text: "Privacy and cookies" },

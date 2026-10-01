@@ -19,6 +19,7 @@ import restrictions from "../data/restrictions.json" with { type: "json" };
 import stores from "../data/stores.json" with { type: "json" };
 import { buildPages, CONTACT_FORM_ENDPOINT } from "../src/lib/pages.mjs";
 import { calculateAll } from "../src/lib/calc.mjs";
+import { sectionOf, siteHeader, siteFooter, photoImg, photoCredit, photoPreload, splitArticle, breadcrumbs, breadcrumbJsonLd } from "../src/lib/layout.mjs";
 
 const SITE_URL = (process.env.VITE_SITE_URL ?? "https://japanproxy.kakuni-lab.com").replace(/\/$/, "");
 const DIST = path.join(import.meta.dirname, "..", "dist");
@@ -32,35 +33,22 @@ const TEMPLATE = fs.readFileSync(TEMPLATE_PATH, "utf-8");
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** 全ページ共通のフッター。運営者・算出方法・プライバシー・連絡先へどのページからでも辿れるようにする。 */
-const SITE_FOOTER = `
-  <footer class="site-foot">
-    <nav>
-      <a href="/">Calculator</a>
-      <a href="/all-pages">All pages</a>
-      <a href="/how-we-calculate">How we calculate</a>
-      <a href="/about">About</a>
-      <a href="/privacy-policy">Privacy &amp; cookies</a>
-      <a href="/contact">Contact</a>
-    </nav>
-    <p>Independent calculator run from Japan. Not affiliated with any proxy service.
-    Estimates only — customs authorities have the final say.</p>
-  </footer>`;
-
 /**
  * layout の意味:
- *   tool-first    … 計算機が先、本文が後（トップページ）
+ *   tool-first    … 写真の見出し帯の中に計算機（トップページ）
  *   content-first … 本文が先、計算機が後（比較・重量・輸入税などの解説ページ）
- *   content-only  … 計算機を出さない（運営者情報・プライバシー・問い合わせ等）
+ *   content-only  … 計算機を出さない（運営者情報・プライバシー・問い合わせ・ガイド等）
  *
- * ★ここは飾りではない。以前は本文を #root の中に入れていたため、React が
- *   createRoot で #root を描き直した瞬間に本文が消え、**どのURLを開いても計算機しか
+ * ★本文は #root の外に置き、React に触らせないこと。以前は本文を #root の中に入れていたため、
+ *   React が createRoot で #root を描き直した瞬間に本文が消え、**どのURLを開いても計算機しか
  *   出ない**状態だった。クローラには本文が見え、人間には見えないという最悪の形で、
  *   AdSense に「有用性の低いコンテンツ」と判定された直接の原因である。
- *   本文は #root の外に置き、React に触らせないこと。
+ *   外枠（ヘッダー・パンくず・目次・フッター）も同じ理由で静的HTMLに置く（src/lib/layout.mjs）。
  */
 function renderPage({ title, description, canonicalPath, body, prefill, layout = "content-first", noindex = false }) {
   let html = TEMPLATE;
+  const section = sectionOf(canonicalPath);
+  const parts = splitArticle(body);
 
   // テンプレート既定の title / description を消してページ固有のものに差し替える
   html = html.replace(/\s*<title>[\s\S]*?<\/title>/, "");
@@ -73,20 +61,58 @@ function renderPage({ title, description, canonicalPath, body, prefill, layout =
     <meta property="og:title" content="${esc(title)}" />
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:url" content="${SITE_URL}${canonicalPath}" />
+    <meta property="og:image" content="${SITE_URL}/img/${section.photo}-1600.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="canonical" href="${SITE_URL}${canonicalPath}" />
     ${noindex ? '<meta name="robots" content="noindex,follow" />' : ""}
+    ${photoPreload(section.photo)}
+    ${canonicalPath !== "/" ? `<script type="application/ld+json">${breadcrumbJsonLd(SITE_URL, section, parts.h1, canonicalPath)}</script>` : ""}
     <script>window.__PAGE__=${JSON.stringify({ prefill: prefill ?? null, layout }).replace(/</g, "\\u003c")};</script>
   </head>`;
   html = html.replace("</head>", head);
 
-  // 本文は #root の**外**に置く。React は #root しか触らないので、本文は人間にも残る。
-  // 全ページ共通のフッターも必ず付ける。運営者・算出方法・プライバシー・連絡先へ
-  // 辿れないサイトは広告審査でも検索評価でも信用されない。
-  const article = `<article class="page-content">${body}</article>`;
-  const root = layout === "content-only" ? "" : `<div id="root"></div>`;
-  const order = layout === "tool-first" ? `${root}${article}` : `${article}${root}`;
+  let main;
+  if (layout === "tool-first") {
+    // トップ: 写真の見出し帯の左に見出し、右に計算機。結果は帯の下へ React のポータルで出す。
+    main = `
+  <section class="band band-home">
+    ${photoImg(section.photo, { eager: true })}<div class="band-shade"></div>
+    <div class="wrap home-grid">
+      <div class="home-intro">
+        <h1>${parts.h1}</h1>
+        ${parts.dek ? `<p class="lede">${parts.dek}</p>` : ""}
+        ${HOME_FACTS}
+      </div>
+      <div class="home-calc" id="calculator"><div id="root"></div></div>
+    </div>
+    ${photoCredit(section.photo)}
+  </section>
+  <div class="wrap"><div id="calc-results"></div></div>
+  <div class="wrap article-layout no-toc"><article class="page-content prose">${parts.body}</article></div>`;
+  } else {
+    const showToc = parts.toc.length >= 3;
+    const toc = showToc ? `<aside class="toc"><nav aria-label="On this page"><p>On this page</p><ol>${
+      parts.toc.map((t) => `<li><a href="#${t.id}">${esc(t.label)}</a></li>`).join("")}</ol></nav></aside>` : "";
+    const calc = layout === "content-only" ? "" : `
+  <section class="calc-section" id="calculator"><div class="wrap">
+    <h2>Work out your own order</h2>
+    <p>The figures above are for one example order. Change anything here and every total recalculates.</p>
+    <div id="root"></div>
+  </div></section>`;
+    main = `
+  <section class="band">
+    ${photoImg(section.photo, { eager: true })}<div class="band-shade"></div>
+    <div class="wrap band-inner">
+      ${breadcrumbs(section, parts.h1)}
+      <h1>${parts.h1}</h1>
+      ${parts.dek ? `<p class="dek">${parts.dek}</p>` : ""}
+    </div>
+    ${photoCredit(section.photo)}
+  </section>
+  <div class="wrap article-layout${showToc ? "" : " no-toc"}">${toc}<article class="page-content prose">${parts.body}</article></div>${calc}`;
+  }
 
-  html = html.replace('<div id="root"></div>', `<div class="page-wrap">${order}${SITE_FOOTER}</div>`);
+  html = html.replace('<div id="root"></div>', `${siteHeader(section.key)}<main id="main">${main}</main>${siteFooter()}`);
   return html;
 }
 
@@ -104,6 +130,7 @@ const pages = buildPages({ proxies, ems, importTax, restrictions, stores });
 // ---- トップページ: 全ページへの入口を持たせる ----
 const grouped = {
   // 「そもそも送れるのか」を最上部に置く。金額より先に知る必要がある情報なので。
+  "Guides and overviews": pages.filter((p) => p.path.startsWith("/guides") || ["/compare", "/import-tax"].includes(p.path)),
   "Can you even ship it?": pages.filter((p) => p.path.startsWith("/can-you-ship-") || p.path === "/what-you-cannot-ship-from-japan"),
   "Compare two services": pages.filter((p) => p.path.includes("-vs-")),
   "Cheapest proxy by marketplace": pages.filter((p) => p.path.startsWith("/cheapest-proxy-")),
@@ -146,8 +173,18 @@ const light = sampleRun.results[0];
 const heavy = heavyRun.results[0];
 const flips = light.proxyId !== heavy.proxyId;
 
+// 見出し帯に並べる3つの数字。どれもデータから数える（手で書くと更新が漏れる）。
+const HOME_FACTS = `<ul class="facts">
+  <li><b>${proxies.proxies.length}</b> proxy services</li>
+  <li><b>${Object.keys(importTax.countries).length}</b> destination countries</li>
+  <li><b>${esc(new Date(proxies._meta.updated + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }))}</b> fees last checked</li>
+</ul>`;
+
 const homeBody = `
-  <h1>What does a Japan proxy service actually cost?</h1>
+  <h1>See what buying from Japan really costs</h1>
+  <p>Four proxy services priced to the yen: service fees, packing, postage inside Japan, EMS, and the import tax
+  your country adds when the parcel lands.</p>
+  <h2>What a proxy actually charges you for</h2>
   <p>A proxy service buys something in Japan on your behalf and forwards it to you. Every one of them
   advertises a service fee of a few hundred yen, and every one of them ends up charging you several times
   that. The fee is not where the money goes.</p>
@@ -299,6 +336,13 @@ fs.writeFileSync(path.join(DIST, "robots.txt"),
     if (p.path !== "/all-pages" && wordsOf(p.body) < 250) {
       problems.push(`本文が薄い ${p.path}（表を除いて${wordsOf(p.body)}語）`);
     }
+    // 2026-10-01 に本文を厚くした（中央値367語→870語前後）。その水準を割るページを出さない。
+    // 表も含めた語数で500語。問い合わせ・プライバシー・送信完了・一覧は性質上短いので対象外。
+    const SHORT_OK = ["/all-pages", "/contact", "/contact-received", "/privacy-policy"];
+    const allWords = p.body.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/g, " ").trim().split(/\s+/).filter(Boolean).length;
+    if (!SHORT_OK.includes(p.path) && !p.noindex && allWords < 500) {
+      problems.push(`本文が薄い ${p.path}（表を含めて${allWords}語。500語以上にすること）`);
+    }
     for (const m of p.body.matchAll(/href="(\/[^"#?]*)"/g)) {
       if (!known.has(m[1])) problems.push(`リンク切れ ${p.path} → ${m[1]}`);
     }
@@ -308,6 +352,11 @@ fs.writeFileSync(path.join(DIST, "robots.txt"),
         problems.push(`日本語混入 ${p.path} の ${field}: ${hit}`);
       }
     }
+  }
+
+  // ヘッダーとフッター（全ページ共通）のリンクも、存在するページを指しているか確かめる
+  for (const m of (siteHeader("") + siteFooter()).matchAll(/href="(\/[^"#?]*)"/g)) {
+    if (!known.has(m[1])) problems.push(`リンク切れ ヘッダー/フッター → ${m[1]}`);
   }
 
   if (problems.length) {
