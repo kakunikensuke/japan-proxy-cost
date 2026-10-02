@@ -46,7 +46,7 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  *   AdSense に「有用性の低いコンテンツ」と判定された直接の原因である。
  *   外枠（ヘッダー・パンくず・目次・フッター）も同じ理由で静的HTMLに置く（src/lib/layout.mjs）。
  */
-function renderPage({ title, description, canonicalPath, body, prefill, layout = "content-first", noindex = false }) {
+function renderPage({ title, description, canonicalPath, body, prefill, layout = "content-first", noindex = false, jsonLd = null }) {
   let html = TEMPLATE;
   const section = sectionOf(canonicalPath);
   const parts = splitArticle(body);
@@ -68,6 +68,7 @@ function renderPage({ title, description, canonicalPath, body, prefill, layout =
     ${noindex ? '<meta name="robots" content="noindex,follow" />' : ""}
     ${photoPreload(section.photo)}
     ${canonicalPath !== "/" ? `<script type="application/ld+json">${breadcrumbJsonLd(SITE_URL, section, parts.h1, canonicalPath)}</script>` : ""}
+    ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ""}
     <script>window.__PAGE__=${JSON.stringify({ prefill: prefill ?? null, layout }).replace(/</g, "\\u003c")};</script>
   </head>`;
   html = html.replace("</head>", head);

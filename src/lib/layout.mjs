@@ -71,6 +71,7 @@ export function sectionOf(path) {
   if (path.startsWith("/ship-")) return { key: "ship", photo: "shipping", parent: { href: "/guides/ems-weight-bands", text: "Shipping costs" } };
   if (path.startsWith("/can-you-ship-")) return { key: "ship", photo: "shipping", parent: { href: "/what-you-cannot-ship-from-japan", text: "What can’t ship" } };
   if (path === "/what-you-cannot-ship-from-japan") return { key: "ship", photo: "shipping" };
+  if (path === "/faq" || path === "/glossary") return { key: "guides", photo: "guides", parent: { href: "/guides", text: "Guides" } };
   if (path === "/guides" || path.startsWith("/guides/")) return { key: "guides", photo: "guides", parent: path === "/guides" ? null : { href: "/guides", text: "Guides" } };
   return { key: "site", photo: "site" };
 }
@@ -111,6 +112,8 @@ export function siteFooter() {
       <li><a href="/what-you-cannot-ship-from-japan">What can’t ship from Japan</a></li>
       <li><a href="/import-tax">Import tax by country</a></li>
       <li><a href="/guides">Guides</a></li>
+      <li><a href="/faq">FAQ</a></li>
+      <li><a href="/glossary">Glossary</a></li>
       <li><a href="/how-we-calculate">How we calculate</a></li>
     </ul></nav>
     <nav aria-label="This site"><h2>This site</h2><ul>

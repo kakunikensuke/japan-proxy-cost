@@ -28,6 +28,7 @@ import { buildGuides } from "./guides.mjs";
 import { buildGenreGuides } from "./genres.mjs";
 import { countryGuide } from "./countryguide.mjs";
 import { buildShippingGuide, methodsTable } from "./shipmethods.mjs";
+import { buildReference } from "./reference.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
@@ -940,6 +941,8 @@ export function buildPages(data) {
   // 示せないサイトは信用されない。
   // 読み物（ガイド）と入口のハブ（/compare・/import-tax・/guides）。ナビゲーションから辿れる先。
   pages.push(...buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName: (c) => countryName(importTax, c) }));
+  // 用語集とよくある質問
+  pages.push(...buildReference(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
   // 配送方法の比較ガイド（EMS・小形包装物・航空小包・船便）
   pages.push(buildShippingGuide(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
   // ジャンル別ガイド（フィギュア・プラモデル・漫画など8本）

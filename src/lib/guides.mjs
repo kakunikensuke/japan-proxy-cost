@@ -593,6 +593,8 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     <li><a href="/import-tax">Import tax by country</a></li>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a></li>
     <li><a href="/how-we-calculate">How the numbers are worked out</a></li>
+    <li><a href="/faq">Frequently asked questions</a></li>
+    <li><a href="/glossary">Glossary</a></li>
   </ul>`,
   });
 
