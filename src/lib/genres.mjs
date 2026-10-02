@@ -16,6 +16,7 @@ import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml, perServiceLines } from "./enrich.mjs";
 import { sourcesAtWeight } from "./enrich2.mjs";
 import { methodsTable } from "./shipmethods.mjs";
+import { approx } from "./fx.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x) => `${Math.round(x * 100)}%`;
@@ -221,7 +222,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
     // ---- 国ごとの費用 ----
     const priced = byCountry.filter((x) => x.best);
     const tr = byCountry.map((x) => x.best
-      ? `<tr><td>${esc(x.cn)}</td><td>${esc(x.best.name)}${x.best.shippable.level !== "ok" ? " (with conditions)" : ""}</td><td class="num">${x.best.grandTotalIsMinimum ? "not estimated" : yen(amountOf(x.best, "tax"))}</td><td class="num">${yen(x.best.grandTotal)}${x.best.grandTotalIsMinimum ? " +duty" : ""}</td><td class="num">${pct((x.best.grandTotal - o.price) / o.price)}</td></tr>`
+      ? `<tr><td>${esc(x.cn)}</td><td>${esc(x.best.name)}${x.best.shippable.level !== "ok" ? " (with conditions)" : ""}</td><td class="num">${x.best.grandTotalIsMinimum ? "not estimated" : yen(amountOf(x.best, "tax"))}</td><td class="num">${yen(x.best.grandTotal)}${x.best.grandTotalIsMinimum ? " +duty" : ""}<br><small>${approx(x.best.grandTotal, x.cc, data.fx)}</small></td><td class="num">${pct((x.best.grandTotal - o.price) / o.price)}</td></tr>`
       : `<tr class="row-exception"><td>${esc(x.cn)}</td><td colspan="4">${x.status.key === "post" ? "Japan Post will not carry it" : "No service confirms it can ship it"}</td></tr>`).join("");
     const winners = {};
     for (const x of priced) {
@@ -322,6 +323,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
   <p>The cheapest service that will take it, for each country, with everything included: the item, fees, postage inside Japan, EMS, and import tax where it can be calculated.
   ${winList.length ? `${listJoin(winList.map(([n, c]) => `${esc(n)} is cheapest (or joint cheapest) for ${c}`))} of the ${priced.length} countries it can go to.` : ""}</p>
   <table><thead><tr><th>Ship to</th><th>Cheapest service</th><th class="num">Import tax</th><th class="num">Total</th><th class="num">On top of the item</th></tr></thead><tbody>${tr}</tbody></table>
+  <p class="cap">Local-currency figures are approximate, at the European Central Bank reference rates of ${esc(data.fx?._meta?.asOf?.ecb ?? "")} (Taiwan dollars at the US Federal Reserve's H.10 rate of ${esc(data.fx?._meta?.asOf?.fedH10 ?? "")}).</p>
   ${priced.length ? `<p>The spread runs from ${yen(cheapestC.best.grandTotal)} to ${esc(cheapestC.cn)} up to ${yen(dearestC.best.grandTotal)} to ${esc(dearestC.cn)}. Most of that gap is EMS postage and import tax, which are the same whichever proxy you use.</p>` : ""}
   ${(() => { const u = byCountry.find((x) => x.cc === "US"); if (!u?.best) return ""; const shipped = u.res.results.filter(ships);
     return `<h2>Each service, line by line</h2>

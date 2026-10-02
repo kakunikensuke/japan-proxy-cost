@@ -9,7 +9,8 @@
     "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview",
     "verify": "node scripts/verify-calc.mjs",
-    "scenarios": "node scripts/scenarios.mjs"
+    "scenarios": "node scripts/scenarios.mjs",
+    "fx": "node scripts/update-fx.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -18,6 +18,7 @@ import importTax from "../data/import-tax.json" with { type: "json" };
 import restrictions from "../data/restrictions.json" with { type: "json" };
 import stores from "../data/stores.json" with { type: "json" };
 import post from "../data/shipping-post.json" with { type: "json" };
+import fx from "../data/fx.json" with { type: "json" };
 import { buildPages, CONTACT_FORM_ENDPOINT } from "../src/lib/pages.mjs";
 import { calculateAll } from "../src/lib/calc.mjs";
 import { sectionOf, siteHeader, siteFooter, photoImg, photoCredit, photoPreload, splitArticle, breadcrumbs, breadcrumbJsonLd } from "../src/lib/layout.mjs";
@@ -127,7 +128,7 @@ function writePage(routePath, html) {
   fs.writeFileSync(outPath, html);
 }
 
-const pages = buildPages({ proxies, ems, importTax, restrictions, stores, post });
+const pages = buildPages({ proxies, ems, importTax, restrictions, stores, post, fx });
 
 // ---- トップページ: 全ページへの入口を持たせる ----
 const grouped = {

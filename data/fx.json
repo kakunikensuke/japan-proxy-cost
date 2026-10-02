@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "note": "1外貨あたりの円。表示はあくまで目安で、必ず日付と出典を併記する。npm run fx で更新。",
+    "sources": {
+      "ecb": "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml",
+      "fedH10": "https://www.federalreserve.gov/releases/h10/current/"
+    },
+    "asOf": {
+      "ecb": "2026-10-01",
+      "fedH10": "2026-09-25"
+    },
+    "fetchedAt": "2026-10-02"
+  },
+  "jpyPer": {
+    "EUR": 178.49,
+    "USD": 157.9837,
+    "CAD": 110.8978,
+    "GBP": 209.0708,
+    "AUD": 109.8062,
+    "SGD": 123.4371,
+    "HKD": 20.1324,
+    "TWD": 4.9397
+  },
+  "currencyOf": {
+    "US": "USD",
+    "CA": "CAD",
+    "GB": "GBP",
+    "AU": "AUD",
+    "DE": "EUR",
+    "FR": "EUR",
+    "SG": "SGD",
+    "TW": "TWD",
+    "HK": "HKD"
+  },
+  "symbol": {
+    "USD": "US$",
+    "CAD": "C$",
+    "GBP": "£",
+    "AUD": "A$",
+    "EUR": "€",
+    "SGD": "S$",
+    "HKD": "HK$",
+    "TWD": "NT$"
+  }
+}

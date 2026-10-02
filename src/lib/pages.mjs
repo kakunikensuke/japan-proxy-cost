@@ -30,6 +30,7 @@ import { countryGuide } from "./countryguide.mjs";
 import { buildShippingGuide, methodsTable } from "./shipmethods.mjs";
 import { buildReference } from "./reference.mjs";
 import { PHOTOS } from "./layout.mjs";
+import { approx, fxNote } from "./fx.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
 
 /**
@@ -292,14 +293,14 @@ function taxWorkedExample(cc, data, cn) {
 }
 
 /** 比較表。ページ固有の実数値が必ずここに入る。 */
-function resultsTable(results, { showTiming = true } = {}) {
+function resultsTable(results, { showTiming = true, cc = null, fx = null } = {}) {
   const rows = results.map((r, i) => `
       <tr${i === 0 ? ' class="best"' : ""}>
         <td>${i + 1}</td>
         <td>${esc(r.name)}</td>
         <td>${yen(r.payNow.total)}</td>
         <td>${r.payOnDelivery.quantified ? yen(r.payOnDelivery.total) : "not estimated"}</td>
-        <td><strong>${yen(r.grandTotal)}</strong>${r.grandTotalIsMinimum ? " +duty" : ""}</td>
+        <td><strong>${yen(r.grandTotal)}</strong>${r.grandTotalIsMinimum ? " +duty" : ""}${cc && fx ? `<br><small>${approx(r.grandTotal, cc, fx)}</small>` : ""}</td>
         ${showTiming ? `<td>${r.taxTiming === "prepaid" ? "Prepaid" : "On delivery"}</td>` : ""}
       </tr>`).join("");
 
@@ -308,7 +309,7 @@ function resultsTable(results, { showTiming = true } = {}) {
       <th>#</th><th>Service</th><th>Pay the proxy</th><th>Pay on delivery</th><th>Total</th>${showTiming ? "<th>Tax</th>" : ""}
     </tr></thead>
     <tbody>${rows}</tbody>
-  </table>`;
+  </table>${cc && fx ? `<p class="cap">${fxNote(cc, fx)}</p>` : ""}`;
 }
 
 function countryNotice(country) {
@@ -363,7 +364,7 @@ export function buildPages(data) {
   ${diff > 0 ? `<strong>${esc(win.name)} works out cheaper by ${yen(diff)}</strong>` : `<strong>the two come out level</strong>`}.</p>
   ${verdictBox(grid, A.name, B.name, aRes, bRes, cn)}
   ${countryNotice(country)}
-  ${resultsTable(pair)}
+  ${resultsTable(pair, { cc, fx: data.fx })}
   <p>Totals include the proxy's service fee, packing, domestic shipping inside Japan, international postage,
   any deposit or payment fee, and import tax. Where a service collects tax up front it appears in the
   &ldquo;pay the proxy&rdquo; column instead of &ldquo;pay on delivery&rdquo; — the tax is the same either way.</p>
@@ -489,7 +490,7 @@ export function buildPages(data) {
     : baseResults[0].payOnDelivery.quantified ? ", with nothing further to pay on arrival" : ", plus import charges that cannot be estimated in advance"}.
   The item is ${Math.round((10000 / baseResults[0].grandTotal) * 100)}% of what you actually spend &mdash; the rest is the cost
   of getting it out of Japan and through customs.</p>
-  ${resultsTable(baseResults)}
+  ${resultsTable(baseResults, { cc, fx: data.fx })}
   ${storeBlock}
   ${baseResults[0].warnings.length ? `<h2>What we could not confirm</h2>${baseResults[0].warnings.map((w) => `<p>${esc(w)}</p>`).join("")}` : ""}
   ${links([
@@ -519,7 +520,7 @@ export function buildPages(data) {
   to ${esc(cn)}${shipping.zone ? ` (zone ${shipping.zone})` : ""}. That is only part of the bill: the proxy's own fees and
   import tax sit on top.</p>
   ${countryNotice(country)}
-  ${resultsTable(results)}
+  ${resultsTable(results, { cc, fx: data.fx })}
 
   <p>EMS charges by weight band, not by the gram, so this same
   ${shipping.amount ? yen(shipping.amount) : '—'} postage applies to anything up to ${w.band}g —

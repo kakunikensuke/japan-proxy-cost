@@ -6,6 +6,8 @@ import importTax from "../data/import-tax.json";
 import restrictions from "../data/restrictions.json";
 import stores from "../data/stores.json";
 import post from "../data/shipping-post.json";
+import fx from "../data/fx.json";
+import { approx, fxNote } from "./lib/fx.mjs";
 import { calculateAll, CARRIER_LABELS } from "./lib/calc.mjs";
 
 // 選べる配送方法（日本郵便）。SAL便は引受が全面停止中なので出さない（data/shipping-post.json の salNote）
@@ -126,7 +128,7 @@ function timingNote(r) {
   return "Nothing to pay on arrival";
 }
 
-function ResultRow({ r, isBest, best, max }) {
+function ResultRow({ r, isBest, best, max, cc }) {
   const [open, setOpen] = useState(false);
   const blocked = r.shippable.level === "prohibited";
   // その配送方法を公式に挙げていない会社は、送れるかどうかとは別に印を付ける
@@ -155,6 +157,7 @@ function ResultRow({ r, isBest, best, max }) {
         </div>
         <div className="row-total">
           <b>{yen(r.grandTotal)}</b>
+          {approx(r.grandTotal, cc, fx) && <small className="fx">{approx(r.grandTotal, cc, fx)}</small>}
           <small>
             {blocked
               ? "for reference only"
@@ -439,7 +442,7 @@ export default function App() {
         <>
           <div className="rows">
             {results.map((r, i) => (
-              <ResultRow key={r.proxyId} r={r} isBest={i === bestIndex} best={best} max={max} />
+              <ResultRow key={r.proxyId} r={r} isBest={i === bestIndex} best={best} max={max} cc={form.destination} />
             ))}
           </div>
           <div className="rows-foot">
@@ -480,6 +483,7 @@ export default function App() {
             Fee data checked {proxies._meta.updated} against each provider's official pages.
           </p>
         )}
+        {fxNote(form.destination, fx) && <p>{fxNote(form.destination, fx)}</p>}
         <p>
           Estimates only. Providers change their pricing, and customs authorities have the final say on duty and tax.
           Always confirm on the provider's own site before you buy.

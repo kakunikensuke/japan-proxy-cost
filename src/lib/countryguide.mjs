@@ -10,6 +10,7 @@ import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml } from "./enrich.mjs";
 import { GENRES } from "./genres.mjs";
 import { methodsTable } from "./shipmethods.mjs";
+import { approx, localPrice, fxNote } from "./fx.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
@@ -43,7 +44,7 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
   const ems1k = lookupEmsRate(ems, cc, 1000).amount;
   const tax = amountOf(best, "tax");
   const glance = `<div class="verdict">
-  <p class="v">A ¥10,000 item from Mercari Japan, 1 kg packed, costs ${yen(best.grandTotal)}${best.grandTotalIsMinimum ? " plus duty" : ""} delivered to ${esc(cn)} through ${esc(best.name)}, the cheapest of the four.</p>
+  <p class="v">A ¥10,000 item from Mercari Japan, 1 kg packed, costs ${yen(best.grandTotal)}${localPrice(best.grandTotal, cc, data.fx) ? ` (${approx(best.grandTotal, cc, data.fx)})` : ""}${best.grandTotalIsMinimum ? " plus duty" : ""} delivered to ${esc(cn)} through ${esc(best.name)}, the cheapest of the four.</p>
   ${costBarHtml(best, best.grandTotal)}<div style="height:12px"></div>${legendHtml([best])}
   <ul class="cap" style="margin:14px 0 0;padding-left:18px">
     <li>EMS postage at 1 kg: ${yen(ems1k)} (Japan Post zone ${zone})</li>
@@ -53,10 +54,11 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
   </ul></div>`;
 
   // ---- 4社の総額 ----
-  const svcRows = res.results.map((r, i) => `<tr${i === 0 ? ' class="best"' : ""}><td>${esc(r.name)}</td><td class="num">${yen(r.payNow.total)}</td><td class="num">${r.payOnDelivery.quantified ? yen(r.payOnDelivery.total) : "not estimated"}</td><td class="num"><strong>${yen(r.grandTotal)}</strong></td><td class="num">${i === 0 ? "—" : "+" + yen(r.grandTotal - best.grandTotal)}</td></tr>`).join("");
+  const svcRows = res.results.map((r, i) => `<tr${i === 0 ? ' class="best"' : ""}><td>${esc(r.name)}</td><td class="num">${yen(r.payNow.total)}</td><td class="num">${r.payOnDelivery.quantified ? yen(r.payOnDelivery.total) : "not estimated"}</td><td class="num"><strong>${yen(r.grandTotal)}</strong><br><small>${approx(r.grandTotal, cc, data.fx)}</small></td><td class="num">${i === 0 ? "—" : (r.grandTotal === best.grandTotal ? "same" : "+" + yen(r.grandTotal - best.grandTotal))}</td></tr>`).join("");
   const services = `<p>The same order through all four. The postage is identical; the differences are each company's fees and whether it collects the tax at checkout.
   ${res.results.at(-1).grandTotal > best.grandTotal ? `Choosing ${esc(res.results.at(-1).name)} instead of ${esc(best.name)} costs ${yen(res.results.at(-1).grandTotal - best.grandTotal)} more on this order.` : "All four come to the same total on this order."}</p>
   <table><thead><tr><th>Service</th><th class="num">At checkout</th><th class="num">On arrival</th><th class="num">Total</th><th class="num">Difference</th></tr></thead><tbody>${svcRows}</tbody></table>
+  <p class="cap">${fxNote(cc, data.fx)}</p>
   <p>Head-to-head for ${esc(cn)}: ${(() => { const out = []; for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) out.push(`<a href="${versusPath(ids[a].id, ids[b].id, cc)}">${esc(ids[a].name)} vs ${esc(ids[b].name)}</a>`); return out.join(", "); })()}.</p>`;
 
   // ---- EMS料金 ----
