@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-09",
+    "updated": "2026-10-05",
     "note": "各社公式の禁制品ページからの転記。記載がないマスは level:'unknown' とし、ok に丸めない。quoteEn は公式原文の抜粋。",
     "levels": {
       "ok": "公式に扱えると読める、または禁制品リストに該当がなく他社の記載とも矛盾しない",
@@ -51,7 +51,7 @@
         "power bank"
       ],
       "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping — the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route.",
-      "whenUnconfirmedEn": "Japan Post does carry lithium batteries to this destination, but only when the battery is already installed in the device, and the proxies cap it at two per parcel. Loose cells and power banks are refused on every route. Buyee and FROM JAPAN publish no rule of their own, so with those two the decision is made at the warehouse after you have paid; ZenMarket and Neokyo at least state their conditions in writing."
+      "whenUnconfirmedEn": "Japan Post does carry lithium batteries to this destination, but only when the battery is already installed in the device, and the proxies cap it at two per parcel. Loose cells and power banks are refused on every route. With a service that publishes no rule of its own, the decision is made at the warehouse after you have paid."
     },
     {
       "id": "replica_gun",
@@ -115,6 +115,58 @@
         "cosplay prop blade"
       ],
       "whenBlockedEn": "Blades are refused by most proxies regardless of destination. A licensed importer in your own country is the realistic route for an iaito or replica katana."
+    },
+    {
+      "id": "perfume",
+      "labelEn": "Perfume or fragrance",
+      "slug": "perfume",
+      "seoLabelEn": "perfume",
+      "helpEn": "Perfume, cologne, body mist, aroma oil",
+      "examplesEn": [
+        "character perfume",
+        "eau de toilette",
+        "aroma oil"
+      ],
+      "whenBlockedEn": "Perfume contains alcohol and counts as a flammable liquid on air routes, so none of these services will send it. The way left is a shop that ships perfume abroad itself; ask the shop how it sends it before you order."
+    },
+    {
+      "id": "cosmetics",
+      "labelEn": "Skincare or make-up",
+      "slug": "cosmetics",
+      "seoLabelEn": "skincare and cosmetics",
+      "helpEn": "Lotions, creams, masks and make-up (not sprays, nail polish or perfume)",
+      "examplesEn": [
+        "face lotion",
+        "sheet masks",
+        "lipstick"
+      ],
+      "whenBlockedEn": "Where cosmetics are refused it is usually because of a flammable warning on the label, sunscreen, or a high alcohol content. Check the label before you buy, and ask the service about anything with alcohol near the top of the ingredients."
+    },
+    {
+      "id": "medicine",
+      "labelEn": "Medicine (over the counter)",
+      "slug": "medicine",
+      "seoLabelEn": "medicine",
+      "helpEn": "Medicine sold without a prescription in Japan",
+      "examplesEn": [
+        "eye drops",
+        "cold medicine",
+        "stomach medicine"
+      ],
+      "whenBlockedEn": "Your own country also limits medicine sent by post, often to a personal quantity, and some need a prescription. Check your customs rules before buying, whichever service you use."
+    },
+    {
+      "id": "plants_seeds",
+      "labelEn": "Plants or seeds",
+      "slug": "plants-and-seeds",
+      "seoLabelEn": "plants and seeds",
+      "helpEn": "Seeds, bulbs, bonsai, potted plants",
+      "examplesEn": [
+        "flower seeds",
+        "bonsai",
+        "moss"
+      ],
+      "whenBlockedEn": "No service here will send plants or seeds. Plants and seeds also face quarantine rules at the border in most countries, so the realistic route is a seller in your own country."
     }
   ],
   "categoryPresets": [
@@ -200,6 +252,34 @@
       ]
     },
     {
+      "id": "perfume",
+      "labelEn": "Perfume / fragrance",
+      "attributes": [
+        "perfume"
+      ]
+    },
+    {
+      "id": "cosmetics",
+      "labelEn": "Skincare / make-up",
+      "attributes": [
+        "cosmetics"
+      ]
+    },
+    {
+      "id": "medicine",
+      "labelEn": "Medicine (over the counter)",
+      "attributes": [
+        "medicine"
+      ]
+    },
+    {
+      "id": "plants_seeds",
+      "labelEn": "Plants / seeds",
+      "attributes": [
+        "plants_seeds"
+      ]
+    },
+    {
       "id": "other",
       "labelEn": "Something else",
       "attributes": []
@@ -244,6 +324,32 @@
       "blade": {
         "level": "prohibited",
         "quoteEn": "Sword Replica"
+      },
+      "perfume": {
+        "level": "prohibited",
+        "quoteEn": "Perfume",
+        "noteEn": "Listed among the items Buyee cannot send to any country.",
+        "sourceUrl": "https://buyee.jp/helpcenter/guide/prohibited?lang=en",
+        "verifiedAt": "2026-10-05"
+      },
+      "cosmetics": {
+        "level": "unknown",
+        "noteEn": "Buyee's all-country list names hair dye, nail polish, perfume and alcohol, but says nothing about skincare or make-up in general.",
+        "sourceUrl": "https://buyee.jp/helpcenter/guide/prohibited?lang=en",
+        "verifiedAt": "2026-10-05"
+      },
+      "medicine": {
+        "level": "unknown",
+        "noteEn": "Buyee's list names narcotics, psychoactive drugs and pharmaceuticals containing blood, but not ordinary medicine.",
+        "sourceUrl": "https://buyee.jp/helpcenter/guide/prohibited?lang=en",
+        "verifiedAt": "2026-10-05"
+      },
+      "plants_seeds": {
+        "level": "prohibited",
+        "quoteEn": "Living Beings",
+        "noteEn": "Buyee's all-country list names living beings and soil. It does not name seeds separately.",
+        "sourceUrl": "https://buyee.jp/helpcenter/guide/prohibited?lang=en",
+        "verifiedAt": "2026-10-05"
       }
     },
     "zenmarket": {
@@ -290,6 +396,31 @@
         "level": "unknown",
         "quoteEn": "Examples of products that cannot be shipped: guns, gunpowder, gun parts, any weapons",
         "noteEn": "\"Any weapons\" is listed, but replica swords and iaito are not named either way."
+      },
+      "perfume": {
+        "level": "prohibited",
+        "quoteEn": "For most countries, alcohol, alcoholic beverages, perfume containing alcohol etc.",
+        "noteEn": "Listed under items prohibited by law from being sent by airmail. EMS is airmail.",
+        "sourceUrl": "https://zenmarket.jp/en/prohibited_items.aspx",
+        "verifiedAt": "2026-10-05"
+      },
+      "cosmetics": {
+        "level": "unknown",
+        "noteEn": "ZenMarket's prohibited list names flammable liquids, deodorant sprays and aroma sprays, but says nothing about skincare or make-up in general.",
+        "sourceUrl": "https://zenmarket.jp/en/prohibited_items.aspx",
+        "verifiedAt": "2026-10-05"
+      },
+      "medicine": {
+        "level": "unknown",
+        "noteEn": "ZenMarket refuses prescription medicine and illegal drugs, and says nothing about medicine sold over the counter.",
+        "sourceUrl": "https://zenmarket.jp/en/prohibited_items.aspx",
+        "verifiedAt": "2026-10-05"
+      },
+      "plants_seeds": {
+        "level": "prohibited",
+        "quoteEn": "Examples of products that cannot be shipped: seeds, crops, mushrooms, bio-active substances.",
+        "sourceUrl": "https://zenmarket.jp/en/prohibited_items.aspx",
+        "verifiedAt": "2026-10-05"
       }
     },
     "neokyo": {
@@ -337,13 +468,40 @@
       "blade": {
         "level": "prohibited",
         "quoteEn": "Firearms and explosives: Katana blades, fireworks, weapon like items"
+      },
+      "perfume": {
+        "level": "prohibited",
+        "quoteEn": "Perfumes",
+        "noteEn": "Listed under flammable substances and liquids.",
+        "sourceUrl": "https://neokyo.com/en/forbidden-items",
+        "verifiedAt": "2026-10-05"
+      },
+      "cosmetics": {
+        "level": "conditional",
+        "quoteEn": "Skincare products with ethanol concentrations exceeding 24%",
+        "noteEn": "Neokyo also refuses sunscreen, shampoo and hair tonic. It refuses cosmetics in general only to Mexico and Spain.",
+        "sourceUrl": "https://neokyo.com/en/forbidden-items",
+        "verifiedAt": "2026-10-05"
+      },
+      "medicine": {
+        "level": "prohibited",
+        "quoteEn": "Medicine",
+        "noteEn": "Listed under various prohibited items.",
+        "sourceUrl": "https://neokyo.com/en/forbidden-items",
+        "verifiedAt": "2026-10-05"
+      },
+      "plants_seeds": {
+        "level": "prohibited",
+        "quoteEn": "Plants and grains",
+        "sourceUrl": "https://neokyo.com/en/forbidden-items",
+        "verifiedAt": "2026-10-05"
       }
     },
     "fromjapan": {
       "_source": {
         "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
-        "verifiedAt": "2026-08-09",
-        "noteEn": "Read from the official Cautionary Notes page. The prohibited list on that page is truncated behind a \"Show more\" control and links to a separate full list, so categories not visible there are still marked unknown."
+        "verifiedAt": "2026-10-05",
+        "noteEn": "Read from the full prohibited list on the official Cautionary Notes page, opened with its \"Show more\" control."
       },
       "flammable_liquid": {
         "level": "prohibited",
@@ -355,14 +513,18 @@
         "noteEn": "Aerosols are not named individually, but they are dangerous goods for air transport, which FROM JAPAN states it cannot send abroad."
       },
       "lithium_battery": {
-        "level": "unknown",
-        "pendingVerification": true,
-        "noteEn": "Not named on the Cautionary Notes page. Japan Post rules still apply — see the destination check."
+        "level": "conditional",
+        "quoteEn": "Items with lithium batteries or lithium-ion batteries (limited to certain countries)",
+        "noteEn": "FROM JAPAN refuses them only for some countries and links to Japan Post's conditions, so Japan Post's rule for the destination decides.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
       },
       "replica_gun": {
-        "level": "unknown",
-        "pendingVerification": true,
-        "noteEn": "Not named on the Cautionary Notes page. The full prohibited list is on a separate page that was not read."
+        "level": "prohibited",
+        "quoteEn": "Model guns",
+        "noteEn": "FROM JAPAN's full prohibited list also names air guns.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
       },
       "lighter": {
         "level": "prohibited",
@@ -370,9 +532,11 @@
         "noteEn": "Lighters are not named individually, but they are dangerous goods for air transport, which FROM JAPAN states it cannot send abroad."
       },
       "food": {
-        "level": "unknown",
-        "pendingVerification": true,
-        "noteEn": "The export list names \"Food and drink tickets\" — meal vouchers, not food itself. FROM JAPAN publishes no rule on food."
+        "level": "conditional",
+        "quoteEn": "Items that require refrigeration",
+        "noteEn": "The list also names meat products, fresh produce, raw milk and eggs. Shelf-stable snacks are not on it.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
       },
       "adult": {
         "level": "prohibited",
@@ -380,9 +544,39 @@
         "noteEn": "FROM JAPAN is the only one of the four that bans adult material outright, for every destination."
       },
       "blade": {
-        "level": "unknown",
-        "pendingVerification": true,
-        "noteEn": "Not named on the Cautionary Notes page. The full prohibited list is on a separate page that was not read."
+        "level": "prohibited",
+        "quoteEn": "Fake swords",
+        "noteEn": "The list also names swords.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
+      },
+      "perfume": {
+        "level": "prohibited",
+        "quoteEn": "Perfume",
+        "noteEn": "Listed under flammable liquids and substances.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
+      },
+      "cosmetics": {
+        "level": "conditional",
+        "quoteEn": "Flammable items and items containing a flammable warning (e.g. sunscreen, shampoo, and adhesives)",
+        "noteEn": "Ordinary skincare and make-up are not on FROM JAPAN's list; anything with a flammable warning is.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
+      },
+      "medicine": {
+        "level": "conditional",
+        "quoteEn": "Category 1 pharmaceuticals and medical devices that require a license for sale in Japan (including contact lenses and fashion color contact lenses)",
+        "noteEn": "Category 1 is the strictest class of medicine sold without a prescription in Japan. Other over-the-counter medicine is not on the list.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
+      },
+      "plants_seeds": {
+        "level": "prohibited",
+        "quoteEn": "Plant seeds",
+        "noteEn": "The list also names bonsai, decorative plants and items with soil.",
+        "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+        "verifiedAt": "2026-10-05"
       }
     },
     "doorzo": {
@@ -437,6 +631,34 @@
       "blade": {
         "level": "prohibited",
         "quoteEn": "imitation knives, and all types of swords",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "perfume": {
+        "level": "prohibited",
+        "quoteEn": "perfumes/fragrances/aroma oils/essential oils",
+        "noteEn": "Perfume is also on Doorzo's list of common international prohibited items.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "cosmetics": {
+        "level": "conditional",
+        "quoteEn": "Items labeled with warnings such as \"Keep Away from Fire\" or similar indications.",
+        "noteEn": "Doorzo also lists sunscreen and hair tonic. Cosmetics in general are refused only from its Korean warehouse.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "medicine": {
+        "level": "prohibited",
+        "quoteEn": "Medicines and medical devices, such as contact lenses, massagers, and hearing aids, can only be sold by licensed professionals.",
+        "noteEn": "Listed under Doorzo's prohibited item categories.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "plants_seeds": {
+        "level": "prohibited",
+        "quoteEn": "Living organisms (including animals, plants, and insects), items containing soil, flowers, potted plants",
+        "noteEn": "The same entry names plant seeds.",
         "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
         "verifiedAt": "2026-10-05"
       }
@@ -531,9 +753,10 @@
     }
   },
   "openQuestions": [
-    "FROM JAPAN: エアガン・刀剣・リチウム電池・食品の4マスが未確認。Cautionary Notes ページの禁制品リストは「Show more」で省略されており、別ページの完全なリストは未取得。",
     "Buyee のリチウム電池の自社ルールが未公開。日本郵便の国別可否でしか判定できていない。",
     "Buyee / ZenMarket の食品の扱いが未記載。",
-    "ZenMarket の模造刀・居合刀の扱いが未記載（『any weapons』としか書かれていない）。"
+    "ZenMarket の模造刀・居合刀の扱いが未記載（『any weapons』としか書かれていない）。",
+    "Buyee / ZenMarket の化粧品（スキンケア・メイク）と市販薬の扱いが未記載（2026-10-05）。",
+    "お酒（日本酒・ウイスキー）は配送先の国の法律で可否が変わるため属性にしていない（2026-10-05）。"
   ]
 }

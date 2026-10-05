@@ -9,7 +9,10 @@ import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numbe
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const lc = (s) => s.charAt(0).toLowerCase() + s.slice(1);
-const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+const listJoin = (arr) => arr.length <= 1 ? arr.join("")
+  // 要素自体に and を含む（"plants and seeds" など）ときは区切りをセミコロンにして and の二重を避ける
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 
 // 重量帯ごとに「この重さで実際に送られがちな物」。配送可否は物の属性で決まるので、帯ごとに見る物を変える。
 const PRESETS_BY_WEIGHT = {

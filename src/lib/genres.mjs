@@ -22,7 +22,10 @@ import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numbe
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x) => `${Math.round(x * 100)}%`;
-const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+const listJoin = (arr) => arr.length <= 1 ? arr.join("")
+  // 要素自体に and を含む（"plants and seeds" など）ときは区切りをセミコロンにして and の二重を避ける
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 const kg = (g) => (g >= 1000 ? `${+(g / 1000).toFixed(1)} kg` : `${g} g`);
 const related = (items) => `<nav class="related"><h2>Related</h2><ul>${items.map((i) => `<li><a href="${i.href}">${esc(i.text)}</a></li>`).join("")}</ul></nav>`;
 const SMALL_NUM = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];

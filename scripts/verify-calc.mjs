@@ -401,5 +401,22 @@ console.log("\n\n=== 米国関税の目安 ===");
   check("英国では関税の目安を出さない", calculateAll({ ...baseInput, destination: "GB", category: "scale_figure" }, { proxies, ems, importTax, restrictions, post }).dutyEstimate === null);
 }
 
+// ===========================================================================
+// 16. 送れない物の追加（2026-10-05）。各社の禁止品ページの原文から手で判定した値
+// ===========================================================================
+console.log("\n\n=== 香水・化粧品・市販薬・植物と種 ===");
+{
+  const lv = (attr, id, cc = "US") => calculateAll({ ...baseInput, destination: cc, attributes: [attr] }, { proxies, ems, importTax, restrictions, post }).results.find((r) => r.proxyId === id).shippable.level;
+  const ids = ["buyee", "zenmarket", "neokyo", "fromjapan", "doorzo"];
+  check("香水は5社とも不可", ids.every((id) => lv("perfume", id) === "prohibited"));
+  check("植物と種は5社とも不可", ids.every((id) => lv("plants_seeds", id) === "prohibited"));
+  check("化粧品: Neokyo・FROM JAPAN・Doorzo は条件付き、Buyee・ZenMarket は記載なし",
+    ["neokyo", "fromjapan", "doorzo"].every((id) => lv("cosmetics", id) === "conditional") && ["buyee", "zenmarket"].every((id) => lv("cosmetics", id) === "unknown"));
+  check("市販薬: Neokyo・Doorzo は不可、FROM JAPAN は条件付き、Buyee・ZenMarket は記載なし",
+    lv("medicine", "neokyo") === "prohibited" && lv("medicine", "doorzo") === "prohibited" && lv("medicine", "fromjapan") === "conditional" && lv("medicine", "buyee") === "unknown" && lv("medicine", "zenmarket") === "unknown");
+  check("FROM JAPAN の模造刀・エアガンは全リストで不可に確定", lv("blade", "fromjapan") === "prohibited" && lv("replica_gun", "fromjapan") === "prohibited");
+  check("FROM JAPAN のリチウム電池: 米国宛ては条件付き、英国宛ては日本郵便が不可", lv("lithium_battery", "fromjapan") === "conditional" && lv("lithium_battery", "fromjapan", "GB") === "prohibited");
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);

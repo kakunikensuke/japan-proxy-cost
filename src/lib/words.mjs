@@ -8,7 +8,10 @@
 import proxies from "../../data/proxies.json" with { type: "json" };
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+const listJoin = (arr) => arr.length <= 1 ? arr.join("")
+  // 要素自体に and を含む（"plants and seeds" など）ときは区切りをセミコロンにして and の二重を避ける
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 const names = proxies.proxies.map((p) => p.shortName ?? p.name);
 
 /** 比較している会社の数（数字） */

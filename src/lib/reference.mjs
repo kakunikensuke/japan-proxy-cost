@@ -13,7 +13,10 @@ import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numbe
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x, d = 0) => `${(x * 100).toFixed(d)}%`;
-const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+// 要素自体に and を含む（"plants and seeds" など）ときは、区切りをセミコロンにして and の二重を避ける
+const listJoin = (arr) => arr.length <= 1 ? arr.join("")
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 const SHIPS = ["ok", "conditional", "carrier_limited"];
 
 export function buildReference(data, { COUNTRY_SLUGS, countryName }) {

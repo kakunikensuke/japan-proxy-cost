@@ -9,7 +9,10 @@ import { calculateAll, CARRIER_LABELS } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
-const listJoin = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+const listJoin = (arr) => arr.length <= 1 ? arr.join("")
+  // 要素自体に and を含む（"plants and seeds" など）ときは区切りをセミコロンにして and の二重を避ける
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 const kg = (g) => (g >= 1000 ? `${+(g / 1000).toFixed(1)} kg` : `${g} g`);
 const SHIPS = ["ok", "conditional", "carrier_limited"];
 export const CARRIERS = ["ems", "small_packet_air", "intl_parcel_air", "intl_parcel_sea"];

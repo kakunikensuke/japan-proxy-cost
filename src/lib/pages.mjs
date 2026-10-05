@@ -81,7 +81,10 @@ export const WEIGHTS = [
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
-const listJoinPlain = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+const listJoinPlain = (arr) => arr.length <= 1 ? arr.join("")
+  // 要素自体に and を含む（"plants and seeds" など）ときは区切りをセミコロンにして and の二重を避ける
+  : arr.some((x) => / and /.test(x)) ? `${arr.slice(0, -1).join("; ")}; and ${arr[arr.length - 1]}`
+  : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 
 function countryName(importTax, code) {
   return importTax.countries[code]?.name ?? code;
@@ -742,7 +745,9 @@ export function buildPages(data) {
 
   // ---- 6. 属性 × 配送先「これは送れるのか」 ----
   // 検索意図が実在する6属性に絞る。8属性すべてを機械的に展開しない。
-  const SEO_ATTRS = ["replica_gun", "flammable_liquid", "aerosol", "lithium_battery", "adult", "food"];
+  // 2026-10-05: 化粧品・市販薬を追加（会社によって答えが違う）。香水・植物と種は5社すべて拒否で、
+  // ページにすると既存の「全社拒否」ページと本文が88%同じになったので作らない（一覧と計算機にだけ載せる）
+  const SEO_ATTRS = ["replica_gun", "flammable_liquid", "aerosol", "lithium_battery", "adult", "food", "cosmetics", "medicine"];
   const { restrictions } = data;
 
   const VERDICT = {
@@ -871,10 +876,11 @@ export function buildPages(data) {
   <p>${sameEverywhere
     ? `No. We checked all nine destinations this site covers and the ${NW} services give the same answer to every one of them, because the rule is about the item rather than the route.`
     : `Yes, for ${exceptions.flat().length} of the nine destinations we cover. The rows marked <strong>(different)</strong> below do not follow the table above.`}</p>
-  <table>
+  ${/* どの国にも1社も送らないなら、9行とも「No service will」の表は何も伝えないので出さない */""}
+  ${sameEverywhere && rep.allBlocked ? "" : `<table>
     <thead><tr><th>Destination</th><th>Can it ship?</th><th>Cheapest that will take it</th></tr></thead>
     <tbody>${countryRows}</tbody>
-  </table>
+  </table>`}
   ${exceptions.map((g) => {
     const x = g[0];
     const note = restrictions.byDestination?.[x.cc]?.[attrId]?.noteEn;
