@@ -30,6 +30,7 @@ import { countryGuide } from "./countryguide.mjs";
 import { buildShippingGuide, methodsTable } from "./shipmethods.mjs";
 import { buildListingsGuide } from "./listings.mjs";
 import { buildProtectionGuide } from "./protection.mjs";
+import { buildShopsGuide } from "./shops.mjs";
 import { buildReference } from "./reference.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { approx, fxNote } from "./fx.mjs";
@@ -992,6 +993,7 @@ export function buildPages(data) {
   pages.push(buildShippingGuide(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
   pages.push(buildListingsGuide(data));
   pages.push(buildProtectionGuide(data));
+  pages.push(buildShopsGuide(data));
   // ジャンル別ガイド（フィギュア・プラモデル・漫画など8本）
   pages.push(...buildGenreGuides(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
 

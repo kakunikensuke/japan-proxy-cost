@@ -33,6 +33,7 @@ export const GUIDES = [
   { slug: "is-it-worth-it", title: "When is an item from Japan worth the shipping?", blurb: "How much the overhead adds at each item price, and where it drops below half the item's cost." },
   { slug: "reading-mercari-and-yahoo-auctions-listings", title: "Reading a Mercari or Yahoo! Auctions listing", blurb: "Condition grades, who pays the postage inside Japan, how bidding works, and the words sellers use." },
   { slug: "lost-or-damaged-parcels", title: "Lost or damaged parcels from Japan: what each proxy covers", blurb: "Which services pay out themselves, which only pass your claim to Japan Post, and the deadlines." },
+  { slug: "buying-from-japanese-anime-shops", title: "Buying from Suruga-ya, Mandarake and other Japanese anime shops", blurb: "Which shops ship abroad themselves, which proxies cover each, and what several items from one shop cost." },
   { slug: "shipping-methods", title: "EMS, airmail or surface: the cheapest way to ship from Japan", blurb: "Every Japan Post method priced for nine countries, and which proxies offer which." },
   { slug: "paying-import-tax-up-front", title: "Paying import tax up front or on delivery: what each proxy does", blurb: "Which services collect VAT or GST at checkout for which countries, and the limits on it." },
 ];
