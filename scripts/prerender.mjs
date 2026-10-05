@@ -355,7 +355,8 @@ fs.writeFileSync(path.join(DIST, "robots.txt"),
     for (const m of p.body.matchAll(/href="(\/[^"#?]*)"/g)) {
       if (!known.has(m[1])) problems.push(`リンク切れ ${p.path} → ${m[1]}`);
     }
-    for (const [field, text] of [["title", p.title], ["description", p.description], ["body", p.body]]) {
+    // 日本語を意図して見せる箇所（商品ページの読み方ガイド）は <span lang="ja"> に入れる。その中だけ検査から外す
+    for (const [field, text] of [["title", p.title], ["description", p.description], ["body", p.body.replace(/<span lang="ja">[^<]*<\/span>/g, "")]]) {
       if (jp.test(text)) {
         const hit = text.split(/\s+/).find((w) => jp.test(w));
         problems.push(`日本語混入 ${p.path} の ${field}: ${hit}`);
