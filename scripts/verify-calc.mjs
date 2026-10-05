@@ -418,5 +418,17 @@ console.log("\n\n=== 香水・化粧品・市販薬・植物と種 ===");
   check("FROM JAPAN のリチウム電池: 米国宛ては条件付き、英国宛ては日本郵便が不可", lv("lithium_battery", "fromjapan") === "conditional" && lv("lithium_battery", "fromjapan", "GB") === "prohibited");
 }
 
+// ===========================================================================
+// 17. 日本郵便のEMS補償の追加料金（2026-10-05、E3）。公式の表: 2万円まで無料、以降2万円ごとに¥50、上限200万円
+// ===========================================================================
+console.log("\n\n=== EMSの補償の追加料金 ===");
+{
+  const { emsCoverFee } = await import("../src/lib/protection.mjs");
+  check("EMS ¥20,000 までは無料", emsCoverFee(20000) === 0);
+  check("EMS ¥30,000 は ¥50（2万円を超えた端数も1刻み）", emsCoverFee(30000) === 50);
+  check("EMS ¥100,000 は ¥200", emsCoverFee(100000) === 200);
+  check("EMS ¥5,000,000 でも上限200万円ぶんの ¥4,950", emsCoverFee(5000000) === 4950);
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);

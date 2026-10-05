@@ -29,6 +29,7 @@ import { buildGenreGuides } from "./genres.mjs";
 import { countryGuide } from "./countryguide.mjs";
 import { buildShippingGuide, methodsTable } from "./shipmethods.mjs";
 import { buildListingsGuide } from "./listings.mjs";
+import { buildProtectionGuide } from "./protection.mjs";
 import { buildReference } from "./reference.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { approx, fxNote } from "./fx.mjs";
@@ -990,6 +991,7 @@ export function buildPages(data) {
   // 配送方法の比較ガイド（EMS・小形包装物・航空小包・船便）
   pages.push(buildShippingGuide(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
   pages.push(buildListingsGuide(data));
+  pages.push(buildProtectionGuide(data));
   // ジャンル別ガイド（フィギュア・プラモデル・漫画など8本）
   pages.push(...buildGenreGuides(data, { COUNTRY_SLUGS, countryName: (c) => countryName(importTax, c) }));
 

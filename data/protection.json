@@ -1,0 +1,80 @@
+{
+  "_meta": {
+    "updated": "2026-10-05",
+    "note": "破損・紛失・キャンセルの各社規定（E3）。quoteEn は公式原文の抜粋だけ。noteEn はこちらの説明。誰が払うか（会社自身か、日本郵便への請求を取り次ぐだけか）を payer で持つ。金額の計算は calc.mjs の結果と、ここにある料率だけを使う"
+  },
+  "japanPost": {
+    "sourceUrl": "https://www.post.japanpost.jp/service/send/oversea/list/delivery/ems/damage_en.html",
+    "insuredMailUrl": "https://www.post.japanpost.jp/service/send/oversea/list/option/insurance_en.html",
+    "verifiedAt": "2026-10-05",
+    "ems": { "freeUpToJpy": 20000, "perStepJpy": 20000, "stepFee": 50, "maxJpy": 2000000 },
+    "parcelInsuranceBaseFee": 400,
+    "quoteEn": "Claim amount under 20,000JPY is free of charge. It is possible to upgrade the claim amount of by paying 50JPY for each 20,000JPY. The upper limit on the compensation to be paid is 2,000,000JPY.",
+    "insurableEn": "Airmail Letter-Post (Only Letters) and Parcel Post",
+    "note": "小形包装物は保険（Insured Mail）の対象に含まれない（対象は手紙と小包だけ）。小包の保険は2万円まで+400円"
+  },
+  "proxies": {
+    "buyee": {
+      "payer": "service",
+      "coverEn": "Only on a paid plan: Insured Delivery or Standard, ¥500 per order",
+      "planFeeJpy": 500, "planId": "guarantee",
+      "claimWindowEn": "14 days from arrival",
+      "quoteEn": "If you apply for a Insured Delivery plan, in the unlikely event that the product is damaged or lost, the amount incurred based on the coverage set by Buyee will be refunded.",
+      "liteQuoteEn": "Request to investigate the delivery status of undelivered items and request refund procedure to the delivery company regarding product defects in the delivery process.",
+      "liteNoteEn": "Listed among what the free Lite plan does not include.",
+      "exclusionsEn": "Defects visible on the listing, malfunctions of appliances, watches and toys, and customs duty.",
+      "cancelQuoteEn": "Please be aware that we do not accept requests to cancel an order once the purchase has been completed/an auction has been won.",
+      "sourceUrl": "https://buyee.jp/helpcenter/guide/plans?lang=en",
+      "cancelSourceUrl": "https://buyee.jp/helpcenter/guide/caution?lang=en",
+      "verifiedAt": "2026-10-05"
+    },
+    "fromjapan": {
+      "payer": "service",
+      "coverEn": "Included: the Product Protection Plan is FROM JAPAN's ¥500 per-item handling fee",
+      "claimWindowEn": "7 days from arrival",
+      "quoteEn": "Your package will be fully insured for damage or non delivery.",
+      "limitEn": "The maximum compensation amount is limited to the amount shown on the delivery slip. Refunds are generally paid in FJ Points.",
+      "exclusionsEn": "Flaws on second-hand items, small packets when the items are worth ¥30,000 or more, untracked shipments, switched or resealed trading cards from private sellers, and import taxes.",
+      "cancelQuoteEn": "As a general rule, bids or orders for items cannot be cancelled once they are placed.",
+      "sourceUrl": "https://www.fromjapan.co.jp/japan/en/help/fee/",
+      "cancelSourceUrl": "https://www.fromjapan.co.jp/japan/en/help/important/",
+      "verifiedAt": "2026-10-05"
+    },
+    "zenmarket": {
+      "payer": "service",
+      "coverEn": "Included in the service fee for parcels under ¥5,000,000",
+      "claimWindowEn": "Damage: 14 days from receipt. Not arrived (EMS): 30 to 180 days after shipping",
+      "quoteEn": "All parcels with a total cost of less than 5,000,000 yen are insured at no additional charge, as the insurance fee is already included in the service fee",
+      "exclusionsEn": "Minor damage to junk items, damage to an item's original outer packaging, and faults with no visible damage.",
+      "cancelQuoteEn": "You can not cancel your bid or the purchased item for any reason.",
+      "cancelNoteEn": "Shop purchases that have reached the warehouse can be returned for ¥1,000 if the seller accepts returns; not for auctions, Mercari or Rakuma.",
+      "sourceUrl": "https://zenmarket.jp/en/shipping.aspx",
+      "cancelSourceUrl": "https://zenmarket.jp/en/fees.aspx",
+      "verifiedAt": "2026-10-05"
+    },
+    "neokyo": {
+      "payer": "carrier",
+      "coverEn": "Shipments include insurance, Neokyo says; it passes your claim to the carrier",
+      "feesQuoteEn": "Includes insurance & tracking",
+      "feesSourceUrl": "https://neokyo.com/en/fees",
+      "claimWindowEn": "Within 5 months of shipping",
+      "quoteEn": "we will be able to forward your claim to the carrier only if it has been brought up within 5 months following the original shipment date.",
+      "cancelQuoteEn": "Cancellation is strictly forbidden",
+      "sourceUrl": "https://neokyo.com/en/faq",
+      "cancelSourceUrl": "https://neokyo.com/en/faq",
+      "verifiedAt": "2026-10-05"
+    },
+    "doorzo": {
+      "payer": "carrier",
+      "coverEn": "Doorzo helps you claim from the carrier; the carrier decides the amount",
+      "claimWindowEn": "5 days from delivery, with an unboxing video",
+      "quoteEn": "Whether compensation is granted and the final compensation amount—which may not cover the full amount paid—will be determined by the carrier's review and final decision.",
+      "exclusionsEn": "Fragile items such as glass and ceramics, crushed or bent paper goods and figure boxes, junk items and untested items.",
+      "cancelQuoteEn": "after the order is placed and payment is completed, your cancellation request, for any reason, cannot be processed.",
+      "extraEn": "Empty parcels from a seller are refunded in full by Doorzo, with an unboxing video.",
+      "sourceUrl": "https://www.doorzo.com/en/userGuide/after-sales-service-doorzo?code=after-sales-service",
+      "cancelSourceUrl": "https://www.doorzo.com/en/userGuide/order-cancellation-process-doorzo?code=refund",
+      "verifiedAt": "2026-10-05"
+    }
+  }
+}
