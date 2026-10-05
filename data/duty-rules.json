@@ -1,0 +1,165 @@
+{
+  "_meta": {
+    "updated": "2026-10-05",
+    "note": "関税（VAT/GSTとは別物）の国別ルール（E5）。limit は『これ以下なら関税がかからない』現地通貨の額（null は免税枠なし）。above は枠を超えたときの趣味の品の関税。確認できなかった税率は rateCheckedEn を null にして『確認していない』と書く。総額の計算には入れていない（米国と同じく、品目で税率が決まるため）",
+    "limitBasis": "各国とも『荷物の価値』で判定。送料を含むかは国で違うので、本文では商品代だけで目安を出し、その旨を書く"
+  },
+  "countries": {
+    "US": {
+      "limit": null,
+      "currency": "USD",
+      "summaryEn": "No duty-free limit. Goods made in Japan pay 12.5% where the normal duty is lower; books, CDs and other informational materials are exempt.",
+      "rateCheckedEn": "12.5% on figures, model kits, cards and consoles made in Japan",
+      "link": "/import-tax-united-states#how-much-duty",
+      "sources": [
+        {
+          "labelEn": "US Harmonized Tariff Schedule (USITC)",
+          "url": "https://hts.usitc.gov/"
+        }
+      ],
+      "verifiedAt": "2026-10-05"
+    },
+    "GB": {
+      "limit": 135,
+      "currency": "GBP",
+      "summaryEn": "No customs duty on consignments of £135 or less (VAT still applies). Above that, the UK Global Tariff applies.",
+      "rateCheckedEn": "Toys and figures 0% to 4%, 0% for goods made in Japan when the UK–Japan preference is claimed; books and game consoles 0%; plastic ornaments such as acrylic stands 6%",
+      "rates": [
+        {
+          "what": "Dolls representing human beings, other than folk costume dolls (9503 00 21 90)",
+          "standard": "4.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Plastic scale model kits (9503 00 35 00)",
+          "standard": "4.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Other toys of plastics (9503 00 95 90)",
+          "standard": "4.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Playing and trading cards (9504 40 00 00)",
+          "standard": "2.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Video game consoles (9504 50 00 00)",
+          "standard": "0.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Books (4901 99 00 00)",
+          "standard": "0.00%",
+          "japan": "0.00%"
+        },
+        {
+          "what": "Plastic statuettes and ornaments (3926 40 00 00)",
+          "standard": "6.00%",
+          "japan": "0.00%"
+        }
+      ],
+      "noteEn": "The Japan rate is a preference: it applies only to goods made in Japan, and only when origin is claimed on the import. A figure made in China pays the standard rate.",
+      "sources": [
+        {
+          "labelEn": "UK Trade Tariff (GOV.UK), commodity codes as listed",
+          "url": "https://www.trade-tariff.service.gov.uk/"
+        }
+      ],
+      "verifiedAt": "2026-10-05"
+    },
+    "DE": {
+      "limit": null,
+      "currency": "EUR",
+      "flatDutyEur": 3,
+      "flatUpToEur": 150,
+      "summaryEn": "The €150 duty-free limit ended on 1 July 2026. Distance sales of €150 or less now pay a flat €3 per declared item line until 1 July 2028; above €150, normal EU tariff rates.",
+      "quoteEn": "The 3 € fee is applied per declared item, where 'item' means each unit of a product that is declared on a separate line.",
+      "caveatEn": "The European Commission describes it as applying to distance sales to consumers. Whether a parcel sent on by a proxy counts as one is not something the notice addresses.",
+      "rateCheckedEn": null,
+      "sources": [
+        {
+          "labelEn": "European Commission, Access2Markets: EU applies €3 customs duty per item on low-value e-commerce consignments",
+          "url": "https://trade.ec.europa.eu/access-to-markets/en/news/eu-applies-eu3-customs-duty-item-low-value-e-commerce-consignments"
+        }
+      ],
+      "verifiedAt": "2026-10-05"
+    },
+    "FR": {
+      "sameAs": "DE"
+    },
+    "AU": {
+      "limit": 1000,
+      "currency": "AUD",
+      "summaryEn": "Goods of A$1,000 or less clear without an import declaration and generally without duty; since July 2018 GST on them is collected at the point of sale instead. Above A$1,000, an import declaration is assessed for duty and GST.",
+      "quoteEn": "Payment of duty and GST is applicable for imported goods with a value exceeding A$1000 unless a concession or exemption applies.",
+      "rateCheckedEn": null,
+      "sources": [
+        {
+          "labelEn": "Australian Customs fact sheet, Buying on the internet (December 2011)",
+          "url": "https://www.abf.gov.au/help-and-support-subsite/FactSheets/buying-internet.pdf"
+        },
+        {
+          "labelEn": "Department of Home Affairs Notice 2018/14, GST on low value imported goods",
+          "url": "https://www.abf.gov.au/help-and-support-subsite/CustomsNotices/2018-14.pdf"
+        }
+      ],
+      "verifiedAt": "2026-10-05"
+    },
+    "CA": {
+      "limit": 20,
+      "currency": "CAD",
+      "summaryEn": "Mail worth CAN$20 or less is free of duty and taxes. Above that, duty and sales tax are charged on delivery, and Canada Post adds a CAN$9.95 handling fee.",
+      "quoteEn": "To process goods imported as mail that are subject to duty and/or tax, the CPC charges the recipient a $9.95 handling fee.",
+      "handlingFeeCad": 9.95,
+      "rateCheckedEn": null,
+      "sources": [
+        {
+          "labelEn": "CBSA Memorandum D5-1-1, International mail processing (21 October 2024)",
+          "url": "https://www.cbsa-asfc.gc.ca/publications/dm-md/d5/d5-1-1-eng.html"
+        }
+      ],
+      "verifiedAt": "2026-10-05"
+    },
+    "SG": {
+      "limit": null,
+      "currency": "SGD",
+      "noDutyOnGeneralGoods": true,
+      "summaryEn": "No customs duty on hobby goods at all. Singapore only charges duty on intoxicating liquors, tobacco, motor vehicles, and petroleum products and biodiesel blends; everything else pays GST only.",
+      "rateCheckedEn": "None on figures, books, cards or consoles",
+      "sources": [
+        {
+          "labelEn": "Singapore Customs, Duties and dutiable goods",
+          "url": "https://www.customs.gov.sg/businesses/valuation-duties-taxes-and-fees/duties-and-dutiable-goods/"
+        }
+      ],
+      "verifiedAt": "2026-10-05",
+      "quoteEn": "Goods not subject to customs or excise duty are non-dutiable, although GST may still apply unless exempted."
+    },
+    "TW": {
+      "limit": 2000,
+      "currency": "TWD",
+      "summaryEn": "Parcels with a customs value of NT$2,000 or less pay no duty or business tax. Above that, duty by tariff heading plus 5% business tax.",
+      "quoteEn": "If the Customs value is within NT$2,000, the Customs duty, commodity tax and business tax are exempted, except tobacco, alcohol, agricultural products subject to tariff quota.",
+      "rateCheckedEn": null,
+      "sources": [
+        {
+          "labelEn": "Customs Administration, Ministry of Finance (Taiwan)",
+          "url": "https://web.customs.gov.tw/en/singlehtml/1865?cntId=cus16_180214_1865"
+        }
+      ],
+      "verifiedAt": "2026-08-09"
+    },
+    "HK": {
+      "limit": null,
+      "currency": "HKD",
+      "noDutyOnGeneralGoods": true,
+      "summaryEn": "No duty on anything but liquor, tobacco, hydrocarbon oil and methyl alcohol.",
+      "rateCheckedEn": "None on figures, books, cards or consoles",
+      "sources": [],
+      "verifiedAt": "2026-08-07"
+    }
+  }
+}
