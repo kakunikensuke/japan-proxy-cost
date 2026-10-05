@@ -301,7 +301,7 @@ export default function App() {
     }));
   };
 
-  const { results, country, shipping, allBlocked, noneConfirmed, storeSuggestion } = useMemo(
+  const { results, country, shipping, allBlocked, noneConfirmed, storeSuggestion, dutyEstimate } = useMemo(
     () => calculateAll(form, { proxies, ems, importTax, restrictions, stores, post }),
     [form]
   );
@@ -419,6 +419,15 @@ export default function App() {
         <aside className={`notice${country.displayEn.severity === "high" ? " notice-high" : ""}`}>
           <strong>{country.displayEn.headline}</strong>
           <p>{country.displayEn.body}</p>
+          {dutyEstimate && (
+            <p>
+              <b>Duty estimate for {(form.category === "other" ? "this item" : (restrictions.categoryPresets.find((c) => c.id === form.category)?.labelEn ?? "this item").toLowerCase())}: </b>
+              {dutyEstimate.kind === "exempt"
+                ? "none. Publications, CDs and other informational materials are exempt from the duty on Japanese goods."
+                : `${dutyEstimate.kind === "floor" ? "at least " : "about "}${yen(dutyEstimate.amount)}, ${dutyEstimate.kind === "floor" ? "12.5% of the item price or more, depending on the item" : "12.5% of the item price"}.`}
+              {" "}Not included in the totals. Rates in force from {dutyEstimate.effectiveFrom}, checked {dutyEstimate.verifiedAt}; see <a href="/import-tax-united-states#how-much-duty">how the estimate works</a>.
+            </p>
+          )}
         </aside>
       )}
 

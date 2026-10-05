@@ -450,8 +450,27 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
   const noneConfirmed = results.length > 0 && results.every((r) => r.shippable.level !== "ok");
 
   const storeSuggestion = suggestStores(input, results, stores);
+  const dutyEstimate = estimateDuty(country, input.itemPriceJpy, input.category);
 
-  return { shipping, country, results, allBlocked, noneConfirmed, storeSuggestion };
+  return { shipping, country, results, allBlocked, noneConfirmed, storeSuggestion, dutyEstimate };
+}
+
+/**
+ * 関税の目安（いまは米国だけ）。品目の種類（計算機のカテゴリ）ごとの料率 × 商品代。
+ *
+ * ■ 総額には足さない
+ * 正確な料率は品目のHSコードで決まり、郵便物の関税を誰がいつ徴収するか（代行の前払い・
+ * 日本郵便側・受取時）と手数料も確認できていない。総額に入れると「到着時に¥Nを払う」と
+ * 断言することになるので、別枠の目安として返し、表示側で必ず「総額に含まない」と書く。
+ * kind: exact = 通常の関税がゼロの品目（合計がちょうど12.5%）/ floor = 品目が分からない（12.5%以上）/ exempt = 情報資料
+ */
+export function estimateDuty(country, itemPriceJpy, category) {
+  const d = country?.dutyEstimate;
+  if (!d || !Number.isFinite(itemPriceJpy)) return null;
+  const cls = d.byPreset?.[category] ?? "unknown";
+  const c = d.classes[cls];
+  if (!c) return null;
+  return { cls, rate: c.rate, kind: c.kind, labelEn: c.labelEn, amount: Math.round(itemPriceJpy * c.rate), effectiveFrom: d.effectiveFrom, verifiedAt: d.verifiedAt };
 }
 
 /**

@@ -181,6 +181,11 @@
       "attributes": []
     },
     {
+      "id": "cd_bluray",
+      "labelEn": "CD / DVD / Blu-ray",
+      "attributes": []
+    },
+    {
       "id": "character_food",
       "labelEn": "Character snacks / food",
       "attributes": [

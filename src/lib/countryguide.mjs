@@ -11,6 +11,7 @@ import { amountOf, costBarHtml, legendHtml } from "./enrich.mjs";
 import { GENRES } from "./genres.mjs";
 import { methodsTable } from "./shipmethods.mjs";
 import { approx, localPrice, fxNote } from "./fx.mjs";
+import { dutyCell, dutySection } from "./duty.mjs";
 import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
@@ -49,7 +50,7 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
   ${costBarHtml(best, best.grandTotal)}<div style="height:12px"></div>${legendHtml([best])}
   <ul class="cap" style="margin:14px 0 0;padding-left:18px">
     <li>EMS postage at 1 kg: ${yen(ems1k)} (Japan Post zone ${zone})</li>
-    <li>Import tax on this order: ${best.grandTotalIsMinimum ? "depends on the item, not estimated" : tax ? yen(tax) : "none"}</li>
+    <li>Import tax on this order: ${best.grandTotalIsMinimum ? (data.importTax.countries[cc]?.dutyEstimate ? `not in the total; ${dutyCell(data.importTax.countries[cc], 10000, "scale_figure")} for a figure made in Japan, none for books or CDs (<a href="#how-much-duty">estimate</a>)` : "depends on the item, not estimated") : tax ? yen(tax) : "none"}</li>
     <li>${noRoute.length ? `Refused by every service: ${listJoin(noRoute.map(nm))}` : "No category we track is refused by every service"}</li>
     ${unconfirmed.length ? `<li>No service confirms it will send: ${listJoin(unconfirmed.map(nm))}</li>` : ""}
   </ul></div>`;
@@ -88,7 +89,7 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
   });
   const genres = `<p>Typical orders for different kinds of item, each through the cheapest service that will take it to ${esc(cn)}. Weights and prices are assumptions; the guides explain each one.</p>
   <table><thead><tr><th>Buying</th><th>Assumed order</th><th>Cheapest</th><th class="num">Total</th></tr></thead><tbody>${genreRows.map(({ g, o, top }) =>
-    `<tr><td><a href="/guides/${g.slug}">${esc(g.name.charAt(0).toUpperCase() + g.name.slice(1))}</a></td><td>${esc(o.what)}, ¥${o.price.toLocaleString("en-US")}, ${kg(o.weightG)}</td><td>${top ? esc(top.name) + (top.shippable.level !== "ok" ? " (with conditions)" : "") : "No service"}</td><td class="num">${top ? yen(top.grandTotal) + (top.grandTotalIsMinimum ? " +duty" : "") : "—"}</td></tr>`).join("")}</tbody></table>`;
+    `<tr><td><a href="/guides/${g.slug}">${esc(g.name.charAt(0).toUpperCase() + g.name.slice(1))}</a></td><td>${esc(o.what)}, ¥${o.price.toLocaleString("en-US")}, ${kg(o.weightG)}</td><td>${top ? esc(top.name) + (top.shippable.level !== "ok" ? " (with conditions)" : "") : "No service"}</td><td class="num">${top ? yen(top.grandTotal) + (top.grandTotalIsMinimum ? (dutyCell(data.importTax.countries[cc], o.price, o.category) ? `<br><small>+ duty, ${dutyCell(data.importTax.countries[cc], o.price, o.category)}</small>` : " +duty") : "") : "—"}</td></tr>`).join("")}</tbody></table>`;
 
   // ---- 関連ページ ----
   const slug = COUNTRY_SLUGS[cc];
@@ -99,5 +100,7 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
     <li><a href="/import-tax">Import tax in all nine countries</a></li>
   </ul>`;
 
-  return { best, glance, services, postage, restrictionsHtml, genres, more };
+  const duty = dutySection(data.importTax.countries[cc], GENRES);
+
+  return { best, glance, services, postage, restrictionsHtml, genres, more, duty };
 }

@@ -378,5 +378,28 @@ console.log("\n\n=== Doorzo ===");
   check("Doorzo の航空小包は最安に数えない（取扱手数料が非公開）", dz(runD({ itemPriceJpy: 10000, carrier: "intl_parcel_air" })).methodListed === false);
 }
 
+// ===========================================================================
+// 15. 米国関税の目安（2026-10-05追加）。HTSUS 9903.05.49 / 9903.05.92 を手で当てた値
+// ===========================================================================
+console.log("\n\n=== 米国関税の目安 ===");
+{
+  const runU = (extra) => calculateAll({ ...baseInput, source: "mercari", itemCount: 1, weightG: 1000, destination: "US", domesticShippingJpy: 700, buyeePlan: "light", ...extra }, { proxies, ems, importTax, restrictions, post });
+  // フィギュア（通常の関税ゼロ）¥15,000 → 12.5% = ¥1,875
+  const fig = runU({ itemPriceJpy: 15000, category: "scale_figure" });
+  check("米国 フィギュア ¥15,000 の関税目安 = ¥1,875（ちょうど12.5%）", fig.dutyEstimate?.amount === 1875 && fig.dutyEstimate.kind === "exact", JSON.stringify(fig.dutyEstimate));
+  // 漫画は情報資料として対象外
+  const man = runU({ itemPriceJpy: 6000, category: "manga" });
+  check("米国 漫画の関税目安 = ¥0（情報資料）", man.dutyEstimate?.amount === 0 && man.dutyEstimate.kind === "exempt");
+  // 品目が分からないときは「12.5%以上」
+  const oth = runU({ itemPriceJpy: 8000, category: "other" });
+  check("米国 その他 ¥8,000 = 下限 ¥1,000（12.5%以上）", oth.dutyEstimate?.amount === 1000 && oth.dutyEstimate.kind === "floor");
+  // カテゴリ未指定も「12.5%以上」に倒す（ちょうど12.5%と言い切らない）
+  check("米国 カテゴリ未指定は下限扱い", runU({ itemPriceJpy: 8000 }).dutyEstimate?.kind === "floor");
+  // 総額には足さない（料率が品目で決まり、徴収方法も未確認のため）
+  check("米国 関税の目安は総額に含めない", fig.results.every((r) => r.grandTotalIsMinimum === true));
+  // 米国以外では出さない
+  check("英国では関税の目安を出さない", calculateAll({ ...baseInput, destination: "GB", category: "scale_figure" }, { proxies, ems, importTax, restrictions, post }).dutyEstimate === null);
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);

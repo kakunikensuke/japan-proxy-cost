@@ -26,10 +26,38 @@
       },
       "dutyRate": null,
       "dutyRateStatus": "unknown-by-hs-code",
-      "dutyNote": "関税率はHSコード（品目）ごとに異なるため一律の数値を出せない。推測値を表示せず、『関税がかかる』事実と根拠だけを示す。",
+      "dutyNote": "関税率はHSコード（品目）ごとに異なるため総額には足さない（grandTotalIsMinimum のまま）。2026-10-05から dutyEstimate で品目の種類ごとの『目安』だけを別枠で出す。",
+      "dutyEstimate": {
+        "verifiedAt": "2026-10-05",
+        "effectiveFrom": "2026-07-24",
+        "note": "日本製品は HTSUS 9903.05.48/49（Section 301、強制労働に関する措置、2026-07-24 0時01分ET以降の通関分）。通常の関税(MFN)が12.5%未満なら合計12.5%、12.5%以上ならMFNのまま。9903.05.92 の情報資料（出版物・映画・ポスター・レコード・写真・テープ・CD・CD-ROM・美術品）は対象外。除外リスト（U.S. note 52(b)(c)・官報の Annex I / II Part A）は画像で、一般的な趣味の品が載っているかは未確認。中国製は 9903.05.31（通常の関税＋12.5%）で、通常の関税がゼロの品目なら同じ12.5%。課税価格は商品代（国際送料は含まない）として近似。誰がいつ徴収するか（代行の前払い・日本郵便側・受取時）と手数料は未確認なので書かない。",
+        "basisEn": "the item price",
+        "classes": {
+          "zeroMfn": { "rate": 0.125, "kind": "exact", "labelEn": "12.5%" },
+          "informational": { "rate": 0, "kind": "exempt", "labelEn": "none (informational materials)" },
+          "unknown": { "rate": 0.125, "kind": "floor", "labelEn": "at least 12.5%" }
+        },
+        "byPreset": {
+          "scale_figure": "zeroMfn", "figure_led": "zeroMfn", "model_kit": "zeroMfn", "game_console": "zeroMfn", "trading_cards": "zeroMfn",
+          "manga": "informational", "doujinshi_r18": "informational", "cd_bluray": "informational",
+          "model_paint": "unknown", "spray_paint": "unknown", "airsoft": "unknown", "character_food": "unknown", "replica_sword": "unknown", "other": "unknown"
+        },
+        "normalDutyEn": [
+          { "what": "Figures, model kits and other toys", "hts": "9503.00.00", "normal": "Free" },
+          { "what": "Video game consoles", "hts": "9504.50.00", "normal": "Free" },
+          { "what": "Playing and trading cards", "hts": "9504.40.00", "normal": "Free" },
+          { "what": "Books and manga", "hts": "4901.99.00", "normal": "Free" },
+          { "what": "Plastic statuettes and ornaments (acrylic stands and similar)", "hts": "3926.40.00", "normal": "5.3%" }
+        ],
+        "sources": [
+          { "labelEn": "US Harmonized Tariff Schedule, headings 9903.05.48, 9903.05.49 and 9903.05.92 (USITC)", "url": "https://hts.usitc.gov/" },
+          { "labelEn": "USTR notice of actions in the Section 301 forced-labor investigations, Federal Register, 28 July 2026", "url": "https://www.federalregister.gov/documents/2026/07/28/2026-15181/notice-of-actions-in-section-301-investigations-of-acts-policies-and-practices-of-various-economies-related-to-the-failure-of-each" },
+          { "labelEn": "CBP rule ending the de minimis exemption for mail, Federal Register, 24 June 2026", "url": "https://www.federalregister.gov/documents/2026/06/24/2026-12669/indefinite-suspension-of-the-de-minimis-exemption-for-mail-shipments-and-new-postal-informal-entry" }
+        ]
+      },
       "displayEn": {
         "headline": "Duty now applies to every shipment",
-        "body": "The US $800 de minimis exemption was suspended on 29 Aug 2025 and made indefinite on 24 Jun 2026. Every parcel needs formal entry and duty, regardless of value. The exact rate depends on the item's HS code, so we do not estimate it here.",
+        "body": "The US $800 de minimis exemption was suspended on 29 Aug 2025 and made indefinite on 24 Jun 2026. Every parcel needs formal entry and duty, regardless of value. The exact rate depends on the item's HS code, so the totals here leave it out; the estimate shown with them is a guide by type of item.",
         "severity": "high"
       }
     },

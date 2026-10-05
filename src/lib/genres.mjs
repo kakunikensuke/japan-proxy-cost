@@ -17,6 +17,7 @@ import { amountOf, costBarHtml, legendHtml, perServiceLines } from "./enrich.mjs
 import { sourcesAtWeight } from "./enrich2.mjs";
 import { methodsTable } from "./shipmethods.mjs";
 import { approx } from "./fx.mjs";
+import { dutyCell, dutySentence } from "./duty.mjs";
 import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
@@ -35,7 +36,7 @@ export const GENRES = [
     title: "Buying figures from Japan: what it costs to ship, and what can stop it",
     h1: "Buying figures from Japan",
     blurb: "Boxed scale figures, prize figures and figures with lights, priced to nine countries.",
-    order: { what: "a second-hand boxed scale figure", source: "mercari", price: 15000, weightG: 1000, count: 1, attrs: [] },
+    order: { category: "scale_figure", what: "a second-hand boxed scale figure", source: "mercari", price: 15000, weightG: 1000, count: 1, attrs: [] },
     variants: [
       { what: "a prize figure", note: "lighter and cheaper, so the postage is a bigger share", price: 3000, weightG: 400 },
       { what: "a figure with an LED or sound base", note: "the base contains a lithium battery, which is judged on its own", attrs: ["lithium_battery"] },
@@ -51,7 +52,7 @@ export const GENRES = [
     title: "Buying Gunpla and model kits from Japan: the kit ships, the paint does not",
     h1: "Buying Gunpla and model kits from Japan",
     blurb: "Plastic kits ship anywhere. Paint, thinner and spray cans do not, whoever you use.",
-    order: { what: "a new plastic model kit", source: "amazon_jp", price: 5000, weightG: 800, count: 1, attrs: [] },
+    order: { category: "model_kit", what: "a new plastic model kit", source: "amazon_jp", price: 5000, weightG: 800, count: 1, attrs: [] },
     variants: [
       { what: "a kit bundled with a bottle of model paint", note: "the paint is a flammable liquid", attrs: ["flammable_liquid"] },
       { what: "a kit bundled with a can of spray topcoat", note: "a pressurised can", attrs: ["aerosol"] },
@@ -67,7 +68,7 @@ export const GENRES = [
     title: "Buying manga and artbooks from Japan: one volume or the whole set",
     h1: "Buying manga and artbooks from Japan",
     blurb: "What a full set of volumes costs to bring over, and why one at a time costs so much more.",
-    order: { what: "a set of ten manga volumes", source: "mercari", price: 6000, weightG: 2000, count: 1, attrs: [] },
+    order: { category: "manga", what: "a set of ten manga volumes", source: "mercari", price: 6000, weightG: 2000, count: 1, attrs: [] },
     variants: [
       { what: "a single volume", note: "a 200 g parcel still pays for the 500 g band", price: 600, weightG: 200 },
       { what: "a large artbook", note: "heavier than it looks", price: 4000, weightG: 1000 },
@@ -83,7 +84,7 @@ export const GENRES = [
     title: "Buying trading cards from Japan: tiny parcels, and the tax on valuable singles",
     h1: "Buying trading cards from Japan",
     blurb: "A 60 g parcel pays a 500 g postage band, and an expensive single can cross a tax limit.",
-    order: { what: "a few trading cards", source: "mercari", price: 3000, weightG: 60, count: 1, attrs: [] },
+    order: { category: "trading_cards", what: "a few trading cards", source: "mercari", price: 3000, weightG: 60, count: 1, attrs: [] },
     variants: [
       { what: "a valuable single card", note: "the value, not the weight, sets the tax", price: 50000, weightG: 60 },
       { what: "a sealed booster box", note: "heavier, so it moves up a band", price: 6000, weightG: 1000 },
@@ -99,7 +100,7 @@ export const GENRES = [
     title: "Buying doujinshi from Japan: costs, and the rules on adult titles",
     h1: "Buying doujinshi from Japan",
     blurb: "Light parcels, a per-item fee that adds up, and which services refuse adult titles where.",
-    order: { what: "five doujinshi from different sellers", source: "mercari", price: 5000, weightG: 400, count: 5, attrs: [] },
+    order: { category: "manga", what: "five doujinshi from different sellers", source: "mercari", price: 5000, weightG: 400, count: 5, attrs: [] },
     variants: [
       { what: "five adult (R18) doujinshi", note: "some services and some countries treat these differently", attrs: ["adult"] },
       { what: "a single doujinshi", note: "one light purchase on its own", price: 1000, weightG: 100, count: 1 },
@@ -115,7 +116,7 @@ export const GENRES = [
     title: "Buying game consoles and handhelds from Japan: the battery decides the route",
     h1: "Buying game consoles and handhelds from Japan",
     blurb: "A console with a built-in battery cannot go by Japan Post to some countries at all.",
-    order: { what: "a boxed handheld console", source: "mercari", price: 30000, weightG: 2000, count: 1, attrs: ["lithium_battery"] },
+    order: { category: "game_console", what: "a boxed handheld console", source: "mercari", price: 30000, weightG: 2000, count: 1, attrs: ["lithium_battery"] },
     variants: [
       { what: "games only, no console", note: "cartridges and discs are judged on their own", attrs: [], price: 6000, weightG: 500 },
     ],
@@ -130,7 +131,7 @@ export const GENRES = [
     title: "Buying anime merchandise from Japan: many small items, one parcel",
     h1: "Buying anime merchandise from Japan",
     blurb: "Acrylic stands, badges and keyrings: why ten small items cost so differently between services.",
-    order: { what: "ten small merchandise items from one shop", source: "other_shop", price: 8000, weightG: 1000, count: 10, sameShop: true, attrs: [] },
+    order: { category: "other", what: "ten small merchandise items from one shop", source: "other_shop", price: 8000, weightG: 1000, count: 10, sameShop: true, attrs: [] },
     variants: [
       { what: "the same ten items from ten different marketplace sellers", note: "no longer one order", source: "mercari", sameShop: false },
       { what: "a single acrylic stand", note: "one light item on its own", price: 1500, weightG: 200, count: 1, sameShop: false },
@@ -146,7 +147,7 @@ export const GENRES = [
     title: "Buying CDs and Blu-rays from Japan: light, cheap to post, easy to bundle",
     h1: "Buying CDs and Blu-rays from Japan",
     blurb: "Discs are among the easiest things to send: what three of them cost, new or second-hand.",
-    order: { what: "three CDs from one shop", source: "amazon_jp", price: 9000, weightG: 600, count: 3, sameShop: true, attrs: [] },
+    order: { category: "cd_bluray", what: "three CDs from one shop", source: "amazon_jp", price: 9000, weightG: 600, count: 3, sameShop: true, attrs: [] },
     variants: [
       { what: "three second-hand CDs from different sellers", note: "three purchases rather than one order", source: "mercari", sameShop: false },
       { what: "a Blu-ray box set", note: "heavier and more valuable", price: 20000, weightG: 1500, count: 1, sameShop: false },
@@ -165,7 +166,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
   const inputOf = (o, cc) => ({
     source: o.source, itemPriceJpy: o.price, itemCount: o.count ?? 1, sameShop: o.sameShop ?? false,
     weightG: o.weightG, destination: cc, domesticShippingJpy: 700 * Math.min(o.count ?? 1, o.sameShop ? 1 : (o.count ?? 1)),
-    buyeePlan: "light", attributes: o.attrs ?? [],
+    buyeePlan: "light", attributes: o.attrs ?? [], ...(o.category ? { category: o.category } : {}),
   });
   const SHIPS = ["ok", "conditional", "carrier_limited"];
   const ships = (r) => SHIPS.includes(r.shippable.level);
@@ -223,7 +224,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
     // ---- 国ごとの費用 ----
     const priced = byCountry.filter((x) => x.best);
     const tr = byCountry.map((x) => x.best
-      ? `<tr><td>${esc(x.cn)}</td><td>${esc(x.best.name)}${x.best.shippable.level !== "ok" ? " (with conditions)" : ""}</td><td class="num">${x.best.grandTotalIsMinimum ? "not estimated" : yen(amountOf(x.best, "tax"))}</td><td class="num">${yen(x.best.grandTotal)}${x.best.grandTotalIsMinimum ? " +duty" : ""}<br><small>${approx(x.best.grandTotal, x.cc, data.fx)}</small></td><td class="num">${pct((x.best.grandTotal - o.price) / o.price)}</td></tr>`
+      ? `<tr><td>${esc(x.cn)}</td><td>${esc(x.best.name)}${x.best.shippable.level !== "ok" ? " (with conditions)" : ""}</td><td class="num">${x.best.grandTotalIsMinimum ? (dutyCell(data.importTax.countries[x.cc], o.price, o.category) ? `duty ${dutyCell(data.importTax.countries[x.cc], o.price, o.category)}, not in total` : "not estimated") : yen(amountOf(x.best, "tax"))}</td><td class="num">${yen(x.best.grandTotal)}${x.best.grandTotalIsMinimum ? " +duty" : ""}<br><small>${approx(x.best.grandTotal, x.cc, data.fx)}</small></td><td class="num">${pct((x.best.grandTotal - o.price) / o.price)}</td></tr>`
       : `<tr class="row-exception"><td>${esc(x.cn)}</td><td colspan="4">${x.status.key === "post" ? "Japan Post will not carry it" : "No service confirms it can ship it"}</td></tr>`).join("");
     const winners = {};
     for (const x of priced) {
@@ -324,6 +325,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
   <p>The cheapest service that will take it, for each country, with everything included: the item, fees, postage inside Japan, EMS, and import tax where it can be calculated.
   ${winList.length ? `${listJoin(winList.map(([n, c]) => `${esc(n)} is cheapest (or joint cheapest) for ${c}`))} of the ${priced.length} countries it can go to.` : ""}</p>
   <table><thead><tr><th>Ship to</th><th>Cheapest service</th><th class="num">Import tax</th><th class="num">Total</th><th class="num">On top of the item</th></tr></thead><tbody>${tr}</tbody></table>
+  ${dutySentence(data.importTax.countries.US, o.price, o.category, g.name) ? `<p>United States: ${dutySentence(data.importTax.countries.US, o.price, o.category, g.name)} See <a href="/import-tax-united-states#how-much-duty">how the US duty estimate works</a>.</p>` : ""}
   <p class="cap">Local-currency figures are approximate, at the European Central Bank reference rates of ${esc(data.fx?._meta?.asOf?.ecb ?? "")} (Taiwan dollars at the US Federal Reserve's H.10 rate of ${esc(data.fx?._meta?.asOf?.fedH10 ?? "")}).</p>
   ${priced.length ? `<p>The spread runs from ${yen(cheapestC.best.grandTotal)} to ${esc(cheapestC.cn)} up to ${yen(dearestC.best.grandTotal)} to ${esc(dearestC.cn)}. Most of that gap is EMS postage and import tax, which are the same whichever proxy you use.</p>` : ""}
   ${(() => { const u = byCountry.find((x) => x.cc === "US"); if (!u?.best) return ""; const shipped = u.res.results.filter(ships);

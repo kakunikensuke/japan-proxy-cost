@@ -6,6 +6,7 @@
  * データに無いこと（配送日数、各マーケットの規約など）は答えに書かない。
  */
 import { calculateAll, lookupShippingRate, CARRIER_LABELS } from "./calc.mjs";
+import { dutyCell, fmtDate } from "./duty.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, SOURCE_NAMES } from "./enrich.mjs";
 import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord, feeText, feeBounds } from "./words.mjs";
@@ -115,6 +116,7 @@ export function buildReference(data, { COUNTRY_SLUGS, countryName }) {
     ["Which Japan proxy service is cheapest?", `It depends on the order. Across ${total.toLocaleString("en-US")} orders priced on this site, ${esc(topWin[0].name)} was cheapest or joint cheapest on ${topWin[0].n.toLocaleString("en-US")} (${pct(topWin[0].n / total)}), ${esc(topWin[1].name)} on ${topWin[1].n.toLocaleString("en-US")}. The full count is in <a href="/guides/which-proxy-is-cheapest">which proxy is cheapest</a>.`],
     ["How much does it cost to ship from Japan to the United States?", `By EMS, ${yen(emsUS1k)} for a 1 kg parcel; by airmail small packet, ${yen(spUS1k)}. A ¥10,000 Mercari item, 1 kg, comes to ${yen(usBest.grandTotal)} through ${esc(usBest.name)} before US duty, which depends on the item. See <a href="/import-tax-united-states">buying from Japan to the United States</a>.`],
     ["Do I pay import tax on things from Japan?", `In most countries, yes. On a ¥10,000, 1 kg order: ${taxRows.map((r) => `${esc(r.cn)} ${r.min ? "depends on the item" : r.tax ? yen(r.tax) : "nothing"}`).join(", ")}. See <a href="/import-tax">import tax by country</a>.`],
+    ["How much US duty will I pay on things from Japan?", `Since ${fmtDate(importTax.countries.US.dutyEstimate.effectiveFrom)}, goods made in Japan pay 12.5% where the normal US duty is lower, which covers figures, model kits, cards and game consoles: about ${dutyCell(importTax.countries.US, 10000, "scale_figure").replace(/^about /, "")} on a ¥10,000 figure. Books, manga and CDs are exempt. The totals on this site leave it out because the exact rate depends on the item. See <a href="/import-tax-united-states#how-much-duty">US duty</a>.`],
     ["Can I pay the import tax before the parcel arrives?", `With some services, for some countries. To the United Kingdom, ${listJoin(prepayers("GB").map(esc)) || `none of the ${NW}`} collect${prepayers("GB").length === 1 ? "s" : ""} it at checkout; to Australia, ${listJoin(prepayers("AU").map(esc)) || "none"}${unpublished("AU").length ? ` (${listJoin(unpublished("AU").map(esc))} also says it does, without publishing the rate)` : ""}. See <a href="/guides/paying-import-tax-up-front">paying tax up front</a>.`],
     ["Which proxy service lets me store items longest?", `Free storage periods are ${storage.join(", ")}. A longer period gives you more time to collect several purchases into one parcel.`],
     ["Does combining parcels really save money?", `Usually a lot. Three 1 kg items sent in one box instead of three save ${yen(consolidation.at(-1).s)} to ${yen(consolidation[0].s)} in EMS postage, the most to ${esc(consolidation[0].cn)}. See <a href="/guides/consolidating-parcels">consolidating parcels</a>.`],

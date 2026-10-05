@@ -73,10 +73,10 @@ export const SOURCE_LABELS = {
 // model kit(800g) と scale figure(1000g) も同じ1000g帯だった。実質4帯しかない。
 // 帯ごとに1本にし、同じ帯に入る商品は本文で列挙して検索語を拾う。
 export const WEIGHTS = [
-  { g: 200, label: "a manga volume", slug: "manga", band: 500, alsoCovers: ["trading cards", "a doujinshi", "a prize figure", "a CD"] },
-  { g: 1000, label: "a boxed scale figure", slug: "scale-figure", band: 1000, alsoCovers: ["a model kit", "a boxed game console accessory"] },
-  { g: 2000, label: "a 2kg parcel", slug: "2kg", band: 2000, alsoCovers: ["two boxed figures packed together"] },
-  { g: 3000, label: "a 3kg parcel", slug: "3kg", band: 3000, alsoCovers: ["a large model kit", "a multi-item haul"] },
+  { g: 200, label: "a manga volume", slug: "manga", category: "manga", band: 500, alsoCovers: ["trading cards", "a doujinshi", "a prize figure", "a CD"] },
+  { g: 1000, label: "a boxed scale figure", slug: "scale-figure", category: "scale_figure", band: 1000, alsoCovers: ["a model kit", "a boxed game console accessory"] },
+  { g: 2000, label: "a 2kg parcel", slug: "2kg", category: "other", band: 2000, alsoCovers: ["two boxed figures packed together"] },
+  { g: 3000, label: "a 3kg parcel", slug: "3kg", category: "other", band: 3000, alsoCovers: ["a large model kit", "a multi-item haul"] },
 ];
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -536,7 +536,7 @@ export function buildPages(data) {
   // ---- 3. 重量 × 配送先 ----
   for (const w of WEIGHTS) {
     for (const cc of countries) {
-      const input = { source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: w.g, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" };
+      const input = { source: "yahoo_auction", itemPriceJpy: 10000, itemCount: 1, weightG: w.g, destination: cc, domesticShippingJpy: 700, buyeePlan: "light", category: w.category };
       const { results, country, shipping } = calculateAll(input, data);
       const cn = countryName(importTax, cc);
       const best = results[0];
@@ -707,8 +707,12 @@ export function buildPages(data) {
     : `<h2>Which proxies collect this tax up front</h2>
   ${prepayers.length
     ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
-    : `<p>None of the ${NW} services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
+    : c.dutyEstimate
+      // 米国: 郵便物の関税を誰がいつ徴収するかは確認できていない（duty.mjs）。「到着時に払う」と断言しない
+      ? `<p>None of the ${NW} services says it collects ${esc(cn)} duty at checkout on a Japan Post parcel. Who does collect it, and what they charge, we could not confirm; the likely amount is under <a href="#how-much-duty">how much US duty to expect</a>.</p>`
+      : `<p>None of the ${NW} services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
   ${taxWorkedExample(cc, data, cn)}
+  ${cg.duty}
   <h2>Tax at six different prices</h2>
   ${taxLadder(cc, data)}
   ${thresholdsInYen(cc, data) ? `<h2>The limits that matter, in yen</h2>${thresholdsInYen(cc, data)}` : ""}
