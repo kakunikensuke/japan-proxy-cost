@@ -355,5 +355,28 @@ console.log("\n\n=== EMS以外の配送方法 ===");
   check("EMSの総額と順位は配送方法対応の前と同じ", a.results.every((r, i) => r.proxyId === b.results[i].proxyId && r.grandTotal === b.results[i].grandTotal));
 }
 
+// ===========================================================================
+// 14. Doorzo（2026-10-05追加）。代行手数料 = 1点ごとに商品価格の3%、下限¥200・上限¥300
+// ===========================================================================
+console.log("\n\n=== Doorzo ===");
+{
+  const runD = (extra) => calculateAll({ ...baseInput, source: "mercari", itemCount: 1, weightG: 1000, destination: "US", domesticShippingJpy: 700, buyeePlan: "light", ...extra }, { proxies, ems, importTax, restrictions, post });
+  const dz = (r) => r.results.find((x) => x.proxyId === "doorzo");
+  // ¥10,000 → 3% = ¥300（上限ちょうど）。10,000 + 300 + 700 + EMS 5,300 = 16,300
+  check("Doorzo ¥10,000・米国1kg = ¥16,300", dz(runD({ itemPriceJpy: 10000 })).grandTotal === 16300, `got ${dz(runD({ itemPriceJpy: 10000 })).grandTotal}`);
+  // ¥3,000 → 3% = ¥90 → 下限 ¥200
+  check("Doorzo ¥3,000 の代行手数料は下限 ¥200", dz(runD({ itemPriceJpy: 3000 })).payNow.lines.find((l) => l.key === "service").amount === 200);
+  // ¥50,000 → 3% = ¥1,500 → 上限 ¥300
+  check("Doorzo ¥50,000 の代行手数料は上限 ¥300", dz(runD({ itemPriceJpy: 50000 })).payNow.lines.find((l) => l.key === "service").amount === 300);
+  // 3点で合計 ¥30,000 → 1点 ¥10,000 → ¥300 × 3 = ¥900
+  check("Doorzo 3点 合計¥30,000 の代行手数料は ¥900", dz(runD({ itemPriceJpy: 30000, itemCount: 3 })).payNow.lines.find((l) => l.key === "service").amount === 900);
+  // 20万円超: 日本郵便 ¥2,800 + Doorzo ¥400 + 1注文 ¥200 = ¥3,400
+  check("Doorzo 20万円超の輸出申告関連 ¥3,400", dz(runD({ itemPriceJpy: 250000 })).payNow.lines.find((l) => l.key === "clearance")?.amount === 3400);
+  // 決済手数料は非公開なので警告が出る
+  check("Doorzo は決済手数料が非公開である旨を警告する", dz(runD({ itemPriceJpy: 10000 })).warnings.some((w) => /payment fee is not published/.test(w)));
+  // 航空小包は取扱手数料が確定しないので最安に数えない
+  check("Doorzo の航空小包は最安に数えない（取扱手数料が非公開）", dz(runD({ itemPriceJpy: 10000, carrier: "intl_parcel_air" })).methodListed === false);
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);

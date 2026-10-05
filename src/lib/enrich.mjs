@@ -17,6 +17,7 @@
  */
 import { calculateAll, lookupEmsRate, checkShippable } from "./calc.mjs";
 import { esc } from "./layout.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 // 文中に入れるときは先頭の1文字だけ小文字にする（Japan などの固有名詞を壊さない）
@@ -292,6 +293,7 @@ function storageText(p) {
   const bits = [];
   bits.push(s.freeDays ? `${s.freeDays} days free` : "free period not published");
   if (s.overstayPerDayPerItem) bits.push(`then ${yen(s.overstayPerDayPerItem)} per item per day`);
+  if (s.overstayPerKgPerDay) bits.push(`then ${yen(s.overstayPerKgPerDay)} per kg per day`);
   if (s.overstayDailyByWeightG) bits.push(`then from ${yen(s.overstayDailyByWeightG[0].amount)} a day by weight`);
   if (s.weeklyBySize) bits.push(`then from ${yen(s.weeklyBySize.small.parcel)} a week by size`);
   if (s.maxDays) bits.push(`disposed of after ${s.maxDays} days`);
@@ -464,7 +466,7 @@ export function taxLadder(cc, data) {
 
   return `<p>${text}${switches.length ? ` ${listJoin(switches)}, because its up-front collection only covers orders below a set value. Above that, the parcel goes through customs as a formal import and you settle with the courier.` : ""}</p>
   <table><thead><tr><th>Item price</th><th class="num">Tax</th><th class="num">Share of item</th>${ids.map((x) => `<th>${esc(x.name)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
-  <p class="cap">A Mercari Japan item, 1 kg packed, EMS. Tax is shown for the cheapest service; the last four columns show when each service takes it.</p>`;
+  <p class="cap">A Mercari Japan item, 1 kg packed, EMS. Tax is shown for the cheapest service; the last ${NW} columns show when each service takes it.</p>`;
 }
 
 export function thresholdsInYen(cc, data) {
@@ -504,7 +506,7 @@ export function proxyAcrossCountries(proxy, data, countries, countryName) {
   });
   const wins = rows.filter((r) => r.rank === 1);
   const tr = rows.map((r) => `<tr><td>${esc(r.cn)}</td><td class="num">${yen(r.mine.grandTotal)}</td><td>${r.rank === 1 ? "<strong>cheapest</strong>" : `${r.rank}${["", "st", "nd", "rd", "th"][Math.min(r.rank, 4)]}`}</td><td>${r.rank === 1 ? "—" : `${esc(r.best.name)}, ${yen(r.mine.grandTotal - r.best.grandTotal)} less`}</td></tr>`).join("");
-  return `<p>On the same ¥10,000, 1 kg Mercari order, ${esc(name)} is the cheapest (or joint cheapest) of the four for
+  return `<p>On the same ¥10,000, 1 kg Mercari order, ${esc(name)} is the cheapest (or joint cheapest) of the ${NW} for
   ${plural(wins.length, "destination")} out of ${rows.length}${wins.length ? `: ${listJoin(wins.map((w) => esc(w.cn)))}` : ""}.
   The postage is the same whichever service you use, so the differences below come from fees and from how each service handles tax.</p>
   <table><thead><tr><th>Ship to</th><th class="num">${esc(name)}</th><th>Rank</th><th>Cheapest instead</th></tr></thead><tbody>${tr}</tbody></table>`;

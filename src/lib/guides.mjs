@@ -14,6 +14,7 @@ import { calculateAll, lookupEmsRate } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml, SOURCE_NAMES } from "./enrich.mjs";
 import { GENRES } from "./genres.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord, feeText } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x, d = 0) => `${(x * 100).toFixed(d)}%`;
@@ -23,7 +24,7 @@ const related = (items) => `<nav class="related"><h2>Related</h2><ul>${items.map
 
 export const GUIDES = [
   { slug: "how-proxy-buying-works", title: "How buying from Japan through a proxy works, step by step", blurb: "Every charge between clicking buy and the parcel landing, in the order you pay it." },
-  { slug: "which-proxy-is-cheapest", title: "Which Japan proxy is cheapest? 1,512 orders priced", blurb: "Four services, seven marketplaces, nine countries: how often each one actually wins." },
+  { slug: "which-proxy-is-cheapest", title: "Which Japan proxy is cheapest? 1,512 orders priced", blurb: `${NWC} services, seven marketplaces, nine countries: how often each one actually wins.` },
   { slug: "consolidating-parcels", title: "Consolidating parcels from Japan: when one box saves money", blurb: "What combining purchases saves in postage to each country, and what storage costs while you wait." },
   { slug: "ems-weight-bands", title: "EMS from Japan: the weight bands and what each step costs", blurb: "The full EMS price table for nine countries, and where a few grams cost a whole step." },
   { slug: "is-it-worth-it", title: "When is an item from Japan worth the shipping?", blurb: "How much the overhead adds at each item price, and where it drops below half the item's cost." },
@@ -65,17 +66,17 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       path: "/compare",
       layout: "content-only",
       prefill: null,
-      title: "Compare Japan proxy services: Buyee, ZenMarket, Neokyo and FROM JAPAN",
-      description: `The same order priced through all four proxy services for ${countries.length} countries, with ${pairs.length * countries.length} head-to-head comparisons.`,
+      title: `Compare Japan proxy services: ${PROXY_TITLE_LIST}`,
+      description: `The same order priced through all ${NW} proxy services for ${countries.length} countries, with ${pairs.length * countries.length} head-to-head comparisons.`,
       body: `
   <h1>Compare Japan proxy services</h1>
-  <p>The same ¥10,000, 1 kg Mercari Japan order, priced through all four services for each of the ${countries.length} countries this
+  <p>The same ¥10,000, 1 kg Mercari Japan order, priced through all ${NW} services for each of the ${countries.length} countries this
   site covers. Green marks the cheapest. Every comparison below works out the total for its own pair and country.</p>
   <h2>One order, nine destinations</h2>
   <p>${ranking.filter((x) => x.n).map((x) => `${esc(x.name)} is cheapest (or joint cheapest) for ${x.n} of ${countries.length}`).join("; ")}.
   ${ranking.filter((x) => !x.n).length ? `${listJoin(ranking.filter((x) => !x.n).map((x) => esc(x.name)))} ${ranking.filter((x) => !x.n).length === 1 ? "is" : "are"} not cheapest anywhere on this particular order, which says more about the order than the service: change the weight, the price or the number of items and the ranking moves, as the comparisons show.` : ""}</p>
   <table><thead><tr><th>Ship to</th>${ids.map((x) => `<th class="num">${esc(x.name)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
-  <p class="cap">Import tax is included where it can be calculated. For the United States and Canada it depends on the item or the province, so those totals leave it out. Postage is identical across the four; the differences are fees and tax timing.</p>
+  <p class="cap">Import tax is included where it can be calculated. For the United States and Canada it depends on the item or the province, so those totals leave it out. Postage is identical across the ${NW}; the differences are fees and tax timing.</p>
 
   <h2>Country by country</h2>
   <ul>${rows.map(({ cc, res }) => {
@@ -85,7 +86,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     const tied = res.results.filter((r) => r.grandTotal === best.grandTotal).map((r) => esc(r.name));
     return `<li><strong>${esc(countryName(cc))}:</strong> ${tied.length > 1 ? `${listJoin(tied)} tie at ${yen(best.grandTotal)}` : `${esc(best.name)} is cheapest at ${yen(best.grandTotal)}`}${worst.grandTotal > best.grandTotal ? `; ${esc(worst.name)} costs ${yen(worst.grandTotal - best.grandTotal)} more${why ? `, mostly its ${KEYS[why.k]}` : ""}` : ""}.</li>`;
   }).join("")}</ul>
-  <p>Postage is the same for all four, so these gaps are made entirely of fees and, where it applies, of whether a service collects the tax at checkout.</p>
+  <p>Postage is the same for all ${NW}, so these gaps are made entirely of fees and, where it applies, of whether a service collects the tax at checkout.</p>
   <h2>Head-to-head comparisons</h2>
   <p>Each page prices the pair on 24 different orders, shows which lines of the bill differ, compares what each will ship to that
   country, and explains when you pay the tax.</p>
@@ -150,10 +151,10 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <p>A service that collects the tax at checkout looks more expensive at the moment you pay, and one that leaves it to the courier
   looks cheaper. Neither is true: the tax is the same, it is just paid at a different time. That is why every total on this site is split into
   what you pay now and what you pay on arrival. Where it is paid on arrival, the courier normally adds a handling charge for having
-  paid it on your behalf, which none of the four services publish and which is therefore not in the totals.</p>
+  paid it on your behalf, which none of the ${NW} services publish and which is therefore not in the totals.</p>
   ${related([
     { href: "/guides/paying-import-tax-up-front", text: "Paying import tax up front or on delivery" },
-    { href: "/compare", text: "Compare the four services" },
+    { href: "/compare", text: `Compare the ${NW} services` },
   ])}`,
     });
   }
@@ -167,9 +168,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     const res = run({ ...base, destination: cc });
     const best = res.results[0];
     const svc = (src) => ids.map((x) => {
-      const v = x.p.serviceFee.bySource[src];
-      const amount = typeof v === "object" ? v.amount : v;
-      return `${esc(x.name)} ${yen(amount)}`;
+      return `${esc(x.name)} ${feeText(x.p.serviceFee.bySource[src])}`;
     }).join(", ");
     const steps = [
       ["item", "The item", amountOf(best, "item")],
@@ -207,7 +206,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     <li><strong>It waits in storage.</strong> Each service holds purchases for free for a while (${storage}) so you can collect several and ship them together. After that, storage is charged.</li>
     <li><strong>It is packed.</strong> ${listJoin(ids.filter((x) => x.p.packingFee?.type === "included").map((x) => esc(x.name)))} include packing in the service fee; ${listJoin(ids.filter((x) => x.p.packingFee?.type === "weight").map((x) => esc(x.name)))} charge${ids.filter((x) => x.p.packingFee?.type === "weight").length === 1 ? "s" : ""} for it by weight.</li>
     <li><strong>It is posted overseas.</strong> EMS to ${esc(cn)} costs ${yen(amountOf(best, "intl"))} at 1 kg, the same whichever proxy sends it. On this order that is ${pct(intlShare)} of the whole bill, the largest single line after the item itself.</li>
-    <li><strong>Paying can cost extra.</strong>${ids.filter((x) => x.p.paymentFee?.type === "rate").map((x) => `${esc(x.name)} adds ${pct(x.p.paymentFee.rate, 1)} of the whole transaction`).join("; ") || "None of the four adds a percentage"}; ${listJoin(ids.filter((x) => x.p.paymentFee?.type === "none").map((x) => esc(x.name)))} add nothing${ids.some((x) => !["rate", "none"].includes(x.p.paymentFee?.type)) ? `, and ${listJoin(ids.filter((x) => !["rate", "none"].includes(x.p.paymentFee?.type)).map((x) => esc(x.name)))} does not publish one` : ""}.</li>
+    <li><strong>Paying can cost extra.</strong>${ids.filter((x) => x.p.paymentFee?.type === "rate").map((x) => `${esc(x.name)} adds ${pct(x.p.paymentFee.rate, 1)} of the whole transaction`).join("; ") || `None of the ${NW} adds a percentage`}; ${listJoin(ids.filter((x) => x.p.paymentFee?.type === "none").map((x) => esc(x.name)))} add nothing${ids.some((x) => !["rate", "none"].includes(x.p.paymentFee?.type)) ? `, and ${listJoin(ids.filter((x) => !["rate", "none"].includes(x.p.paymentFee?.type)).map((x) => esc(x.name)))} does not publish one` : ""}.</li>
     <li><strong>It clears customs in ${esc(cn)}.</strong> ${amountOf(best, "tax") ? `${yen(amountOf(best, "tax"))} of VAT on this order, charged on the item plus the international postage.` : "No tax is due on this order."} Some services collect it at checkout; otherwise the courier collects it at the door.</li>
   </ol>
   <h2>The running total</h2>
@@ -218,14 +217,14 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   ${buyee ? `<table><thead><tr><th>Buyee plan</th><th class="num">Fee</th><th>Shipping guarantee</th><th>Inspection</th></tr></thead><tbody>${buyee.plans.map((p) => `<tr><td>${esc(p.nameEn ?? p.name)}</td><td class="num">${yen(p.fee)}</td><td>${p.shippingGuarantee ? "Yes" : "No"}</td><td>${p.inspection ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table>
   <p>The totals on this site use the free Light plan, so Buyee is compared at its cheapest. If you would take the Standard plan anyway, add ${yen(buyee.plans.find((p) => p.id === "standard")?.fee ?? 0)} to its totals before comparing.</p>` : ""}
   <h2>Where it goes wrong</h2>
-  <p><strong>The item cannot be exported.</strong> Paint, spray cans, lighters, batteries and replica weapons are refused by some or all of the four, and you find out at the warehouse, after you have paid for the item and the postage to get it there. Check <a href="/what-you-cannot-ship-from-japan">what cannot ship</a> before you bid.</p>
+  <p><strong>The item cannot be exported.</strong> Paint, spray cans, lighters, batteries and replica weapons are refused by some or all of the ${NW}, and you find out at the warehouse, after you have paid for the item and the postage to get it there. Check <a href="/what-you-cannot-ship-from-japan">what cannot ship</a> before you bid.</p>
   <p><strong>You change your mind.</strong> ${zen?.cancelFee ? `ZenMarket, for example, charges ${yen(zen.cancelFee.amount)} to cancel once an item has reached the warehouse, and auction and flea-market purchases cannot be cancelled at all.` : "Cancelling after the purchase is often not possible."}</p>
   <p><strong>You leave it in storage too long.</strong> The free period runs from the day the item reaches the warehouse. Past it, storage is charged daily or weekly, and items left long enough are disposed of without compensation.</p>
   ${related([
     { href: "/guides/which-proxy-is-cheapest", text: "Which proxy is cheapest? 1,512 orders priced" },
     { href: "/guides/consolidating-parcels", text: "When one box saves money" },
     { href: `/import-tax-${COUNTRY_SLUGS[cc]}`, text: `Import tax in ${cn}` },
-    { href: "/compare", text: "Compare the four services" },
+    { href: "/compare", text: `Compare the ${NW} services` },
   ])}`,
     });
   }
@@ -245,11 +244,21 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     const byWeight = Object.fromEntries(weights.map((w) => [w, Object.fromEntries(ids.map((x) => [x.id, 0]))]));
     const byPrice = Object.fromEntries(prices.map((p) => [p, Object.fromEntries(ids.map((x) => [x.id, 0]))]));
     let total = 0, gapSum = 0;
+    // 決済手数料を公開していない会社（計算上は¥0）が、公開されている中で最も高い料率を払った場合の勝ち数
+    const unknownPay = ids.filter((x) => !["none", "rate"].includes(x.p.paymentFee?.type));
+    const knownRates = ids.filter((x) => x.p.paymentFee?.type === "rate").map((x) => x.p.paymentFee.rate);
+    const stressRate = knownRates.length ? Math.max(...knownRates) : 0;
+    const stressWins = Object.fromEntries(ids.map((x) => [x.id, 0]));
     for (const cc of countries) for (const s of sources) for (const w of weights) for (const p of prices) for (const n of counts) {
       const res = run({ ...base, destination: cc, source: s, weightG: w, itemPriceJpy: p, itemCount: n, sameShop: n > 1 });
       const best = res.results[0].grandTotal;
       total++;
       gapSum += res.results.at(-1).grandTotal - best;
+      if (unknownPay.length && stressRate) {
+        const alt = res.results.map((r) => ({ id: r.proxyId, t: unknownPay.some((u) => u.id === r.proxyId) ? r.grandTotal + Math.round(r.payNow.total * (stressRate / (1 - stressRate))) : r.grandTotal }));
+        const m = Math.min(...alt.map((a) => a.t));
+        for (const a of alt) if (a.t === m) stressWins[a.id]++;
+      }
       for (const r of res.results) if (r.grandTotal === best) { wins[r.proxyId]++; byCountry[cc][r.proxyId]++; bySource[s][r.proxyId]++; byCount[n][r.proxyId]++; byWeight[w][r.proxyId]++; byPrice[p][r.proxyId]++; }
     }
     const order = ids.map((x) => ({ ...x, n: wins[x.id] })).sort((a, b) => b.n - a.n);
@@ -276,10 +285,10 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       layout: "content-only",
       prefill: null,
       title: `Which Japan proxy is cheapest? ${total.toLocaleString("en-US")} orders priced`,
-      description: `We priced ${total.toLocaleString("en-US")} orders through Buyee, ZenMarket, Neokyo and FROM JAPAN. ${top.name} was cheapest (or joint cheapest) on ${top.n.toLocaleString("en-US")} of them.`,
+      description: `We priced ${total.toLocaleString("en-US")} orders through ${PROXY_TITLE_LIST}. ${top.name} was cheapest (or joint cheapest) on ${top.n.toLocaleString("en-US")} of them.`,
       body: `
   <h1>Which Japan proxy is cheapest?</h1>
-  <p>Asking which proxy is cheapest is like asking which phone plan is cheapest: it depends on how you use it. So instead of an opinion, here is a count. We priced ${total.toLocaleString("en-US")} different orders through all four services and counted how often each came out cheapest.</p>
+  <p>Asking which proxy is cheapest is like asking which phone plan is cheapest: it depends on how you use it. So instead of an opinion, here is a count. We priced ${total.toLocaleString("en-US")} different orders through all ${NW} services and counted how often each came out cheapest.</p>
   <div class="verdict"><p class="v">${esc(top.name)} was cheapest, or joint cheapest, on ${top.n.toLocaleString("en-US")} of ${total.toLocaleString("en-US")} orders (${pct(top.n / total)}).</p>
   <p class="cap" style="margin:0">Ties count for every service involved, so the shares add up to more than 100%.</p></div>
   <h2>The orders</h2>
@@ -290,6 +299,10 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <table><thead><tr><th>Service</th><th class="num">Cheapest on</th><th class="num">Share</th></tr></thead><tbody>${order.map((x) => `<tr><td>${esc(x.name)}</td><td class="num">${x.n.toLocaleString("en-US")}</td><td class="num">${share(x.n)}</td></tr>`).join("")}</tbody></table>
   <p>${order.filter((x) => x.n === 0).length ? `${listJoin(order.filter((x) => x.n === 0).map((x) => esc(x.name)))} never came out cheapest on these orders. That does not make ${order.filter((x) => x.n === 0).length === 1 ? "it" : "them"} poor value, since price is not the only thing a service offers, but if price is what you care about it is worth knowing.` : `Every service wins somewhere, which is the point: the answer depends on the order.`}
   On average, choosing the most expensive service instead of the cheapest cost ${yen(gapSum / total)} per order.</p>
+  ${unknownPay.length && stressRate ? `<h2>The fee nobody publishes</h2>
+  <p>${listJoin(unknownPay.map((x) => esc(x.name)))} ${unknownPay.length === 1 ? "does" : "do"} not publish a payment fee, so the count above treats it as zero. That flatters ${unknownPay.length === 1 ? "it" : "them"} if a fee is charged at checkout. Here is the same count with ${listJoin(unknownPay.map((x) => esc(x.name)))} paying ${(stressRate * 100).toFixed(1)}%, the highest payment fee any of the ${NW} publishes:</p>
+  <table><thead><tr><th>Service</th><th class="num">As published</th><th class="num">With a ${(stressRate * 100).toFixed(1)}% fee</th></tr></thead><tbody>${order.map((x) => `<tr><td>${esc(x.name)}${unknownPay.some((u) => u.id === x.id) ? " *" : ""}</td><td class="num">${x.n.toLocaleString("en-US")}</td><td class="num">${stressWins[x.id].toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table>
+  <p class="cap">* Payment fee not published. Check the checkout page of these services for the fee on your payment method before relying on the ranking.</p>` : ""}
   <h2>By destination</h2>
   <p>${countryLeaders.length === 1 ? `${esc(countryLeaders[0])} leads in every country.` : `The leader changes with the country: ${listJoin(countryLeaders.map(esc))} each top at least one.`} Each row is ${perC} orders.</p>
   <table><thead><tr><th>Ship to</th>${ids.map((x) => `<th class="num">${esc(x.name)}</th>`).join("")}</tr></thead><tbody>${countryRows}</tbody></table>
@@ -348,6 +361,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     const storeRows = ids.map((x) => {
       const s = x.p.storage ?? {};
       const after = s.overstayPerDayPerItem ? `${yen(s.overstayPerDayPerItem)} per item per day`
+        : s.overstayPerKgPerDay ? `${yen(s.overstayPerKgPerDay)} per kg per day`
         : s.overstayDailyByWeightG ? `${yen(s.overstayDailyByWeightG[0].amount)}–${yen(s.overstayDailyByWeightG.at(-1).amount)} a day by weight`
         : s.weeklyBySize ? `${yen(s.weeklyBySize.small.parcel)}–${yen(s.weeklyBySize.large.order)} a week by size` : "not published";
       return `<tr><td>${esc(x.name)}</td><td class="num">${s.freeDays ?? "—"} days</td><td>${after}</td><td>${s.maxDays ? `after ${s.maxDays} days` : s.disposeAfterDays ? `after ${s.disposeAfterDays} days` : s.maxUnpaidWeeks ? `after ${s.maxUnpaidWeeks} unpaid weeks` : "not published"}</td></tr>`;
@@ -373,7 +387,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <table><thead><tr><th>Service</th><th class="num">Three parcels</th><th class="num">One box</th><th class="num">Saved</th></tr></thead><tbody>${exRows.map((r) => `<tr><td>${esc(r.name)}</td><td class="num">${yen(r.sep)}</td><td class="num">${yen(r.tog)}</td><td class="num"><strong>${yen(r.sep - r.tog)}</strong></td></tr>`).join("")}</tbody></table>
   <p>${esc(exBest.name)} saves the most by consolidating, ${yen(exBest.sep - exBest.tog)}; ${esc(exWorst.name)} saves the least, ${yen(exWorst.sep - exWorst.tog)}. The VAT falls too, because it is charged on the goods plus the international postage, and one box pays less postage than three.</p>
   <h2>What packing adds</h2>
-  <p>${neo ? `${esc(neo.name)} charges for packing by weight: ${yen(neo.p.packingFee.baseAmount)} up to ${kg(neo.p.packingFee.baseUpToG)}, then ${yen(neo.p.packingFee.perAdditionalKg)} per extra kilogram. Three 1 kg parcels packed separately cost ${yen(3 * neoPack(1000))} in packing; one 3 kg box costs ${yen(neoPack(3000))}. The other three include packing in their service fee, so for them consolidation changes only the postage.` : "All four include packing in the service fee, so consolidation changes only the postage."}</p>
+  <p>${neo ? `${esc(neo.name)} charges for packing by weight: ${yen(neo.p.packingFee.baseAmount)} up to ${kg(neo.p.packingFee.baseUpToG)}, then ${yen(neo.p.packingFee.perAdditionalKg)} per extra kilogram. Three 1 kg parcels packed separately cost ${yen(3 * neoPack(1000))} in packing; one 3 kg box costs ${yen(neoPack(3000))}. The other ${numberWord(ids.filter((x) => x.p.packingFee?.type === "included").length)} include packing in their service fee, so for them consolidation changes only the postage.` : `All ${NW} include packing in the service fee, so consolidation changes only the postage.`}</p>
   <h2>How long you can wait</h2>
   <p>Consolidation only works while your purchases are in free storage. The clock starts when each item reaches the warehouse, so the first purchase sets the deadline for the box.</p>
   <table><thead><tr><th>Service</th><th class="num">Free storage</th><th>After that</th><th>Disposed of</th></tr></thead><tbody>${storeRows}</tbody></table>
@@ -413,7 +427,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       description: `Japan Post EMS prices for ${countries.length} countries in one table, and where a few grams over a band costs up to ${yen(Math.max(...steps.flatMap((s) => s.jumps.map((j) => j.add))))}.`,
       body: `
   <h1>EMS from Japan: the weight bands</h1>
-  <p>Totals on this site default to Japan Post's EMS, the one service all four proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
+  <p>Totals on this site default to Japan Post's EMS, the one service all ${NW} proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
   <h2>The table</h2>
   <table><thead><tr><th>Weight</th>${zones.map((z) => `<th class="num">${zoneName(z)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
   <p class="cap">Japan Post EMS, checked ${esc(ems._meta.updated)}. Countries in the same column share a price zone. Bands between those shown are not used on this site; a parcel is priced at the next band up.</p>
@@ -506,7 +520,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     const prepayCount = ids.map((x) => ({ ...x, n: taxed.filter((cc) => cellFor(x, cc).startsWith("<strong>")).length, m: taxed.filter((cc) => cellFor(x, cc) === "Collects, rate not published").length })).sort((a, b) => b.n - a.n);
     hl["paying-import-tax-up-front"] = prepayCount.filter((x) => x.n).length
       ? `${prepayCount.filter((x) => x.n).map((x) => `${esc(x.name)} collects tax at checkout for ${x.n} of ${taxed.length} countries`).join("; ")}.`
-      : "None of the four collects tax at checkout for these countries.";
+      : `None of the ${NW} collects tax at checkout for these countries.`;
     const overEx = (() => {
       const cc = "AU";
       if (!countries.includes(cc)) return null;
@@ -530,14 +544,14 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       layout: "content-only",
       prefill: null,
       title: "Paying import tax up front or on delivery: what each proxy does",
-      description: `Which of Buyee, ZenMarket, Neokyo and FROM JAPAN collect VAT or GST at checkout for which countries, the value limits on it, and what it does to the total.`,
+      description: `Which of ${PROXY_TITLE_LIST} collect VAT or GST at checkout for which countries, the value limits on it, and what it does to the total.`,
       body: `
   <h1>Paying import tax up front or on delivery</h1>
   <p>Some proxies collect your country's VAT or GST when you pay for shipping, so nothing is due when the parcel arrives. Others leave it to the courier, who pays it at the border and then collects it from you, usually with a handling fee on top. The tax itself is the same either way. This guide is about the timing, and about the catches.</p>
   <h2>Who collects what, where</h2>
   <table><thead><tr><th>Ship to</th>${ids.map((x) => `<th>${esc(x.name)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
   <p class="cap">For EMS parcels, from each company's published rules. ${countries.filter((cc) => importTax.countries[cc]?.vatRate === 0).map((cc) => esc(countryName(cc))).join(", ")} ${countries.filter((cc) => importTax.countries[cc]?.vatRate === 0).length ? "is left out because it charges no import tax on general goods." : ""}</p>
-  <p>${prepayCount.filter((x) => x.n).map((x) => `${esc(x.name)} collects at checkout for ${x.n} of the ${taxed.length} countries here`).join("; ") || "None of the four collects at checkout for these countries"}.
+  <p>${prepayCount.filter((x) => x.n).map((x) => `${esc(x.name)} collects at checkout for ${x.n} of the ${taxed.length} countries here`).join("; ") || `None of the ${NW} collects at checkout for these countries`}.
   ${prepayCount.filter((x) => !x.n && x.m).map((x) => `${esc(x.name)} says it collects the tax at checkout for ${x.m} of them but does not publish the rate, so its totals on this site assume you pay on arrival.`).join(" ")}
   ${prepayCount.filter((x) => !x.n && !x.m).length ? `${listJoin(prepayCount.filter((x) => !x.n && !x.m).map((x) => esc(x.name)))} ${prepayCount.filter((x) => !x.n && !x.m).length === 1 ? "does" : "do"} not collect it up front for any of them on EMS.` : ""}</p>
   <h2>Same tax, different timing</h2>
@@ -552,10 +566,10 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <p>To ${esc(countryName(overEx.cc))}, here is the same 1\u00a0kg Mercari order at ${yen(overEx.lo)} and at ${yen(overEx.hi)}. At the lower price ${listJoin(overEx.rows.filter((r) => r.loT === "prepaid").map((r) => esc(r.name)))} collect the tax at checkout. At the higher price ${overEx.rows.filter((r) => r.loT === "prepaid" && r.hiT !== "prepaid").length ? `${listJoin(overEx.rows.filter((r) => r.loT === "prepaid" && r.hiT !== "prepaid").map((r) => esc(r.name)))} no longer do, and the parcel is taxed at the border instead` : "the same services still collect it"}.</p>
   <table><thead><tr><th>Service</th><th>At ${yen(overEx.lo)}</th><th>At ${yen(overEx.hi)}</th></tr></thead><tbody>${overEx.rows.map((r) => `<tr><td>${esc(r.name)}</td><td>${r.loT === "prepaid" ? "At checkout" : "On arrival"}</td><td>${r.hiT === "prepaid" ? "At checkout" : "On arrival"}</td></tr>`).join("")}</tbody></table>` : ""}
   <h2>The handling fee</h2>
-  <p>When the courier pays your tax at the border, it charges you for doing so. None of the four services publishes that fee because it is the courier's, not theirs, and it varies by carrier and country, so it is not in any total on this site. It is the practical reason to prefer up-front collection where you have the choice.</p>
+  <p>When the courier pays your tax at the border, it charges you for doing so. None of the ${NW} services publishes that fee because it is the courier's, not theirs, and it varies by carrier and country, so it is not in any total on this site. It is the practical reason to prefer up-front collection where you have the choice.</p>
   ${related([
     { href: "/import-tax", text: "Import tax by country" },
-    { href: "/compare", text: "Compare the four services" },
+    { href: "/compare", text: `Compare the ${NW} services` },
   ])}`,
     });
   }
@@ -589,7 +603,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <a href="/contact">contact page</a> is the quickest way to get it corrected.</p>
   <h2>Reference pages</h2>
   <ul>
-    <li><a href="/compare">Compare the four services, country by country</a></li>
+    <li><a href="/compare">Compare the ${NW} services, country by country</a></li>
     <li><a href="/import-tax">Import tax by country</a></li>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a></li>
     <li><a href="/how-we-calculate">How the numbers are worked out</a></li>

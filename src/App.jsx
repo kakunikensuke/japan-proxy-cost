@@ -61,6 +61,9 @@ const INCLUDE_LABELS = {
   domestic_trade_guarantee: "domestic purchase guarantee",
 };
 
+// 決済手数料を公開していない会社。計算上は¥0なので、結果に必ず断りを出す
+const PAYMENT_UNPUBLISHED = new Set(proxies.proxies.filter((p) => !["none", "rate"].includes(p.paymentFee?.type)).map((p) => p.id));
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const lcFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
@@ -142,6 +145,7 @@ function ResultRow({ r, isBest, best, max, cc }) {
           <b>{r.name}</b>
           {isBest && <span className="tag">Cheapest that can ship this</span>}
           {tag && <span className={`tag ${tag.cls}`}>{tag.text}</span>}
+          {PAYMENT_UNPUBLISHED.has(r.proxyId) && <span className="row-meta">Payment fee not published</span>}
           {!isBest && !tag && best && (
             <span className="row-meta">
               {r.grandTotal === best.grandTotal ? "Same total" : `${yen(r.grandTotal - best.grandTotal)} more`}
@@ -405,7 +409,7 @@ export default function App() {
   const resultsBlock = (
     <section className="results-wrap" aria-live="polite">
       <div className="results-head">
-        <h2>Your order, four ways</h2>
+        <h2>Your order, {NUMBER_WORDS[results.length] ?? results.length} ways</h2>
         {!cannotPrice && summary && (
           <p className="results-sum"><strong>{summary.head}</strong>{summary.tail}</p>
         )}

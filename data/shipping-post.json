@@ -682,6 +682,28 @@
         "sourceUrl": null,
         "verifiedAt": "2026-10-02"
       }
+    },
+    "doorzo": {
+      "small_packet_air": {
+        "status": "unknown",
+        "evidence": "Doorzo lists 'AIR Packet' (up to about 1.8 kg), which is a different Japan Post service from the airmail small packet priced here.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/jp-post-faq-doorzo?code=shipment-EMS",
+        "verifiedAt": "2026-10-05"
+      },
+      "intl_parcel_air": {
+        "status": "partial",
+        "evidence": "Lists 'Air Mail' with a handling fee of JPY 200–2,000.",
+        "warningEn": "Doorzo offers this method but adds a shipping handling fee of ¥200–2,000 depending on weight, which it does not itemise, so this total is not counted as cheapest",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/jp-post-faq-doorzo?code=shipment-EMS",
+        "verifiedAt": "2026-10-05"
+      },
+      "intl_parcel_sea": {
+        "status": "partial",
+        "evidence": "Lists 'Surface Mail' with a handling fee of JPY 200–2,000.",
+        "warningEn": "Doorzo offers this method but adds a shipping handling fee of ¥200–2,000 depending on weight, which it does not itemise, so this total is not counted as cheapest",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/jp-post-faq-doorzo?code=shipment-EMS",
+        "verifiedAt": "2026-10-05"
+      }
     }
   }
 }

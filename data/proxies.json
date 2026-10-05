@@ -221,6 +221,121 @@
         }
       ],
       "affiliate": { "status": "unknown", "unverified": true }
+    },
+    {
+      "id": "doorzo",
+      "name": "Doorzo",
+      "shortName": "Doorzo",
+      "url": "https://www.doorzo.com/",
+      "verifiedAt": "2026-10-05",
+      "verifiedBy": "公式 User Guide『Fee Structure』『Japan Post』『Prohibited & Returned』をブラウザで描画して確認（2026-10-05）",
+      "serviceFee": {
+        "unit": "item",
+        "note": "公式: 'a proxy purchasing service fee equal to 3% of the item price, subject to a minimum of JPY 200 and a maximum of JPY 300 per item'。駿河屋は最大¥500（本ツールの仕入れ元に駿河屋は無い）。期間限定の手数料無料キャンペーンは計算に入れない",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/fee-structure-doorzo?code=fee-desc",
+        "bySource": {
+          "yahoo_auction": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          },
+          "mercari": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          },
+          "rakuma": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          },
+          "amazon_jp": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          },
+          "rakuten": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          },
+          "recommended": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item",
+            "unverified": true,
+            "note": "ZenMarketの推奨ストアに相当する区分はDoorzoに無い。一般の通販と同じ料率と仮定"
+          },
+          "other_shop": {
+            "type": "rate",
+            "rate": 0.03,
+            "min": 200,
+            "max": 300,
+            "unit": "item"
+          }
+        }
+      },
+      "paymentFee": {
+        "type": "unknown",
+        "unverified": true,
+        "note": "公式: 'The types of fees supported by each payment method may vary. Please refer to the checkout page for details.' 料率は公開されていない",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/fee-structure-doorzo?code=fee-desc"
+      },
+      "packingFee": {
+        "type": "included",
+        "amount": 0,
+        "note": "基本料金に梱包の項目なし。補強は任意（¥150〜）。同梱は10注文まで無料、11注文目から1件¥100",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/fee-structure-doorzo?code=fee-desc"
+      },
+      "domesticShipping": {
+        "note": "出品者負担でなければ注文時に支払う"
+      },
+      "storage": {
+        "freeDays": 60,
+        "maxDays": 90,
+        "overstayPerKgPerDay": 50,
+        "note": "60日無料、その後最大30日まで1注文・1kgあたり1日¥50（1kg未満は1kgに切り上げ）。期限を過ぎると放棄扱いで廃棄",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/fee-structure-doorzo?code=fee-desc",
+        "verifiedAt": "2026-10-05"
+      },
+      "photoService": {
+        "amount": 500,
+        "photos": 6,
+        "note": "入庫後の撮影（After-storage Photo Service）6枚"
+      },
+      "exportClearanceFee": {
+        "amount": 3200,
+        "perItemAmount": 200,
+        "thresholdJpy": 200000,
+        "carriers": [
+          "ems",
+          "intl_parcel",
+          "small_packet"
+        ],
+        "note": "20万円超: 日本郵便の輸出申告料¥2,800 + Doorzoの手数料¥400 + 1注文¥200",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/jp-post-faq-doorzo?code=shipment-EMS",
+        "verifiedAt": "2026-10-05"
+      },
+      "taxPrepay": [],
+      "taxPrepayNote": "公式: 'Taxes and duties (such as SST and DDP, applicable to select countries only)'。どの国・どの配送方法かは未確認のため、事前徴収なしとして扱う",
+      "versusPagesByCountry": false,
+      "versusPagesByCountryNote": "国別に比較ページを割ると9本の本文が79〜86%同じになった（2026-10-05実測。基準は80%未満）。差が手数料だけで、国によって答えが変わらないため。この会社を含む組は1組1ページにし、9か国の表を載せる",
+      "affiliate": {
+        "status": "none",
+        "note": "未調査"
+      }
     }
   ],
 

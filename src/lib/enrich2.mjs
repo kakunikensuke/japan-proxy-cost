@@ -5,6 +5,7 @@
 import { calculateAll, checkShippable } from "./calc.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, SOURCE_NAMES } from "./enrich.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const lc = (s) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -36,8 +37,8 @@ export function presetsAtWeight(slug, cc, cn, data) {
   const blocked = rows.filter((r) => r.refused.length);
   const destBlocked = rows.filter((r) => r.dest);
   return `<p>${clean.length === rows.length
-    ? `All four services will send every one of these to ${esc(cn)}.`
-    : `${clean.length ? `${listJoin(clean.map((r) => esc(lc(r.preset.labelEn))))} can go through any of the four. ` : ""}${blocked.length ? `${listJoin(blocked.map((r) => esc(lc(r.preset.labelEn))))} ${blocked.length === 1 ? "is" : "are"} refused by at least one service on this route, so the cheapest total above is only the answer if the cheapest service will take it.` : ""}`}
+    ? `All ${NW} services will send every one of these to ${esc(cn)}.`
+    : `${clean.length ? `${listJoin(clean.map((r) => esc(lc(r.preset.labelEn))))} can go through any of the ${NW}. ` : ""}${blocked.length ? `${listJoin(blocked.map((r) => esc(lc(r.preset.labelEn))))} ${blocked.length === 1 ? "is" : "are"} refused by at least one service on this route, so the cheapest total above is only the answer if the cheapest service will take it.` : ""}`}
   ${destBlocked.length ? `For ${listJoin(destBlocked.map((r) => esc(lc(r.preset.labelEn))))}, the block is Japan Post's own rule for ${esc(cn)}, so no service can send it.` : ""}</p>
   <table><thead><tr><th>If the parcel is</th><th>Services that will ship it</th><th>Refused by</th></tr></thead><tbody>${tr}</tbody></table>`;
 }
@@ -75,7 +76,7 @@ export function refusalCost(data, attrId) {
   const risky = rows.filter((r) => r.level !== "ok");
   return `<p>${risky.length
     ? `With ${listJoin(risky.map((r) => esc(r.name)))}, this is the money at risk on a ¥10,000 Yahoo! Auctions win if the item is turned away at the warehouse. It has already been spent by the time anyone looks inside the box.`
-    : `None of the four refuses this outright, but the table shows what would be at stake on a ¥10,000 Yahoo! Auctions win if a warehouse did.`}</p>
+    : `None of the ${NW} refuses this outright, but the table shows what would be at stake on a ¥10,000 Yahoo! Auctions win if a warehouse did.`}</p>
   <table><thead><tr><th>Service</th><th>Its rule</th><th class="num">Already spent</th><th>Disposal charge</th></tr></thead><tbody>${tr}</tbody></table>
   <p class="cap">"Already spent" is the item, ¥700 of postage inside Japan and the service fee. International postage is not included because the parcel never ships.</p>`;
 }

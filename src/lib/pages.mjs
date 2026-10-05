@@ -32,6 +32,7 @@ import { buildReference } from "./reference.mjs";
 import { PHOTOS } from "./layout.mjs";
 import { approx, fxNote } from "./fx.mjs";
 import { presetsAtWeight, sourcesAtWeight, refusalCost, taxAmongCountries } from "./enrich2.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord, feeText } from "./words.mjs";
 
 /**
  * お問い合わせはサイト内のフォームで受ける。
@@ -80,6 +81,7 @@ export const WEIGHTS = [
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
+const listJoinPlain = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
 
 function countryName(importTax, code) {
   return importTax.countries[code]?.name ?? code;
@@ -255,7 +257,7 @@ function whenThisWins(proxy, data) {
   const table = rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${r.rank === 1 ? "<strong>1st</strong>" : `${r.rank}${["", "st", "nd", "rd", "th"][Math.min(r.rank, 4)]}`}</td><td>${yen(r.total)}</td><td>${r.rank === 1 ? "&mdash;" : esc(r.winner.name) + " " + yen(r.winner.grandTotal)}</td></tr>`).join("");
 
   return `<h2>When ${name} is actually the cheapest</h2>
-  <p>Fee tables do not answer that on their own, so here is the same set of orders priced through all four
+  <p>Fee tables do not answer that on their own, so here is the same set of orders priced through all ${NW}
   services, showing where ${name} lands:</p>
   <table>
     <thead><tr><th>Order</th><th>${name}</th><th>Total</th><th>Beaten by</th></tr></thead>
@@ -332,16 +334,32 @@ export function buildPages(data) {
   // 比較ページのURLは「proxies.json の並び順で先に出てくる方が左」で生成される。
   // ここをアルファベット順で組み立てると存在しないURLを指してしまう（実際に404を2本作った）。
   const order = ids.map((p) => p.id);
+  // 国別に割る組かどうか。割っても答えが変わらない組（本文が80%以上同じになる組）は1組1ページにする。
+  // どの会社を含む組を割らないかは proxies.json の versusPagesByCountry で持つ（Doorzo: 実測79〜86%で基準超え）
+  const byCountryPair = (x, y) => !proxies.proxies.some((p) => [x, y].includes(p.id) && p.versusPagesByCountry === false);
   const versusPath = (x, y, cc) => {
     const [first, second] = order.indexOf(x) < order.indexOf(y) ? [x, y] : [y, x];
-    return `/${first}-vs-${second}-to-${COUNTRY_SLUGS[cc]}`;
+    return byCountryPair(x, y) ? `/${first}-vs-${second}-to-${COUNTRY_SLUGS[cc]}` : `/${first}-vs-${second}`;
   };
 
   // ---- 1. 代行A vs 代行B × 配送先 ----
   for (let a = 0; a < ids.length; a++) {
     for (let b = a + 1; b < ids.length; b++) {
-      for (const cc of countries) {
+      const split = byCountryPair(ids[a].id, ids[b].id);
+      for (const cc of split ? countries : ["US"]) {
         const A = ids[a], B = ids[b];   // 左が必ず配列で先に来る方（versusPath と対応）
+        // 1組1ページのときは、9か国の総額を並べた表を足す（国別ページの代わり）
+        const countryTable = split ? "" : (() => {
+          const rows = countries.map((c) => {
+            const rr = calculateAll({ source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: c, domesticShippingJpy: 700, buyeePlan: "light" }, data).results;
+            const a = rr.find((r) => r.proxyId === A.id), b = rr.find((r) => r.proxyId === B.id);
+            return { cn: countryName(importTax, c), a, b, d: b.grandTotal - a.grandTotal };
+          });
+          const same = rows.every((r) => Math.sign(r.d) === Math.sign(rows[0].d));
+          return `<h2>Country by country</h2>
+  <p>${same ? `The answer is the same for all ${countries.length} countries this site covers: ${esc(rows[0].d > 0 ? A.name : B.name)} is cheaper on this order everywhere, by ${yen(Math.min(...rows.map((r) => Math.abs(r.d))))} to ${yen(Math.max(...rows.map((r) => Math.abs(r.d))))}. That is why this comparison is one page rather than one per country.` : `The cheaper of the two depends on the country.`}</p>
+  <table><thead><tr><th>Ship to</th><th class="num">${esc(A.name)}</th><th class="num">${esc(B.name)}</th><th>Cheaper</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.cn)}</td><td class="num">${yen(r.a.grandTotal)}${r.a.grandTotalIsMinimum ? " +duty" : ""}</td><td class="num">${yen(r.b.grandTotal)}${r.b.grandTotalIsMinimum ? " +duty" : ""}</td><td>${r.d === 0 ? "tie" : `${esc(r.d > 0 ? A.name : B.name)} by ${yen(Math.abs(r.d))}`}</td></tr>`).join("")}</tbody></table>`;
+        })();
         const input = { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" };
         const { results, country } = calculateAll(input, data);
         const pair = results.filter((r) => r.proxyId === A.id || r.proxyId === B.id);
@@ -355,14 +373,26 @@ export function buildPages(data) {
 
         pages.push({
           path: versusPath(A.id, B.id, cc),
-          title: `${A.name} vs ${B.name} shipping to ${cn} — which is cheaper?`,
+          title: split ? `${A.name} vs ${B.name} shipping to ${cn} — which is cheaper?` : `${A.name} vs ${B.name}: which Japan proxy is cheaper?`,
           description: `On a ¥10,000 1kg order from Mercari to ${cn}, ${win.name} lands at ${yen(win.grandTotal)} and ${lose.name} at ${yen(lose.grandTotal)}. Full fee breakdown.`,
           prefill: input,
           body: `
-  <h1>${esc(A.name)} vs ${esc(B.name)}: shipping to ${esc(cn)}</h1>
+  <h1>${split ? `${esc(A.name)} vs ${esc(B.name)}: shipping to ${esc(cn)}` : `${esc(A.name)} vs ${esc(B.name)}`}</h1>
   <p>Taking a typical order — a ¥10,000 item from Mercari Japan, about 1kg once packed, sent to ${esc(cn)} by EMS —
   ${diff > 0 ? `<strong>${esc(win.name)} works out cheaper by ${yen(diff)}</strong>` : `<strong>the two come out level</strong>`}.</p>
   ${verdictBox(grid, A.name, B.name, aRes, bRes, cn)}
+  ${(() => {
+    // 決済手数料を公開していない会社が勝っているなら、その前提を結論のすぐ下に書く（ページ末尾の注記だけでは足りない）
+    const unpublished = [aRes, bRes].filter((r) => !["none", "rate"].includes(proxies.proxies.find((p) => p.id === r.proxyId)?.paymentFee?.type));
+    if (!unpublished.length) return "";
+    const rates = proxies.proxies.filter((p) => p.paymentFee?.type === "rate").map((p) => p.paymentFee.rate);
+    const rate = rates.length ? Math.max(...rates) : 0;
+    if (!rate) return "";
+    const adj = (r) => unpublished.includes(r) ? r.grandTotal + Math.round(r.payNow.total * (rate / (1 - rate))) : r.grandTotal;
+    const a2 = adj(aRes), b2 = adj(bRes);
+    const flips = Math.sign(b2 - a2) !== Math.sign(bRes.grandTotal - aRes.grandTotal) && b2 !== a2;
+    return `<p class="cap">${listJoinPlain(unpublished.map((r) => esc(r.name)))} ${unpublished.length === 1 ? "does" : "do"} not publish a payment fee, so ${unpublished.length === 1 ? "it is" : "each is"} counted as \u00a50. At ${(rate * 100).toFixed(1)}%, the highest payment fee any service here publishes, this order would come to ${yen(a2)} with ${esc(aRes.name)} and ${yen(b2)} with ${esc(bRes.name)}${flips ? `, and ${esc(a2 < b2 ? aRes.name : bRes.name)} would be the cheaper of the two` : ", which does not change which is cheaper"}.</p>`;
+  })()}
   ${countryNotice(country)}
   ${resultsTable(pair, { cc, fx: data.fx })}
   <p>Totals include the proxy's service fee, packing, domestic shipping inside Japan, international postage,
@@ -386,6 +416,8 @@ export function buildPages(data) {
 
   <h2>When you pay the import tax</h2>
   ${taxTimingDuel(cc, cn, data, input, A, B)}
+
+  ${countryTable}
 
   <h2>Storage, packing and payment terms</h2>
   ${termsDuel(data, A, B)}
@@ -446,11 +478,11 @@ export function buildPages(data) {
     pages.push({
       path: `/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}`,
       title: `Cheapest Japan proxy service to ${cn}, by where you buy (${data.proxies._meta.updated})`,
-      description: `All four proxy services priced on the same ¥10,000 1kg order to ${cn}, from seven Japanese marketplaces. ${cheapest.best.name} is cheapest at ${yen(cheapest.best.grandTotal)}${winners.length > 1 ? ", but the winner changes with the marketplace" : ""}.`,
+      description: `All ${NW} proxy services priced on the same ¥10,000 1kg order to ${cn}, from seven Japanese marketplaces. ${cheapest.best.name} is cheapest at ${yen(cheapest.best.grandTotal)}${winners.length > 1 ? ", but the winner changes with the marketplace" : ""}.`,
       prefill: baseInput,
       body: `
   <h1>Cheapest proxy service from Japan to ${esc(cn)}</h1>
-  <p>The same order &mdash; &yen;10,000 of goods, roughly 1kg packed, EMS to ${esc(cn)} &mdash; priced through all four
+  <p>The same order &mdash; &yen;10,000 of goods, roughly 1kg packed, EMS to ${esc(cn)} &mdash; priced through all ${NW}
   services, from each of the seven places a proxy can buy from.
   <strong>${winners.length > 1
     ? `There is no single cheapest service: ${winners.map((w) => esc(w)).join(" and ")} each win depending on where you buy.`
@@ -459,7 +491,7 @@ export function buildPages(data) {
 
   <h2>Cheapest service for each marketplace</h2>
   <table>
-    <thead><tr><th>Where you buy</th><th>Cheapest</th><th>Total</th><th>The other three</th></tr></thead>
+    <thead><tr><th>Where you buy</th><th>Cheapest</th><th>Total</th><th>The other ${NW_OTHERS}</th></tr></thead>
     <tbody>${sourceRows}</tbody>
   </table>
   <p>${dearest.best.grandTotal > cheapest.best.grandTotal
@@ -535,7 +567,7 @@ export function buildPages(data) {
   ${priceAtWeight(input, data, cn)}
 
   <h2>Each service, line by line</h2>
-  <p>The postage is identical for all four at this weight. These are the lines that are not:</p>
+  <p>The postage is identical for all ${NW} at this weight. These are the lines that are not:</p>
   ${perServiceLines(results)}
 
   <h2>Cheaper than EMS?</h2>
@@ -553,7 +585,7 @@ export function buildPages(data) {
   domestic postage inside Japan, payment fees and tax. ${shipping.amount && shipping.amount > 10000
     ? "Postage costs more than the item itself here, which is the usual reason a purchase from Japan stops making sense."
     : "Weight is the one input you can still change after you have chosen what to buy, by having the box packed tighter or by leaving the outer packaging behind."}</p>
-  <p>The four services differ on how they treat weight. One charges for packing by weight on top of postage;
+  <p>The ${NW} services differ on how they treat weight. One charges for packing by weight on top of postage;
   the others fold packing into the service fee. That is why the ranking at ${w.g}g is not automatically the
   ranking at a different weight — the table above is recalculated for this weight specifically.</p>
   ${links([
@@ -568,9 +600,8 @@ export function buildPages(data) {
   for (const p of proxies.proxies) {
     const name = p.shortName ?? p.name;
     const feeRows = Object.entries(p.serviceFee.bySource).map(([src, v]) => {
-      const amount = typeof v === "object" ? v.amount : v;
-      const unit = typeof v === "object" ? v.unit : p.serviceFee.unit;
-      return `<tr><td>${esc(SOURCE_LABELS[src]?.label ?? src)}</td><td>${yen(amount)} per ${unit}</td></tr>`;
+      const unit = (typeof v === "object" ? v.unit : null) ?? p.serviceFee.unit;
+      return `<tr><td>${esc(SOURCE_LABELS[src]?.label ?? src)}</td><td>${feeText(v)} per ${unit}</td></tr>`;
     }).join("");
 
     pages.push({
@@ -600,6 +631,7 @@ export function buildPages(data) {
     ? `${esc(name)} stores a purchase free for ${p.storage.freeDays} days from the moment it reaches their warehouse${p.storage.maxDays ? `, and will hold it for at most ${p.storage.maxDays} days in total` : ""}.`
     : `${esc(name)} does not publish a free storage period.`}
   ${p.storage?.overstayPerDayPerItem ? `After that it is ${yen(p.storage.overstayPerDayPerItem)} per item per day.` : ""}
+  ${p.storage?.overstayPerKgPerDay ? `After that it is ${yen(p.storage.overstayPerKgPerDay)} per kilogram per day, with anything under 1\u00a0kg counted as 1\u00a0kg.` : ""}
   ${p.storage?.overstayDailyByWeightG ? `After that it is charged daily by weight, from ${yen(p.storage.overstayDailyByWeightG[0].amount)} a day for a parcel under ${(p.storage.overstayDailyByWeightG[0].maxWeightG / 1000)}kg.` : ""}
   ${p.storage?.weeklyBySize ? `After that it is charged weekly by parcel size, from ${yen(p.storage.weeklyBySize.small.parcel)} to ${yen(p.storage.weeklyBySize.large.order)} a week.` : ""}
   This matters more than it sounds: the free window is what lets you win several auctions over a few weeks and
@@ -640,7 +672,7 @@ export function buildPages(data) {
       path: `/import-tax-${COUNTRY_SLUGS[cc]}`,
       // 2026-10-02 に「輸入税のページ」から「その国で日本から買うための総合ガイド」へ格上げ。URLは変えない
       title: `Buying from Japan to ${cn}: import tax, shipping and the cheapest proxy`,
-      description: `${cg.best.name} is the cheapest of four proxy services on a typical order to ${cn}. Import tax, EMS postage, what cannot be sent, and costs for figures, manga, cards and more.`,
+      description: `${cg.best.name} is the cheapest of ${NW} proxy services on a typical order to ${cn}. Import tax, EMS postage, what cannot be sent, and costs for figures, manga, cards and more.`,
       prefill: { source: "mercari", itemPriceJpy: 10000, itemCount: 1, weightG: 1000, destination: cc, domesticShippingJpy: 700, buyeePlan: "light" },
       body: `
   <h1>Buying from Japan to ${esc(cn)}</h1>
@@ -675,7 +707,7 @@ export function buildPages(data) {
     : `<h2>Which proxies collect this tax up front</h2>
   ${prepayers.length
     ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
-    : `<p>None of the four services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
+    : `<p>None of the ${NW} services collect this tax up front for ${esc(cn)}. You pay it when the parcel arrives, and couriers normally add a handling charge on top.</p>`}`}
   ${taxWorkedExample(cc, data, cn)}
   <h2>Tax at six different prices</h2>
   ${taxLadder(cc, data)}
@@ -685,7 +717,7 @@ export function buildPages(data) {
   <h2>The handling fee nobody quotes</h2>
   <p>Where tax is not collected up front, the courier or postal operator pays it for you at the border and
   then charges a fee for having done so. It is not part of the tax itself.
-  None of the four services publish it and it varies by carrier, so it is deliberately left out of the totals
+  None of the ${NW} services publish it and it varies by carrier, so it is deliberately left out of the totals
   here rather than guessed at — but it is a real reason to prefer a service that collects at checkout where
   you have the choice.</p>
   <h2>EMS postage to ${esc(cn)}</h2>
@@ -794,7 +826,7 @@ export function buildPages(data) {
     const cheapestOk = okOf(rep)[0];
 
     const verdictLine = rep.allBlocked
-      ? `<strong>No. None of the four services will ship ${esc(attr.seoLabelEn)} out of Japan.</strong>`
+      ? `<strong>No. None of the ${NW} services will ship ${esc(attr.seoLabelEn)} out of Japan.</strong>`
       : cheapestOk
         ? `<strong>Yes, but only through some of them.</strong> ${esc(cheapestOk.name)} is the cheapest that will take it, landing at ${yen(cheapestOk.grandTotal)} on a &yen;10,000 1kg order.`
         : `<strong>No service confirms in writing that it will.</strong> Every provider either refuses ${esc(attr.seoLabelEn)} or has published no rule about it.`;
@@ -806,7 +838,7 @@ export function buildPages(data) {
       return `
       <tr${differs ? ` class="row-exception"` : ""}>
         <td>${esc(x.cn)}${differs ? " <strong>(different)</strong>" : ""}</td>
-        <td>${x.allBlocked ? "<strong>No service will</strong>" : ok.length === 4 ? "All four will" : `${ok.length} of 4 will`}</td>
+        <td>${x.allBlocked ? "<strong>No service will</strong>" : ok.length === N_PROXIES ? `All ${NW} will` : `${ok.length} of ${N_PROXIES} will`}</td>
         <td>${ok[0] ? `${esc(ok[0].name)} &mdash; ${yen(ok[0].grandTotal)}` : "&mdash;"}</td>
       </tr>`;
     }).join("");
@@ -817,8 +849,8 @@ export function buildPages(data) {
       path: `/can-you-ship-${attr.slug}-from-japan`,
       title: `Can you ship ${attr.seoLabelEn} from Japan?`,
       description: rep.allBlocked
-        ? `No. All four Japan proxy services refuse ${attr.seoLabelEn}. Here is what each one says, and what to do instead.`
-        : `Buyee, ZenMarket, Neokyo and FROM JAPAN compared on ${attr.seoLabelEn}, quoting each company's own rules, with the answer for nine destinations.`,
+        ? `No. All ${NW} Japan proxy services refuse ${attr.seoLabelEn}. Here is what each one says, and what to do instead.`
+        : `${PROXY_TITLE_LIST} compared on ${attr.seoLabelEn}, quoting each company's own rules, with the answer for nine destinations.`,
       prefill: inputFor(rep.cc),
       body: `
   <h1>Can you ship ${esc(attr.seoLabelEn)} from Japan?</h1>
@@ -833,7 +865,7 @@ export function buildPages(data) {
 
   <h2>Does the destination change the answer?</h2>
   <p>${sameEverywhere
-    ? `No. We checked all nine destinations this site covers and the four services give the same answer to every one of them, because the rule is about the item rather than the route.`
+    ? `No. We checked all nine destinations this site covers and the ${NW} services give the same answer to every one of them, because the rule is about the item rather than the route.`
     : `Yes, for ${exceptions.flat().length} of the nine destinations we cover. The rows marked <strong>(different)</strong> below do not follow the table above.`}</p>
   <table>
     <thead><tr><th>Destination</th><th>Can it ship?</th><th>Cheapest that will take it</th></tr></thead>
@@ -846,7 +878,7 @@ export function buildPages(data) {
     return `<h3>${g.map((y) => esc(y.cn)).join(", ")}</h3>
     <p>${note ? esc(note) + " " : ""}${refused.length ? `${refused.join(" and ")} refuse${refused.length === 1 ? "s" : ""} ${esc(attr.seoLabelEn)} on this route specifically.` : ""}
     ${restrictions.byDestination?.[x.cc]?.[attrId]
-      ? `This is a Japan Post rule about the destination, so it applies whichever of the four services you use &mdash; switching companies does not get around it.`
+      ? `This is a Japan Post rule about the destination, so it applies whichever of the ${NW} services you use &mdash; switching companies does not get around it.`
       : `This is the company's own policy rather than a postal rule, so a different service may still accept it.`}</p>`;
   }).join("")}
 
@@ -892,7 +924,7 @@ export function buildPages(data) {
     pages.push({
       path: "/what-you-cannot-ship-from-japan",
       title: "What you cannot ship out of Japan with a proxy service",
-      description: "Airsoft, model paint, spray cans, lithium batteries and more — what each of the four major Japan proxy services actually refuses, quoted from their own rules.",
+      description: `Airsoft, model paint, spray cans, lithium batteries and more — what each of the ${NW} major Japan proxy services actually refuses, quoted from their own rules.`,
       prefill: null,
       body: `
   <h1>What you cannot ship out of Japan with a proxy service</h1>
@@ -912,7 +944,7 @@ export function buildPages(data) {
 
   <h2>Two separate rules have to pass, not one</h2>
   <p>Whether a parcel can leave Japan is decided twice. The proxy applies its own policy, which differs
-  between companies and is a commercial decision — one of the four publishes a handling procedure for model
+  between companies and is a commercial decision — one of the ${NW} publishes a handling procedure for model
   guns where the others simply refuse them. Then Japan Post applies the rules for the country you are sending
   to, and those apply to everyone equally. A company being willing to take your money does not mean the post
   office will take the box.</p>
@@ -1023,7 +1055,7 @@ function staticPages(data) {
   <h2>What is deliberately not included</h2>
   <ul>
     <li><strong>Courier customs handling fees.</strong> These are real, but they vary by
-    carrier and country and none of the four companies publish them. We say a fee is likely rather than invent
+    carrier and country and none of the ${NW} companies publish them. We say a fee is likely rather than invent
     a figure.</li>
     <li><strong>Customs duty by HS code.</strong> Duty depends on what the item is, and the rate for a resin
     figure differs from that for a cotton shirt. Where duty applies but cannot be pinned down, the total is

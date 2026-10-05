@@ -17,6 +17,7 @@ import { amountOf, costBarHtml, legendHtml, perServiceLines } from "./enrich.mjs
 import { sourcesAtWeight } from "./enrich2.mjs";
 import { methodsTable } from "./shipmethods.mjs";
 import { approx } from "./fx.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord } from "./words.mjs";
 
 const yen = (n) => "¥" + Math.round(n).toLocaleString("en-US");
 const pct = (x) => `${Math.round(x * 100)}%`;
@@ -178,7 +179,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
     const unknown = all.filter((r) => r.shippable.level === "unknown");
     const refused = all.filter((r) => r.shippable.level === "prohibited");
     const byPost = refused.length === all.length && all.every((r) => r.shippable.blockers.some((b) => b.axis === "destination"));
-    if (clean.length === all.length) return { key: "all", text: "all four ship it" };
+    if (clean.length === all.length) return { key: "all", text: `all ${NW} ship it` };
     if (byPost) return { key: "post", text: "Japan Post will not carry it, whichever service you use" };
     const bits = [];
     if (clean.length) bits.push(`${names(clean)} ${clean.length === 1 ? "ships" : "ship"} it`);
@@ -199,7 +200,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
     const groups = new Map();
     for (const x of byCountry) { if (!groups.has(x.status.key)) groups.set(x.status.key, { text: x.status.text, list: [] }); groups.get(x.status.key).list.push(x.cn); }
     const shipLine = groups.size === 1 && byCountry[0].status.key === "all"
-      ? `All four services will ship ${esc(o.what)} to all ${countries.length} countries this site covers.`
+      ? `All ${NW} services will ship ${esc(o.what)} to all ${countries.length} countries this site covers.`
       : [...groups.values()].map((gr) => `To ${listJoin(gr.list.map(esc))}: ${gr.text}.`).join(" ");
     // 条件の中身（こちらの説明文 noteEn。公式原文ではないので引用符で囲まない）
     // 会社の条件と、配送先（日本郵便）の条件を分けて、それぞれ最初に出たものだけ残す
@@ -245,7 +246,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
       const ref = rows.find((r) => r.cc === "GB")?.best;
       const base = byCountry.find((x) => x.cc === "GB")?.best;
       const parts = [];
-      if (!blocked.length && !some.length) parts.push(`All four services will still ship it to all ${countries.length} countries.`);
+      if (!blocked.length && !some.length) parts.push(`All ${NW} services will still ship it to all ${countries.length} countries.`);
       else {
         const vg = new Map();
         for (const r of rows) { if (!vg.has(r.status.key)) vg.set(r.status.key, { text: r.status.text, list: [] }); vg.get(r.status.key).list.push(r.cn); }
@@ -309,7 +310,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
       layout: "content-first",
       prefill: inputOf(o, "US"),
       title: g.title,
-      description: `${g.blurb} Totals for nine countries through Buyee, ZenMarket, Neokyo and FROM JAPAN, worked out from each company's published fees.`,
+      description: `${g.blurb} Totals for nine countries through ${PROXY_TITLE_LIST}, worked out from each company's published fees.`,
       body: `
   <h1>${esc(g.h1)}</h1>
   <p>${esc(g.intro)}</p>
@@ -339,7 +340,7 @@ export function buildGenreGuides(data, { COUNTRY_SLUGS, countryName }) {
   ${adviceHtml}
   ${storeHtml}
   ${related([
-    ...g.see.map((href) => ({ href, text: href.startsWith("/can-you-ship-") ? `Can you ship ${href.replace("/can-you-ship-", "").replace("-from-japan", "").replace(/-/g, " ")} from Japan?` : href.startsWith("/ship-") ? "Shipping costs by weight" : href === "/import-tax" ? "Import tax by country" : href === "/compare" ? "Compare the four services" : "Guide: " + href.replace("/guides/", "").replace(/-/g, " ") })),
+    ...g.see.map((href) => ({ href, text: href.startsWith("/can-you-ship-") ? `Can you ship ${href.replace("/can-you-ship-", "").replace("-from-japan", "").replace(/-/g, " ")} from Japan?` : href.startsWith("/ship-") ? "Shipping costs by weight" : href === "/import-tax" ? "Import tax by country" : href === "/compare" ? `Compare the ${NW} services` : "Guide: " + href.replace("/guides/", "").replace(/-/g, " ") })),
     { href: "/guides", text: "All guides" },
   ])}`,
     };

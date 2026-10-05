@@ -76,10 +76,16 @@ function calcPaymentFee(proxy, base) {
   return { amount: 0, warning: `${proxy.shortName ?? proxy.name}: payment fee is not published; treated as ¥0` };
 }
 
-function calcServiceFee(proxy, { source, itemCount, sameShop }) {
+function calcServiceFee(proxy, { source, itemCount, sameShop, itemPriceJpy }) {
   const raw = proxy.serviceFee.bySource[source];
   if (raw == null) {
     return { amount: 0, warning: `${proxy.shortName ?? proxy.name} does not publish a fee for ${source}` };
+  }
+  // 料率で決まる手数料。商品価格は複数点の合計で入ってくるので、1点あたりに割って料率を当て、下限・上限で挟む
+  if (typeof raw === "object" && raw.type === "rate") {
+    const perItem = itemPriceJpy / Math.max(1, itemCount);
+    const each = Math.min(raw.max ?? Infinity, Math.max(raw.min ?? 0, Math.round(perItem * raw.rate)));
+    return { amount: each * itemCount, unit: "item" };
   }
   const amount = typeof raw === "object" ? raw.amount : raw;
   const unit = typeof raw === "object" ? raw.unit : proxy.serviceFee.unit;
@@ -119,7 +125,7 @@ function calcPlanFee(proxy, planId) {
   return { amount: plan.fee, planName: plan.nameEn ?? plan.name, includes };
 }
 
-function calcExportClearance(proxy, { itemTotal, carrier }) {
+function calcExportClearance(proxy, { itemTotal, carrier, itemCount }) {
   const ec = proxy.exportClearanceFee;
   if (!ec) {
     return {
@@ -130,7 +136,7 @@ function calcExportClearance(proxy, { itemTotal, carrier }) {
     };
   }
   const covered = ec.carriers.some((c) => c === carrier || String(carrier).startsWith(c + "_"));
-  if (itemTotal > ec.thresholdJpy && covered) return { amount: ec.amount };
+  if (itemTotal > ec.thresholdJpy && covered) return { amount: ec.amount + (ec.perItemAmount ?? 0) * Math.max(1, itemCount ?? 1) };
   return { amount: 0 };
 }
 
@@ -262,10 +268,10 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
     const offer = carrier === "ems" ? { status: "listed" } : post?.offeredBy?.[proxy.id]?.[carrier];
     const methodListed = offer?.status === "listed";
     if (!methodListed) {
-      push(`${proxy.shortName ?? proxy.name} does not list ${(CARRIER_LABELS[carrier] ?? carrier).toLowerCase()} among its shipping methods, so this total may not be available`);
+      push(offer?.warningEn ?? `${proxy.shortName ?? proxy.name} does not list ${(CARRIER_LABELS[carrier] ?? carrier).toLowerCase()} among its shipping methods, so this total may not be available`);
     }
 
-    const service = calcServiceFee(proxy, { source, itemCount, sameShop });
+    const service = calcServiceFee(proxy, { source, itemCount, sameShop, itemPriceJpy });
     push(service.warning);
     const plan = calcPlanFee(proxy, proxy.id === "buyee" ? buyeePlan : undefined);
     const packing = calcPackingFee(proxy, weightG);
@@ -274,7 +280,7 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
     const intl = shipping.amount ?? 0;
     if (shipping.error) push(shipping.error);
 
-    const clearance = calcExportClearance(proxy, { itemTotal: itemPriceJpy, carrier });
+    const clearance = calcExportClearance(proxy, { itemTotal: itemPriceJpy, carrier, itemCount });
     push(clearance.warning);
 
     const beforePaymentFee = itemPriceJpy + service.amount + plan.amount + packing.amount

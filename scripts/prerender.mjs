@@ -22,6 +22,7 @@ import fx from "../data/fx.json" with { type: "json" };
 import { buildPages, CONTACT_FORM_ENDPOINT } from "../src/lib/pages.mjs";
 import { calculateAll } from "../src/lib/calc.mjs";
 import { sectionOf, siteHeader, siteFooter, photoImg, photoCredit, photoPreload, splitArticle, breadcrumbs, breadcrumbJsonLd } from "../src/lib/layout.mjs";
+import { NW, NWC, NW_OTHERS, N_PROXIES, PROXY_TITLE_LIST, PROXY_TITLE_AMP, numberWord, feeText, feeBounds } from "../src/lib/words.mjs";
 
 const SITE_URL = (process.env.VITE_SITE_URL ?? "https://japanproxy.kakuni-lab.com").replace(/\/$/, "");
 const DIST = path.join(import.meta.dirname, "..", "dist");
@@ -159,8 +160,10 @@ const unitOf = (p) => {
 };
 
 const feeStructureRows = proxies.proxies.map((p) => {
-  const amounts = [...new Set(Object.values(p.serviceFee.bySource).map((v) => (typeof v === "object" ? v.amount : v)))].sort((a, b) => a - b);
-  const range = amounts.length > 1 ? `${yen(amounts[0])}–${yen(amounts[amounts.length - 1])}` : yen(amounts[0]);
+  // 料率型（Doorzo）は「3% (¥200–¥300)」と書く。固定額を前提に読むと ¥NaN になる
+  const rateFee = Object.values(p.serviceFee.bySource).find((v) => typeof v === "object" && v.type === "rate");
+  const amounts = [...new Set(Object.values(p.serviceFee.bySource).flatMap(feeBounds))].sort((a, b) => a - b);
+  const range = rateFee ? feeText(rateFee) : amounts.length > 1 ? `${yen(amounts[0])}–${yen(amounts[amounts.length - 1])}` : yen(amounts[0]);
   return `<tr><td>${esc(p.shortName ?? p.name)}</td><td>${range}</td><td>${esc(unitOf(p))}</td></tr>`;
 }).join("");
 
@@ -185,7 +188,7 @@ const HOME_FACTS = `<ul class="facts">
 
 const homeBody = `
   <h1>See what buying from Japan really costs</h1>
-  <p>Four proxy services priced to the yen: service fees, packing, postage inside Japan, EMS, and the import tax
+  <p>${NWC} proxy services priced to the yen: service fees, packing, postage inside Japan, EMS, and the import tax
   your country adds when the parcel lands.</p>
   <h2>What a proxy actually charges you for</h2>
   <p>A proxy service buys something in Japan on your behalf and forwards it to you. Every one of them
@@ -248,7 +251,7 @@ const homeBody = `
   Estimates only — see <a href="/how-we-calculate">how we calculate</a>.</small></p>`;
 
 writePage("/", renderPage({
-  title: "Japan Proxy Cost Calculator — compare Buyee, ZenMarket, Neokyo & FROM JAPAN",
+  title: `Japan Proxy Cost Calculator — compare ${PROXY_TITLE_AMP}`,
   description: "Work out what a Japanese proxy service actually costs. Service fees, packing, deposit fees, EMS postage and import tax, compared side by side.",
   canonicalPath: "/",
   body: homeBody,
@@ -288,7 +291,7 @@ for (const p of pages) {
 // 無いと存在しないURLで本文ゼロバイトの真っ白なページが返る。
 writePage("/404", renderPage({
   title: "Page not found — Japan Proxy Cost Calculator",
-  description: "That page does not exist. Start from the calculator to compare Buyee, ZenMarket, Neokyo and FROM JAPAN.",
+  description: `That page does not exist. Start from the calculator to compare ${PROXY_TITLE_LIST}.`,
   canonicalPath: "/404",
   prefill: null,
   noindex: true,
@@ -297,7 +300,7 @@ writePage("/404", renderPage({
   <h1>That page doesn't exist</h1>
   <p>The link may be out of date. Start again from the calculator, or pick one of these:</p>
   <ul>
-    <li><a href="/">Compare all four proxy services</a></li>
+    <li><a href="/">Compare all ${NW} proxy services</a></li>
     ${Object.entries(grouped).map(([heading, list]) =>
       `<li><a href="${list[0].path}">${esc(heading)}</a></li>`).join("")}
   </ul>`,
@@ -346,6 +349,9 @@ fs.writeFileSync(path.join(DIST, "robots.txt"),
     if (!SHORT_OK.includes(p.path) && !p.noindex && allWords < 500) {
       problems.push(`本文が薄い ${p.path}（表を含めて${allWords}語。500語以上にすること）`);
     }
+    // 計算や表示の取り違えで NaN / undefined が本文に出たら止める（2026-10-05、料率型の手数料で ¥NaN を出した）
+    const plain = p.body.replace(/<[^>]+>/g, " ");
+    if (/\bNaN\b|\bundefined\b/.test(plain)) problems.push(`本文に NaN / undefined ${p.path}: ${(plain.match(/.{0,30}\b(NaN|undefined)\b.{0,20}/) || [""])[0].trim()}`);
     for (const m of p.body.matchAll(/href="(\/[^"#?]*)"/g)) {
       if (!known.has(m[1])) problems.push(`リンク切れ ${p.path} → ${m[1]}`);
     }

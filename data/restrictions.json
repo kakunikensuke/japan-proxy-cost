@@ -379,6 +379,62 @@
         "pendingVerification": true,
         "noteEn": "Not named on the Cautionary Notes page. The full prohibited list is on a separate page that was not read."
       }
+    },
+    "doorzo": {
+      "_source": {
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "flammable_liquid": {
+        "level": "prohibited",
+        "quoteEn": "Flammable materials and liquids, ping pong balls, fuels (such as gasoline and kerosene), matches, lighters, paints, perfumes/fragrances/aroma oils/essential oils, nail polish and nail polish remover, alcohol, thinner",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "aerosol": {
+        "level": "prohibited",
+        "quoteEn": "aerosol cans (such as hair sprays, deodorant sprays, spray paints, and pain relief sprays)",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "lithium_battery": {
+        "level": "conditional",
+        "quoteEn": "Lithium Batteries — Must be installed inside the device; cannot be shipped separately (e.g., cameras, consoles, phones, tablets, computers). Max. 2 items with built-in lithium batteries per package.",
+        "noteEn": "Batteries must be inside the device, at most two such items per parcel. Power banks are refused.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/jp-post-faq-doorzo?code=shipment-EMS",
+        "verifiedAt": "2026-10-05"
+      },
+      "replica_gun": {
+        "level": "prohibited",
+        "quoteEn": "Firearms (including model guns, air guns, pistols, rifles, machine guns, cannons, as well as their ammunition and firearm parts)",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "lighter": {
+        "level": "prohibited",
+        "quoteEn": "matches, lighters",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "food": {
+        "level": "conditional",
+        "quoteEn": "Refrigerated, frozen, and raw food items are also not supported, as Doorzo does not provide the necessary storage or shipping conditions for such products.",
+        "noteEn": "Shelf-stable food is only listed as prohibited for parcels sent from Doorzo's Korean warehouse; from Japan, refrigerated, frozen and raw food is refused.",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "adult": {
+        "level": "prohibited",
+        "quoteEn": "Items with obscene content or adult products",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      },
+      "blade": {
+        "level": "prohibited",
+        "quoteEn": "imitation knives, and all types of swords",
+        "sourceUrl": "https://www.doorzo.com/en/userGuide/prohibited-items-list-shipping-doorzo?code=shipment-embargo",
+        "verifiedAt": "2026-10-05"
+      }
     }
   },
   "byDestination": {
