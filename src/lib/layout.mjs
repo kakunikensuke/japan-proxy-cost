@@ -120,6 +120,7 @@ export function siteFooter() {
       <li><a href="/about">About</a></li>
       <li><a href="/privacy-policy">Privacy &amp; cookies</a></li>
       <li><a href="/contact">Contact</a></li>
+      <li><a href="/data-updates">When figures were checked</a></li>
       <li><a href="/about#photo-credits">Photo credits</a></li>
     </ul></nav>
   </div>

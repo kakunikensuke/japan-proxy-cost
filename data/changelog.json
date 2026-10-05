@@ -1,0 +1,25 @@
+{
+  "_meta": {
+    "note": "サイトの変更履歴（E6）。読者に関係する変更だけを英語で書く。日付は git のコミット日。新しい順。料金や規則を確認し直したら、ここにも1行足す"
+  },
+  "entries": [
+    { "date": "2026-10-05", "kind": "content", "en": "Added a country-by-country guide to customs duty, with the UK's tariff rates for figures, cards, consoles and books, and the EU's new €3 flat duty." },
+    { "date": "2026-10-05", "kind": "content", "en": "Added a guide to buying from Suruga-ya, Mandarake, Lashinbang, Toranoana and Melonbooks, including which of them ship abroad themselves." },
+    { "date": "2026-10-05", "kind": "content", "en": "Added a guide to lost or damaged parcels: which services pay out themselves, which pass claims to Japan Post, and the deadlines for claiming." },
+    { "date": "2026-10-05", "kind": "content", "en": "Added a guide to reading Mercari and Yahoo! Auctions listings, using the marketplaces' own definitions of condition grades and bidding." },
+    { "date": "2026-10-05", "kind": "data", "en": "Added perfume, skincare and make-up, over-the-counter medicine, and plants and seeds to the items checked against each service's prohibited list." },
+    { "date": "2026-10-05", "kind": "data", "en": "Read FROM JAPAN's full prohibited list. Its rules for replica guns, swords, lithium batteries and food, previously marked as not stated, are now taken from it." },
+    { "date": "2026-10-05", "kind": "data", "en": "Added an estimate of US customs duty by type of item, following the 12.5% rate on goods made in Japan in force since 24 July 2026. It is shown next to the totals, not added to them." },
+    { "date": "2026-10-05", "kind": "data", "en": "Added Doorzo as a fifth service, with its fees taken from its own user guide. Its payment fee is not published and is counted as ¥0, which is noted wherever it comes out cheapest." },
+    { "date": "2026-10-02", "kind": "data", "en": "Totals now show an approximate figure in the destination's currency, at European Central Bank reference rates (Taiwan dollars at the US Federal Reserve's H.10 rate)." },
+    { "date": "2026-10-02", "kind": "content", "en": "Added a glossary and a page of frequently asked questions." },
+    { "date": "2026-10-02", "kind": "data", "en": "Added Japan Post's airmail small packets, airmail parcels and surface parcels alongside EMS, with which services offer each." },
+    { "date": "2026-10-02", "kind": "content", "en": "Turned each country's import tax page into a full guide to buying from Japan for that country, and added eight guides by kind of item." },
+    { "date": "2026-10-02", "kind": "content", "en": "Redesigned the site and expanded every page with worked examples." },
+    { "date": "2026-08-27", "kind": "content", "en": "Merged pages that gave the same answer for every country into single pages." },
+    { "date": "2026-08-28", "kind": "content", "en": "Added shops in Japan that ship abroad themselves, shown where buying direct is possible." },
+    { "date": "2026-08-10", "kind": "data", "en": "Added Taiwan and Hong Kong as destinations." },
+    { "date": "2026-08-09", "kind": "data", "en": "Started checking each order against the services' prohibited-item rules and Japan Post's rules for each destination." },
+    { "date": "2026-08-07", "kind": "data", "en": "First version: fees for FROM JAPAN, Buyee, ZenMarket and Neokyo checked against each company's own pages." }
+  ]
+}
