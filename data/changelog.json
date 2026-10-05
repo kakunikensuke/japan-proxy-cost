@@ -3,6 +3,7 @@
     "note": "サイトの変更履歴（E6）。読者に関係する変更だけを英語で書く。日付は git のコミット日。新しい順。料金や規則を確認し直したら、ここにも1行足す"
   },
   "entries": [
+    { "date": "2026-10-06", "kind": "data", "en": "Rechecked the fees of FROM JAPAN, Buyee, ZenMarket and Neokyo against their own pages. Fees were unchanged, but ZenMarket only collects VAT or GST at checkout on parcels up to £135 to the UK, €150 to the EU, A$1,000 to Australia and S$400 per item to Singapore; above those, the tax is now shown as paid on arrival." },
     { "date": "2026-10-05", "kind": "content", "en": "Added a country-by-country guide to customs duty, with the UK's tariff rates for figures, cards, consoles and books, and the EU's new €3 flat duty." },
     { "date": "2026-10-05", "kind": "content", "en": "Added a guide to buying from Suruga-ya, Mandarake, Lashinbang, Toranoana and Melonbooks, including which of them ship abroad themselves." },
     { "date": "2026-10-05", "kind": "content", "en": "Added a guide to lost or damaged parcels: which services pay out themselves, which pass claims to Japan Post, and the deadlines for claiming." },

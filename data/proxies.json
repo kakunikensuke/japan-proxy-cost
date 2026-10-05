@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-07",
+    "updated": "2026-10-06",
     "currency": "JPY",
     "note": "各社公式ページからの転記。unverified:true の項目は未確認のため計算時に警告を出すこと。",
     "sourceKeys": ["yahoo_auction", "mercari", "rakuma", "amazon_jp", "rakuten", "recommended", "other_shop"]
@@ -12,7 +12,7 @@
       "name": "One Map by FROM JAPAN",
       "shortName": "FROM JAPAN",
       "url": "https://www.fromjapan.co.jp/",
-      "verifiedAt": "2026-08-07",
+      "verifiedAt": "2026-10-06",
       "verifiedBy": "official-guide",
 
       "serviceFee": {
@@ -57,7 +57,7 @@
       "name": "Buyee",
       "operator": "tenso株式会社",
       "url": "https://buyee.jp/",
-      "verifiedAt": "2026-08-07",
+      "verifiedAt": "2026-10-06",
       "verifiedBy": "official-guide",
       "shippingModes": ["standard", "direct"],
       "calcMode": "standard",
@@ -102,7 +102,7 @@
       "id": "zenmarket",
       "name": "ZenMarket",
       "url": "https://zenmarket.jp/",
-      "verifiedAt": "2026-08-07",
+      "verifiedAt": "2026-10-06",
       "verifiedBy": "official-fees-page",
 
       "serviceFee": {
@@ -141,17 +141,17 @@
       ],
       "cancelFee": { "amount": 1000, "note": "倉庫到着後。ヤフオク・メルカリ・ラクマは不可" },
       "disposalFee": { "perKg": 300, "laborPer15min": 1000, "batteryPerUnitMin": 300, "batteryPerUnitMax": 3200 },
-      "taxPrepayNote": "公式 shipping.aspx より。全て『商品代と国際送料の両方が課税対象』と明記されている。DDPオプションもあり。",
+      "taxPrepayNote": "公式 shipping.aspx より。全て『商品代と国際送料の両方が課税対象』と明記されている。DDPオプションもあり。2026-10-06の再確認で、各国に事前徴収の上限（豪AUD1,000・英£135・EU€150・星は1品SGD400・NZ NZD1,000 以下）があると判明し追加。上限を超える荷物は到着時払い",
       "taxPrepay": [
-        { "country": "AU", "tax": "GST", "rate": 0.10,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
-        { "country": "NZ", "tax": "GST", "rate": 0.15,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
-        { "country": "GB", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
+        { "country": "AU", "tax": "GST", "rate": 0.10,  "base": "goods+intl", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06", "quoteEn": "Pre-charged for parcels below or equal to 1,000 AUD" },
+        { "country": "NZ", "tax": "GST", "rate": 0.15,  "base": "goods+intl", "thresholdValue": 1000, "thresholdCurrency": "NZD", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06" },
+        { "country": "GB", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "thresholdValue": 135, "thresholdCurrency": "GBP", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06", "quoteEn": "Pre-charged for parcels below or equal to 135 GBP" },
         { "country": "NO", "tax": "VAT", "rate": 0.25,  "base": "goods+intl", "verifiedAt": "2026-08-07", "note": "VOECスキーム" },
         { "country": "CH", "tax": "VAT", "rate": 0.081, "base": "goods+intl", "verifiedAt": "2026-08-07" },
-        { "country": "SG", "tax": "GST", "rate": 0.09,  "base": "goods+intl", "verifiedAt": "2026-08-07", "note": "400SGD超の品が混在する荷物は、事前徴収後に追加課税されることがある" },
+        { "country": "SG", "tax": "GST", "rate": 0.09,  "base": "goods+intl", "thresholdValue": 400, "thresholdCurrency": "SGD", "thresholdRule": "atOrUnder", "thresholdPer": "item", "verifiedAt": "2026-10-06", "quoteEn": "Pre-charged for items below or equal to 400 SGD", "note": "上限は荷物ではなく1品ごと。400SGD超の品が混在する荷物は、事前徴収後に追加課税されることがある" },
         { "country": "KZ", "tax": "VAT", "rate": 0.16,  "base": "goods+intl", "verifiedAt": "2026-08-07" },
-        { "country": "DE", "tax": "VAT", "rate": 0.19,  "base": "goods+intl", "note": "ZenMarketは『EU VAT rates by country』と記載。19%はドイツの標準税率" },
-        { "country": "FR", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "note": "ZenMarketは『EU VAT rates by country』と記載。20%はフランスの標準税率" }
+        { "country": "DE", "tax": "VAT", "rate": 0.19,  "base": "goods+intl", "thresholdValue": 150, "thresholdCurrency": "EUR", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06", "quoteEn": "Pre-charged for parcels below or equal to 150 EUR", "note": "ZenMarketは『EU VAT rates by country』と記載。19%はドイツの標準税率" },
+        { "country": "FR", "tax": "VAT", "rate": 0.20,  "base": "goods+intl", "thresholdValue": 150, "thresholdCurrency": "EUR", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06", "quoteEn": "Pre-charged for parcels below or equal to 150 EUR", "note": "ZenMarketは『EU VAT rates by country』と記載。20%はフランスの標準税率" }
       ],
       "insurance": { "includedUnderJpy": 5000000, "note": "サービス料に込み。割引キャンペーン中でも適用" },
       "exportClearanceFee": null,
@@ -163,7 +163,7 @@
       "id": "neokyo",
       "name": "Neokyo",
       "url": "https://neokyo.com/",
-      "verifiedAt": "2026-08-07",
+      "verifiedAt": "2026-10-06",
       "verifiedBy": "official-fees-page",
 
       "serviceFee": {
@@ -206,8 +206,9 @@
       },
       "exportClearanceFee": null,
       "exportClearanceNote": "公式 shipping ページに20万円超の通関業務委託料の記載なし。要確認（問い合わせ項目）。",
+      "taxPrepayNoteEU": "2026-10-06確認: 2026-07-01から EU27か国宛ては FedEx・DHL かつ €147 以下のときだけ IOSS で事前徴収（DDP）。日本郵便は到着時払い（DDU）。本ツールは日本郵便だけ値付けするので taxPrepay に入れていない（入れると onlyCarriers を見ない箇所で『事前徴収する会社』に数えてしまう）",
       "taxPrepay": [
-        { "country": "AU", "tax": "GST", "rate": 0.10, "base": "charge1", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "atOrUnder", "verifiedAt": "2026-08-07", "note": "宣言価値に対して10%（Low-Value Goods）" },
+        { "country": "AU", "tax": "GST", "rate": 0.10, "base": "charge1", "thresholdValue": 1000, "thresholdCurrency": "AUD", "thresholdRule": "atOrUnder", "verifiedAt": "2026-10-06", "note": "宣言価値に対して10%（Low-Value Goods）" },
         {
           "country": "US", "tax": "DDP", "rate": 0.134, "base": "charge1",
           "onlyCarriers": ["fedex"],
@@ -216,7 +217,7 @@
           "brokerFeeRateOfTax": 0.02, "brokerFeeMinUsd": 15,
           "itemLineFeeUsd": 3.5,
           "foodCosmeticsExtraUsd": 29,
-          "verifiedAt": "2026-08-07",
+          "verifiedAt": "2026-10-06",
           "note": "FedEx利用時のみDDP。基本税=宣言価値の13.4%+150円/包、ブローカー費用=基本税の2%か$15の高い方、品目ラインごと$3.50〜、食品・化粧品は+$29"
         }
       ],

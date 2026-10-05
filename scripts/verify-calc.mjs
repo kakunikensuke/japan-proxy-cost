@@ -430,5 +430,23 @@ console.log("\n\n=== EMSの補償の追加料金 ===");
   check("EMS ¥5,000,000 でも上限200万円ぶんの ¥4,950", emsCoverFee(5000000) === 4950);
 }
 
+// ===========================================================================
+// 18. ZenMarket の事前徴収の上限（2026-10-06の再確認で判明）。公式 shipping.aspx:
+//     英 £135・EU €150・豪 AUD1,000 以下の荷物、星は1品 SGD400 以下だけ事前徴収
+// ===========================================================================
+console.log("\n\n=== ZenMarket の事前徴収の上限 ===");
+{
+  const zm = (extra) => calculateAll({ ...baseInput, source: "mercari", itemCount: 1, weightG: 1000, domesticShippingJpy: 700, buyeePlan: "light", ...extra }, { proxies, ems, importTax, restrictions, post }).results.find((r) => r.proxyId === "zenmarket");
+  // £135 ≒ ¥28,225（2026-10-01 の参照レート）
+  check("ZenMarket 英国 ¥20,000 は事前徴収", zm({ destination: "GB", itemPriceJpy: 20000 }).taxTiming === "prepaid");
+  check("ZenMarket 英国 ¥50,000（£135超）は到着時払い", zm({ destination: "GB", itemPriceJpy: 50000 }).taxTiming === "on-delivery");
+  // €150 ≒ ¥26,774
+  check("ZenMarket ドイツ ¥20,000 は事前徴収", zm({ destination: "DE", itemPriceJpy: 20000 }).taxTiming === "prepaid");
+  check("ZenMarket フランス ¥40,000（€150超）は到着時払い", zm({ destination: "FR", itemPriceJpy: 40000 }).taxTiming === "on-delivery");
+  // SGD400 ≒ ¥49,375。上限は1品ごと
+  check("ZenMarket シンガポール 3品 計¥120,000（1品¥40,000）は事前徴収", zm({ destination: "SG", itemPriceJpy: 120000, itemCount: 3 }).taxTiming === "prepaid");
+  check("ZenMarket シンガポール 1品 ¥60,000（SGD400超）は到着時払い", zm({ destination: "SG", itemPriceJpy: 60000 }).taxTiming === "on-delivery");
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);

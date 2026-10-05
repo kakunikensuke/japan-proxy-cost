@@ -148,7 +148,7 @@ function calcExportClearance(proxy, { itemTotal, carrier, itemCount }) {
  * 国境で消費税と関税を請求される。0円と言い切って請求が来るのは、金額を外すより悪い。
  * 円換算はあくまで概算なので、レートの日付を添えて warnings に出す。
  */
-function findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx }) {
+function findPrepayRule(proxy, destination, carrier, { itemPriceJpy, itemCount = 1, fx }) {
   const rule = (proxy.taxPrepay ?? []).find((t) => t.country === destination);
   if (!rule) return null;
   if (rule.onlyCarriers && !rule.onlyCarriers.includes(carrier)) return null;
@@ -159,9 +159,11 @@ function findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx }) {
   if (rule.thresholdValue == null || !jpyPer) return rule;
 
   const thresholdJpy = Math.round(rule.thresholdValue * jpyPer);
+  // 上限が1品ごとの会社（ZenMarket のシンガポール）は、1品あたりの価格で判定する
+  const basis = rule.thresholdPer === "item" ? itemPriceJpy / Math.max(1, itemCount) : itemPriceJpy;
   const within = rule.thresholdRule === "atOrUnder"
-    ? itemPriceJpy <= thresholdJpy
-    : itemPriceJpy < thresholdJpy;
+    ? basis <= thresholdJpy
+    : basis < thresholdJpy;
   return { ...rule, thresholdJpy, overThreshold: !within };
 }
 
@@ -302,7 +304,7 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
 
     // ---- 税: 事前徴収なら①、そうでなければ② ----
     const otherCosts = payNowLines.reduce((s, l) => s + l.amount, 0) - itemPriceJpy;
-    const prepay = findPrepayRule(proxy, destination, carrier, { itemPriceJpy, fx: importTax.fx });
+    const prepay = findPrepayRule(proxy, destination, carrier, { itemPriceJpy, itemCount, fx: importTax.fx });
 
     let taxTiming = "none";
     const payOnDeliveryLines = [];

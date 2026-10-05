@@ -714,7 +714,7 @@ export function buildPages(data) {
   handling fees that apply almost everywhere else.</p>`
     : `<h2>Which proxies collect this tax up front</h2>
   ${prepayers.length
-    ? `<p>${prepayers.map((p) => esc(p.shortName ?? p.name)).join(", ")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
+    ? `<p>${prepayers.map((p) => { const t = p.taxPrepay.find((x) => x.country === cc); return esc(p.shortName ?? p.name) + (t?.thresholdValue ? ` (on ${t.thresholdPer === "item" ? "items" : "orders"} ${t.thresholdRule === "under" ? "under" : "up to"} ${esc(t.thresholdCurrency)} ${t.thresholdValue.toLocaleString("en-US")})` : ""); }).reduce((s, x, i, a) => s + (i === 0 ? "" : i === a.length - 1 ? " and " : ", ") + x, "")} ${prepayers.length === 1 ? "collects" : "collect"} it at checkout. The others leave you to pay on delivery, where the courier normally adds a handling charge on top.</p>`
     : c.dutyEstimate
       // 米国: 郵便物の関税を誰がいつ徴収するかは確認できていない（duty.mjs）。「到着時に払う」と断言しない
       ? `<p>None of the ${NW} services says it collects ${esc(cn)} duty at checkout on a Japan Post parcel. Who does collect it, and what they charge, we could not confirm; the likely amount is under <a href="#how-much-duty">how much US duty to expect</a>.</p>`

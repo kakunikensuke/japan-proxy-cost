@@ -38,7 +38,8 @@ export function buildReference(data, { COUNTRY_SLUGS, countryName }) {
   // 事前徴収すると書いているが税率を公開していない会社（「徴収しない」と書かないため）
   const unpublished = (cc) => P.filter((x) => (x.p.taxPrepay ?? []).some((t) => t.country === cc && (t.unverifiedRate || t.rate == null))).map((x) => x.name);
   const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
-  const prepayers = (cc) => P.filter((x) => (x.p.taxPrepay ?? []).some((t) => t.country === cc && t.rate && (!t.onlyCarriers || t.onlyCarriers.includes("ems")))).map((x) => x.name);
+  const prepayers = (cc) => P.map((x) => ({ x, t: (x.p.taxPrepay ?? []).find((t) => t.country === cc && t.rate && (!t.onlyCarriers || t.onlyCarriers.includes("ems"))) })).filter(({ t }) => t)
+    .map(({ x, t }) => t.thresholdValue ? `${x.name} (${t.thresholdRule === "under" ? "under" : "up to"} ${t.thresholdCurrency} ${t.thresholdValue.toLocaleString("en-US")})` : x.name);
   const emsUS1k = lookupShippingRate(data, "ems", "US", 1000).amount;
   const spUS1k = lookupShippingRate(data, "small_packet_air", "US", 1000).amount;
   const seaUS5k = lookupShippingRate(data, "intl_parcel_sea", "US", 5000).amount;

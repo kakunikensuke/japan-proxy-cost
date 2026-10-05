@@ -218,17 +218,19 @@
     }
   },
   "fx": {
-    "asOf": "2026-08-09",
+    "asOf": "2026-10-01",
     "purpose": "代行会社の『いくらまでなら税を事前徴収するか』というしきい値は現地通貨建て（豪AUD1,000・星SGD400など）。円換算しないと判定できないが、換算はあくまで概算なのでレートと日付を必ず残し、しきい値付近では為替で結果が変わりうる旨を警告する。",
+    "note": "2026-10-06に data/fx.json（欧州中央銀行の参照レート、台湾ドルのみ米連邦準備制度H.10）にそろえた。ZenMarket の事前徴収の上限（£135・€150）の判定に GBP・EUR が必要になったため",
     "sources": [
-      "https://www.google.com/finance/quote/AUD-JPY",
-      "https://www.google.com/finance/quote/SGD-JPY",
-      "https://www.google.com/finance/quote/TWD-JPY"
+      "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml",
+      "https://www.federalreserve.gov/releases/h10/current/"
     ],
     "jpyPer": {
-      "AUD": 111.36,
-      "SGD": 123.44,
-      "TWD": 4.902
+      "AUD": 109.8062,
+      "SGD": 123.4371,
+      "TWD": 4.9397,
+      "GBP": 209.0708,
+      "EUR": 178.49
     }
   },
   "courierHandlingFee": {
