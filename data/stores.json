@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-28",
+    "updated": "2026-10-06",
     "note": "代行を通さず日本から直接海外発送する店。proxies.json(代行4社)とは別枠で「そもそも代行が要らない場合」を示すために使う。",
     "shippingCaveat": "各社とも配送可能国の一覧を公開していない。したがって国別の可否は未確認であり、断言してはならない。表示では必ず各店で確認するよう促すこと。",
     "displayRule": "affiliateUrl が null の店は表示しない（未承認のプログラムのリンクを出さないため）。"
@@ -37,12 +37,14 @@
       "affiliateUrl": "https://solarisjapan.com?aff=1166",
       "affiliateStatus": "approved",
       "statusAt": "2026-08-28",
-      "sellsEn": "figures, anime goods and model kits",
+      "sellsEn": "new and pre-owned figures, video games and anime merchandise",
+      "sellsNote": "2026-10-06 公式ページ: figures, video games and all sorts of otaku-related merchandise / Brand New and Pre-Owned items",
       "categories": ["figure", "model_kit", "anime_goods"],
       "shippingNoteEn": "Japan Post only (Saver / Regular / Express)",
       "countryListPublished": false,
-      "sourceUrl": "https://solarisjapan.com/pages/shipping",
-      "verifiedAt": "2026-08-28",
+      "sourceUrl": "https://solarisjapan.com/pages/help-first-time-visitors#shipping",
+      "verifiedAt": "2026-10-06",
+      "shippingQuoteEn": "All of our shipments are handled by the good people at Japan Post.",
       "commissionNote": "3-8%（月の確定売上と商品種別で変動）",
       "cookieHours": 24,
       "unverified": true
