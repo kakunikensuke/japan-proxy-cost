@@ -22,7 +22,7 @@
     "GB": {
       "limit": 135,
       "currency": "GBP",
-      "summaryEn": "No customs duty on consignments of £135 or less (VAT still applies). Above that, the UK Global Tariff applies.",
+      "summaryEn": "No customs duty on consignments of £135 or less (VAT still applies). Above that, the UK Global Tariff applies. The government has said the £135 relief will end by October 2028 at the latest.",
       "rateCheckedEn": "Toys and figures 0% to 4%, 0% for goods made in Japan when the UK–Japan preference is claimed; books and game consoles 0%; plastic ornaments such as acrylic stands 6%",
       "rates": [
         {
@@ -66,9 +66,13 @@
         {
           "labelEn": "UK Trade Tariff (GOV.UK), commodity codes as listed",
           "url": "https://www.trade-tariff.service.gov.uk/"
+        },
+        {
+          "labelEn": "HM Treasury and HMRC, low value imports consultation response (13 July 2026)",
+          "url": "https://www.gov.uk/government/consultations/reforming-the-customs-treatment-of-low-value-imports-into-the-united-kingdom/outcome/reforming-the-customs-treatment-of-low-value-imports-into-the-united-kingdom-consultation-response"
         }
       ],
-      "verifiedAt": "2026-10-05"
+      "verifiedAt": "2026-10-06"
     },
     "DE": {
       "limit": null,
@@ -85,7 +89,7 @@
           "url": "https://trade.ec.europa.eu/access-to-markets/en/news/eu-applies-eu3-customs-duty-item-low-value-e-commerce-consignments"
         }
       ],
-      "verifiedAt": "2026-10-05"
+      "verifiedAt": "2026-10-06"
     },
     "FR": {
       "sameAs": "DE"

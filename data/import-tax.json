@@ -70,12 +70,19 @@
         "dutyThreshold": 135,
         "currency": "GBP",
         "thresholdLabelEn": "£135",
-        "note": "£135以下の荷物は関税なし。ただしVATは販売時点で課税される。2025年秋季予算で廃止方針が示され、2029年3月までに撤廃予定。",
-        "verifiedAt": "2026-08-07"
+        "note": "£135以下の荷物は関税なし。ただしVATは販売時点で課税される。2025年秋季予算で廃止方針（当初は遅くとも2029年3月）。2026-07-13の政府回答で6か月前倒しし『遅くとも2028年10月』。VATは商品・送料・梱包・保険・関税の合計に課税（GOV.UK）",
+        "removalBy": "2028-10",
+        "removalQuoteEn": "The government has listened carefully to stakeholder views on timelines and has decided to accelerate the delivery by 6 months to October 2028 at the latest.",
+        "sources": [
+          { "labelEn": "GOV.UK, Tax and customs for goods sent from abroad", "url": "https://www.gov.uk/goods-sent-from-abroad/tax-and-duty" },
+          { "labelEn": "GOV.UK, VAT rates", "url": "https://www.gov.uk/vat-rates" },
+          { "labelEn": "HM Treasury and HMRC, Reforming the customs treatment of low value imports: consultation response (13 July 2026)", "url": "https://www.gov.uk/government/consultations/reforming-the-customs-treatment-of-low-value-imports-into-the-united-kingdom/outcome/reforming-the-customs-treatment-of-low-value-imports-into-the-united-kingdom-consultation-response" }
+        ],
+        "verifiedAt": "2026-10-06"
       },
       "displayEn": {
         "headline": "20% VAT applies",
-        "body": "UK VAT of 20% is charged on the goods plus shipping. Consignments of £135 or less are free of customs duty (this threshold is due to be abolished by March 2029).",
+        "body": "UK VAT of 20% is charged on the goods plus shipping. Consignments of £135 or less are free of customs duty; the government has said this relief will end by October 2028 at the latest.",
         "severity": "medium"
       }
     },
@@ -89,12 +96,17 @@
         "currency": "EUR",
         "removedOn": "2026-07-01",
         "flatDutyEur": 3,
-        "note": "EUの€150関税免除は2026年7月1日に廃止。低額のEC荷物には1点あたり€3の固定関税。VATは従来どおり全額課税。",
-        "verifiedAt": "2026-08-07"
+        "note": "EUの€150関税免除は2026年7月1日に廃止。€150以下の通信販売の荷物には申告1行ごとに€3の固定関税（2028年7月1日まで）。VATは標準税率19%で、輸入時は送料を含む額に課税（VAT指令86条）。",
+        "sources": [
+          { "labelEn": "Your Europe, VAT rates in EU countries", "url": "https://europa.eu/youreurope/business/taxation/vat/vat-rules-rates/index_en.htm" },
+          { "labelEn": "Council Directive 2006/112/EC, Article 86 (taxable amount on importation)", "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32006L0112" },
+          { "labelEn": "European Commission, EU applies €3 customs duty per item on low-value e-commerce consignments", "url": "https://trade.ec.europa.eu/access-to-markets/en/news/eu-applies-eu3-customs-duty-item-low-value-e-commerce-consignments" }
+        ],
+        "verifiedAt": "2026-10-06"
       },
       "displayEn": {
         "headline": "19% VAT + new €3 flat duty",
-        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Low-value ecommerce parcels now carry a flat €3 customs duty per item, on top of 19% German VAT on goods plus shipping.",
+        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Online purchases of €150 or less now carry a flat €3 customs duty for each item line declared, on top of 19% German VAT on goods plus shipping.",
         "severity": "medium"
       }
     },
@@ -108,11 +120,16 @@
         "currency": "EUR",
         "removedOn": "2026-07-01",
         "flatDutyEur": 3,
-        "verifiedAt": "2026-08-07"
+        "sources": [
+          { "labelEn": "Your Europe, VAT rates in EU countries", "url": "https://europa.eu/youreurope/business/taxation/vat/vat-rules-rates/index_en.htm" },
+          { "labelEn": "Council Directive 2006/112/EC, Article 86 (taxable amount on importation)", "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32006L0112" },
+          { "labelEn": "European Commission, EU applies €3 customs duty per item on low-value e-commerce consignments", "url": "https://trade.ec.europa.eu/access-to-markets/en/news/eu-applies-eu3-customs-duty-item-low-value-e-commerce-consignments" }
+        ],
+        "verifiedAt": "2026-10-06"
       },
       "displayEn": {
         "headline": "20% VAT + new €3 flat duty",
-        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Low-value ecommerce parcels now carry a flat €3 customs duty per item, on top of 20% French VAT on goods plus shipping.",
+        "body": "The EU abolished its €150 duty-free threshold on 1 July 2026. Online purchases of €150 or less now carry a flat €3 customs duty for each item line declared, on top of 20% French VAT on goods plus shipping.",
         "severity": "medium"
       }
     },

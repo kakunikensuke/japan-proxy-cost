@@ -479,7 +479,7 @@ export function thresholdsInYen(cc, data) {
   const dm = country.deMinimis ?? {};
   if (dm.status === "active" && dm.approxJpy) items.push(`${esc(country.name)}'s duty-free limit of ${esc(dm.thresholdLabelEn)} is about ${yen(dm.approxJpy)} (rate as of ${esc(dm.fx?.asOf ?? "")}). It is tested against the item plus postage, not the item alone.`);
   else if (dm.status === "active") items.push(`${esc(country.name)}'s duty-free limit is ${esc(dm.thresholdLabelEn)}.${country.vatRate === 0.2 && cc === "GB" ? " It covers customs duty only: VAT is due on every parcel regardless." : ""}`);
-  if (dm.status === "removed") items.push(`${esc(country.name)} has no duty-free limit for low-value parcels${dm.removedOn ? ` (abolished ${esc(dm.removedOn)})` : ""}${dm.flatDutyEur ? `, and low-value e-commerce parcels pay a flat €${dm.flatDutyEur} duty per item` : ""}.`);
+  if (dm.status === "removed") items.push(`${esc(country.name)} has no duty-free limit for low-value parcels${dm.removedOn ? ` (abolished ${esc(dm.removedOn)})` : ""}${dm.flatDutyEur ? `, and online purchases of €150 or less pay a flat €${dm.flatDutyEur} duty for each item line declared` : ""}.`);
   if (dm.status === "suspended") items.push(`The former US$${dm.formerThresholdUsd} duty-free limit has been suspended since ${esc(dm.suspendedSince)}, so every parcel goes through formal entry.`);
   for (const p of data.proxies.proxies) {
     const r = (p.taxPrepay ?? []).find((t) => t.country === cc && t.rate && t.thresholdValue && (!t.onlyCarriers || t.onlyCarriers.includes("ems")));
