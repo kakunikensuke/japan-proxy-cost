@@ -11,6 +11,7 @@
  * データに無いこと（各マーケットの規約、配送日数など）は書かない。
  */
 import { calculateAll, lookupEmsRate } from "./calc.mjs";
+import { bandSteps, KEY_WEIGHTS } from "./emsbands.mjs";
 import { esc } from "./layout.mjs";
 import { amountOf, costBarHtml, legendHtml, SOURCE_NAMES } from "./enrich.mjs";
 import { GENRES } from "./genres.mjs";
@@ -416,10 +417,14 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     for (const c of ems.targetCountries) (byZone[c.zone] ||= []).push(c);
     const zones = Object.keys(byZone).sort();
     const tr = bands.map((w) => `<tr><td>Up to ${kg(w)}</td>${zones.map((z) => `<td class="num">${ems.rates.find((r) => r.weightG === w)[z] != null ? yen(ems.rates.find((r) => r.weightG === w)[z]) : "—"}</td>`).join("")}</tr>`).join("");
+    // jumps は隣り合う本物の重量帯どうし（「1g超えると1段分」の話に使う）。keyJumps は代表の重さどうし（文で並べる用）
     const steps = zones.map((z) => {
       const list = bands.map((w) => ({ w, a: ems.rates.find((r) => r.weightG === w)[z] }));
       const jumps = list.slice(1).map((x, i) => ({ from: list[i].w, to: x.w, add: x.a - list[i].a, perKg: (x.a - list[i].a) / ((x.w - list[i].w) / 1000) }));
-      return { z, list, jumps, perKgFirst: list[0].a / 0.5, perKgLast: list.at(-1).a / 5 };
+      const key = list.filter((x) => KEY_WEIGHTS.slice(0, 6).includes(x.w));
+      const keyJumps = key.slice(1).map((x, i) => ({ from: key[i].w, to: x.w, add: x.a - key[i].a }));
+      const at = (w) => list.find((x) => x.w === w).a;
+      return { z, list, jumps, keyJumps, perKgFirst: list[0].a / 0.5, perKgLast: at(5000) / 5, perKg30: at(30000) / 30 };
     });
     const zoneName = (z) => listJoin(byZone[z].map((c) => esc(c.name)));
     const far = steps.at(-1), near = steps[0];
@@ -437,10 +442,10 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <p>Totals on this site default to Japan Post's EMS, the one service all ${NW} proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
   <h2>The table</h2>
   <table><thead><tr><th>Weight</th>${zones.map((z) => `<th class="num">${zoneName(z)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
-  <p class="cap">Japan Post EMS, checked ${esc(ems._meta.updated)}. Countries in the same column share a price zone. Bands between those shown are not used on this site; a parcel is priced at the next band up.</p>
+  <p class="cap">Japan Post EMS, checked ${esc(ems._meta.updated)}. Countries in the same column share a price zone. Japan Post's bands: ${bandSteps(ems.rates)}. A parcel is priced at the band it falls in.</p>
   <h2>What each extra step costs</h2>
-  <p>To ${zoneName(far.z)}, the steps are ${far.jumps.map((j) => `${yen(j.add)} from ${kg(j.from)} to ${kg(j.to)}`).join(", ")}. To ${zoneName(near.z)}, the same steps are ${near.jumps.map((j) => yen(j.add)).join(", ")}.</p>
-  <p>Per kilogram, heavier parcels are much cheaper. To ${zoneName(far.z)}, a 500 g parcel costs the equivalent of ${yen(far.perKgFirst)} per kg; a 5 kg parcel costs ${yen(far.perKgLast)} per kg. That is the arithmetic behind <a href="/guides/consolidating-parcels">consolidating purchases</a> into one box.</p>
+  <p>Between some common weights, to ${zoneName(far.z)}: ${far.keyJumps.map((j) => `${yen(j.add)} from ${kg(j.from)} to ${kg(j.to)}`).join(", ")}. To ${zoneName(near.z)}, the same gaps cost ${near.keyJumps.map((j) => yen(j.add)).join(", ")}.</p>
+  <p>Per kilogram, heavier parcels are much cheaper. To ${zoneName(far.z)}, a 500 g parcel costs the equivalent of ${yen(far.perKgFirst)} per kg; a 5 kg parcel costs ${yen(far.perKgLast)} per kg, and a 30 kg parcel ${yen(far.perKg30)} per kg. That is the arithmetic behind <a href="/guides/consolidating-parcels">consolidating purchases</a> into one box.</p>
   <h2>How much of an order is postage</h2>
   <p>On a \u00a510,000, 1\u00a0kg Mercari order through the cheapest service, EMS makes up ${shares.map((x) => `${pct(x.share)} of the total to ${esc(x.cn)}`).join(", ")}. It is the same whichever proxy you use, so no choice of service makes it go away. Only the weight and the destination change it.</p>
   <h2>Weight once packed, not item weight</h2>

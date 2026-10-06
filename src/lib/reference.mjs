@@ -7,6 +7,7 @@
  */
 import { calculateAll, lookupShippingRate, CARRIER_LABELS } from "./calc.mjs";
 import { dutyCell, fmtDate } from "./duty.mjs";
+import { bandSteps } from "./emsbands.mjs";
 import protection from "../../data/protection.json" with { type: "json" };
 import { esc } from "./layout.mjs";
 import { amountOf, SOURCE_NAMES } from "./enrich.mjs";
@@ -80,7 +81,7 @@ export function buildReference(data, { COUNTRY_SLUGS, countryName }) {
       ["storage", "Free storage period", `How long a proxy holds your purchases at no charge, counted from arrival at the warehouse: ${storage.join(", ")}. Past it, storage is charged and items are eventually disposed of.`],
       ["consolidation", "Consolidation", `Sending several purchases together in one box. Because postage is charged by weight band, one heavier box usually costs much less than several light ones: three 1 kg parcels sent as one 3 kg box save ${yen(consolidation.at(-1).s)} to ${yen(consolidation[0].s)} in EMS postage, depending on the country.`],
       ["ems", "EMS", `Japan Post's express international service, tracked, offered by every proxy. 1 kg to the United States costs ${yen(emsUS1k)}.`],
-      ["weight-band", "Weight band", `Postage is charged by bands, not by the gram: a parcel pays for the whole band it falls in. EMS bands used on this site end at ${listJoin(bands.map((g) => g >= 1000 ? `${g / 1000} kg` : `${g} g`))}.`],
+      ["weight-band", "Weight band", `Postage is charged by bands, not by the gram: a parcel pays for the whole band it falls in. For EMS, ${bandSteps(ems.rates)}.`],
       ["zone", "Postal zone", `Japan Post groups countries into price zones. Zone ${ems.targetCountries.find((c) => c.code === "TW").zone} includes Taiwan; zone ${ems.targetCountries.find((c) => c.code === "HK").zone} Hong Kong and Singapore; zone ${ems.targetCountries.find((c) => c.code === "GB").zone} Europe, Canada and Australia; zone ${ems.targetCountries.find((c) => c.code === "US").zone} the United States.`],
       ["small-packet", "Airmail small packet", `A Japan Post service for items up to 2 kg, much cheaper than EMS at low weights: 1 kg to the United States costs ${yen(spUS1k)} against ${yen(emsUS1k)} by EMS.`],
       ["surface", "Surface (sea) parcel", `A parcel sent by ship: the cheapest for heavy parcels and the slowest. 5 kg to the United States costs ${yen(seaUS5k)} against ${yen(emsUS5k)} by EMS.`],

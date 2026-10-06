@@ -448,5 +448,19 @@ console.log("\n\n=== ZenMarket の事前徴収の上限 ===");
   check("ZenMarket シンガポール 1品 ¥60,000（SGD400超）は到着時払い", zm({ destination: "SG", itemPriceJpy: 60000 }).taxTiming === "on-delivery");
 }
 
+// ===========================================================================
+// 19. EMS の中間の重量帯（2026-10-06、料金表を全42段にした）。日本郵便の公式料金表を手で読んだ値
+// ===========================================================================
+console.log("\n\n=== EMS の中間の重量帯 ===");
+{
+  const { lookupEmsRate } = await import("../src/lib/calc.mjs");
+  check("EMS 米国 600g = ¥4,180（以前は1kgの¥5,300で計算していた）", lookupEmsRate(ems, "US", 600).amount === 4180);
+  check("EMS 英国 1.2kg = 1.25kg帯の ¥5,000", lookupEmsRate(ems, "GB", 1200).amount === 5000);
+  check("EMS 台湾 4.2kg = 4.5kg帯の ¥5,900", lookupEmsRate(ems, "TW", 4200).amount === 5900);
+  check("EMS 香港 7kg = ¥10,350", lookupEmsRate(ems, "HK", 7000).amount === 10350);
+  check("EMS 米国 30kg = ¥75,100（最大）", lookupEmsRate(ems, "US", 30000).amount === 75100);
+  check("EMS 30kg超は料金なし", lookupEmsRate(ems, "US", 30001).amount === null);
+}
+
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);
 process.exit(failures === 0 ? 0 : 1);
