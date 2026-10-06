@@ -3,6 +3,7 @@
     "note": "サイトの変更履歴（E6）。読者に関係する変更だけを英語で書く。日付は git のコミット日。新しい順。料金や規則を確認し直したら、ここにも1行足す"
   },
   "entries": [
+    { "date": "2026-10-06", "kind": "data", "en": "Rechecked import tax rules for the United States, Canada, Australia, Singapore, Taiwan and Hong Kong against official sources: no change in rates or limits. Taiwan's customs page now words its NT$2,000 exemption differently, and the quotation on this site has been updated to match." },
     { "date": "2026-10-06", "kind": "data", "en": "Rechecked Japan Post EMS rates: unchanged. The full rate table is now used, from 500 g to 30 kg in every band. Before, parcels between the bands this site held (for example 600 g) were priced at the next one up, which overstated postage." },
     { "date": "2026-10-06", "kind": "data", "en": "Rechecked the UK, German and French import tax rules against government sources. The rates were unchanged; the UK has brought forward the end of its £135 customs duty relief to October 2028 at the latest, and the EU's €3 duty is now described as it is officially worded, per declared item line." },
     { "date": "2026-10-06", "kind": "data", "en": "Rechecked the fees of FROM JAPAN, Buyee, ZenMarket and Neokyo against their own pages. Fees were unchanged, but ZenMarket only collects VAT or GST at checkout on parcels up to £135 to the UK, €150 to the EU, A$1,000 to Australia and S$400 per item to Singapore; above those, the tax is now shown as paid on arrival." },

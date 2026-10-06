@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-09",
+    "updated": "2026-10-06",
     "purpose": "輸入時にかかる税は『配送先の国』の制度であって代行会社の性質ではない。代行会社が決めるのは“いつ払うか”（事前徴収 or 着払い）だけ。したがって税は全社に同じ条件で乗せ、事前徴収の有無だけを表示する。",
     "warning": "税率・免税枠は制度変更が頻繁。2025〜2026年に米国・EUで大きな改正があった。GitHub Actions で定期的に見直すこと。",
     "displayPolicy": "利用者には ①今すぐ代行に払う額 ②到着時に現地で払う額 ③合計 の3段で見せる。②が0でも『事前徴収済み』と明示し、消えたように見せない。",
@@ -9,6 +9,11 @@
   "countries": {
     "US": {
       "name": "United States",
+      "verifiedAt": "2026-10-05",
+      "sources": [
+        { "labelEn": "CBP rule ending the de minimis exemption for mail, Federal Register, 24 June 2026", "url": "https://www.federalregister.gov/documents/2026/06/24/2026-12669/indefinite-suspension-of-the-de-minimis-exemption-for-mail-shipments-and-new-postal-informal-entry" },
+        { "labelEn": "US Harmonized Tariff Schedule (USITC)", "url": "https://hts.usitc.gov/" }
+      ],
       "vatRate": null,
       "vatNote": "米国に輸入VAT/GSTは無い。州の売上税は輸入時には徴収されない。",
       "vatNoteEn": "none — the US has no import VAT or GST, and state sales tax is not collected at the border",
@@ -135,6 +140,10 @@
     },
     "AU": {
       "name": "Australia",
+      "verifiedAt": "2026-10-06",
+      "sources": [
+        { "labelEn": "Department of Home Affairs Notice 2018/14, GST on low value imported goods", "url": "https://www.abf.gov.au/help-and-support-subsite/CustomsNotices/2018-14.pdf" }
+      ],
       "vatRate": 0.1,
       "vatLabel": "GST",
       "vatBase": "goods+shipping",
@@ -152,6 +161,11 @@
     },
     "CA": {
       "name": "Canada",
+      "verifiedAt": "2026-10-06",
+      "sources": [
+        { "labelEn": "Canada Revenue Agency, GST/HST rates by province (Nova Scotia 14% from 1 April 2025)", "url": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate/calculator.html" },
+        { "labelEn": "CBSA Memorandum D5-1-1, International mail processing", "url": "https://www.cbsa-asfc.gc.ca/publications/dm-md/d5/d5-1-1-eng.html" }
+      ],
       "vatRate": null,
       "vatLabel": "GST/HST",
       "vatRateStatus": "varies-by-province",
@@ -172,6 +186,10 @@
     },
     "SG": {
       "name": "Singapore",
+      "verifiedAt": "2026-10-06",
+      "sources": [
+        { "labelEn": "IRAS, GST rate on imports of low-value goods (9% from 1 January 2024)", "url": "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/gst-rate-change/gst-rate-change-for-business/gst-rate-on-imports-of-low-value-goods-and-b2c-imported-non-digital-services" }
+      ],
       "vatRate": 0.09,
       "vatLabel": "GST",
       "vatBase": "goods+shipping",
@@ -196,8 +214,8 @@
         "currency": "TWD",
         "thresholdLabelEn": "NT$2,000",
         "sourceUrl": "https://web.customs.gov.tw/en/singlehtml/1865?cntId=cus16_180214_1865",
-        "verifiedAt": "2026-08-09",
-        "quoteEn": "If the Customs value is within NT$2,000, the Customs duty, commodity tax and business tax are exempted, except tobacco, alcohol, agricultural products subject to tariff quota.",
+        "verifiedAt": "2026-10-06",
+        "quoteEn": "According to Article 7 of the Regulations Governing Customs Clearance Procedures for Importing and Exporting Postal Parcels, the tax-exemption value of imported postal parcel is currently set at NTD 2,000.",
         "approxJpy": 9800,
         "fx": {
           "rate": 0.204,
@@ -226,7 +244,8 @@
         "note": "そもそも一般物品に関税・消費税がないため免税枠という概念がない"
       },
       "sourceUrl": "https://www.gov.hk/en/residents/taxes/commodities/index.htm",
-      "verifiedAt": "2026-08-09",
+      "quoteEn": "Only liquor, tobacco, hydrocarbon oil and methyl alcohol are subject to the charging of duties in Hong Kong.",
+      "verifiedAt": "2026-10-06",
       "displayEn": {
         "headline": "No import tax at all",
         "body": "Hong Kong is a free port. Only liquor, tobacco, hydrocarbon oil and methyl alcohol are dutiable — everything else arrives with no duty, no VAT and no sales tax. The figure below is the whole cost.",
