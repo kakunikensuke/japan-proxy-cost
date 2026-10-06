@@ -508,8 +508,9 @@ export function suggestStores(input, results, stores) {
   const sendable = results.filter((r) => r.shippable?.level !== "prohibited");
   if (sendable.length === 0) return { applicable: false, reason: "all-blocked" };
 
-  // 未承認プログラムのリンクは出さない
-  const available = stores.stores.filter((s) => s.affiliateUrl);
+  // 未承認プログラムのリンクは出さない。品目が分かるときは、その品目を扱う店だけ（data/stores.json の presetCategories）
+  const wanted = stores.presetCategories?.[input?.category];
+  const available = stores.stores.filter((s) => s.affiliateUrl && (!Array.isArray(wanted) || (s.categories ?? []).some((x) => wanted.includes(x))));
   if (available.length === 0) return { applicable: false, reason: "no-approved-store" };
 
   // 商品代を除いた代行コストの最小値 ＝ 直販なら丸ごと不要になりうる額

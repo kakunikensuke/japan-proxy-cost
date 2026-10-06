@@ -7,6 +7,7 @@ import ems from "../data/shipping-ems.json" with { type: "json" };
 import importTax from "../data/import-tax.json" with { type: "json" };
 import restrictions from "../data/restrictions.json" with { type: "json" };
 import post from "../data/shipping-post.json" with { type: "json" };
+import stores from "../data/stores.json" with { type: "json" };
 import { calculateAll } from "../src/lib/calc.mjs";
 
 const yen = (n) => "¥" + n.toLocaleString("ja-JP");
@@ -460,6 +461,20 @@ console.log("\n\n=== EMS の中間の重量帯 ===");
   check("EMS 香港 7kg = ¥10,350", lookupEmsRate(ems, "HK", 7000).amount === 10350);
   check("EMS 米国 30kg = ¥75,100（最大）", lookupEmsRate(ems, "US", 30000).amount === 75100);
   check("EMS 30kg超は料金なし", lookupEmsRate(ems, "US", 30001).amount === null);
+}
+
+// ===========================================================================
+// 20. 直販ストアの案内は品目に合う店だけ（2026-10-06、CDJapan を公開したときに追加）
+// ===========================================================================
+console.log("\n\n=== 直販ストアの出し分け ===");
+{
+  const sug = (category) => calculateAll({ ...baseInput, source: "amazon_jp", destination: "US", category }, { proxies, ems, importTax, restrictions, post, stores }).storeSuggestion;
+  const names = (x) => (x?.stores ?? []).map((s) => s.id).sort().join(",");
+  check("フィギュアは Solaris と CDJapan の両方", names(sug("scale_figure")) === "cdjapan,solaris");
+  check("CD・Blu-ray は CDJapan だけ", names(sug("cd_bluray")) === "cdjapan");
+  check("化粧品は直販ストアを案内しない", !sug("cosmetics")?.applicable);
+  check("品目が「その他」なら全店", names(sug("other")) === "cdjapan,solaris");
+  check("メルカリ（中古）では案内しない", calculateAll({ ...baseInput, source: "mercari", destination: "US", category: "scale_figure" }, { proxies, ems, importTax, restrictions, post, stores }).storeSuggestion?.applicable === false);
 }
 
 console.log(failures === 0 ? "\n✅ 手計算の試算表と配送不可判定をすべて再現できました" : `\n❌ ${failures}件が不一致`);

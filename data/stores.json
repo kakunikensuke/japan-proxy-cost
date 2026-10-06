@@ -6,6 +6,13 @@
     "displayRule": "affiliateUrl が null の店は表示しない（未承認のプログラムのリンクを出さないため）。"
   },
 
+  "presetCategories": {
+    "_note": "計算機のカテゴリ（restrictions.json の categoryPresets の id）→ 案内してよい店の categories。フィギュアの注文に CD 店だけを出すような的外れを避ける。空配列は案内しない。ここに無い id（other など）は全店を案内する",
+    "scale_figure": ["figure"], "figure_led": ["figure"], "model_kit": ["model_kit"],
+    "manga": ["book"], "doujinshi_r18": [], "cd_bluray": ["cd", "bluray"], "game_console": ["game"],
+    "trading_cards": [], "character_food": [], "model_paint": [], "spray_paint": [], "airsoft": [], "replica_sword": [],
+    "perfume": [], "cosmetics": [], "medicine": [], "plants_seeds": []
+  },
   "sourceRule": {
     "note": "中古・絶版が中心の仕入れ元では、直販に同じ物が存在しないため提案しない。",
     "suggestFor": ["amazon_jp", "rakuten", "recommended", "other_shop"],
@@ -17,18 +24,20 @@
       "id": "cdjapan",
       "name": "CDJapan",
       "url": "https://www.cdjapan.co.jp/",
-      "affiliateUrl": null,
-      "affiliateStatus": "pending",
-      "statusAt": "2026-08-28",
-      "sellsEn": "CDs, Blu-ray, books, magazines and official artist merchandise",
-      "categories": ["cd", "bluray", "book", "official_goods"],
-      "shippingNoteEn": null,
-      "countryListPublished": null,
-      "sourceUrl": null,
-      "verifiedAt": null,
-      "commissionNote": "5-7%（前月の確定売上で変動）",
-      "cookieHours": 720,
-      "unverified": true
+      "affiliateUrl": "https://www.cdjapan.co.jp/aff/click.cgi/PytJTGW7Lok/7781/A024053/",
+      "affiliateStatus": "approved",
+      "statusAt": "2026-10-01",
+      "statusNote": "2026-10-01に9月分の月次報告メール（Affiliate Partner 宛て）が届き参加済みと確認。リンクはユーザーが管理画面の Create New Page Link でトップページ向けに作成（2026-10-06）。支払方法はCDJapanポイント",
+      "sellsEn": "CDs, Blu-ray and DVDs, books, games, figures and anime goods",
+      "sellsNote": "2026-10-06 公式トップのメニュー: CD / DVD / Blu-ray / Book / Game / Figures & Characters & Hobbies / Anime / Apparel / Collectible",
+      "categories": ["cd", "bluray", "book", "official_goods", "game", "figure", "anime_goods"],
+      "shippingNoteEn": "EMS, airmail, DHL, FedEx and others, depending on the country",
+      "shippingQuoteEn": "CDJapan offers the following shipping methods listed below.",
+      "countryListPublished": true,
+      "sourceUrl": "https://www.cdjapan.co.jp/guide/help/shipping/available_shipping_methods_by_country",
+      "verifiedAt": "2026-10-06",
+      "commissionNote": "5-7%（前月の確定売上で変動）。2026年10月は5%（月次報告メール）",
+      "cookieHours": 720
     },
     {
       "id": "solaris",
