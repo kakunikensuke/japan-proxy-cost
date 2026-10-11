@@ -83,12 +83,13 @@ const NAV = [
   { key: "guides", href: "/guides", text: "Guides" },
 ];
 
-const LOGO = (dark) => `<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><rect x="2" y="7" width="24" height="18" rx="4" fill="${dark ? "#FFFFFF" : "#13233A"}"/><path d="M2 12h24" stroke="${dark ? "#13233A" : "#FFFFFF"}" stroke-width="1.5"/><rect x="10" y="3" width="8" height="9" rx="2" fill="#2453FF"/><circle cx="21" cy="19" r="2.4" fill="#F2A93B"/></svg>`;
+// 色は kakuni-design（2026-10-11）: ヘッダーの黒い帯の上では白、フッターの紙の上では紺
+const LOGO = (onDark) => `<svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><rect x="2" y="7" width="24" height="18" rx="1" fill="${onDark ? "#F4F3EF" : "#102440"}"/><path d="M2 12h24" stroke="${onDark ? "#0B0D10" : "#F1F0EC"}" stroke-width="1.5"/><rect x="10" y="3" width="8" height="9" rx="1" fill="#A9B8CB"/><circle cx="21" cy="19" r="2.4" fill="#2F6AA3"/></svg>`;
 
 export function siteHeader(sectionKey) {
   return `<a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="wrap">
-  <a class="brand" href="/">${LOGO(false)}<span>Japan Proxy Cost</span></a>
+  <a class="brand" href="/">${LOGO(true)}<span>Japan Proxy Cost</span></a>
   <nav class="top-nav" aria-label="Main">${NAV.map((n) =>
     `<a href="${n.href}"${n.key === sectionKey ? ' aria-current="page"' : ""}>${n.text}</a>`).join("")}</nav>
   <a class="top-cta" href="/#calculator">Price my order</a>
@@ -97,9 +98,10 @@ export function siteHeader(sectionKey) {
 
 export function siteFooter() {
   return `<footer class="foot"><div class="wrap">
+  <p class="foot-lead">Every yen, before you pay it.</p>
   <div class="foot-cols">
     <div class="foot-about">
-      <a class="brand" href="/">${LOGO(true)}<span>Japan Proxy Cost</span></a>
+      <a class="brand" href="/">${LOGO(false)}<span>Japan Proxy Cost</span></a>
       <p>An independent calculator for buying from Japan through a proxy service. Not affiliated with any of the services it compares.</p>
     </div>
     <nav aria-label="Compare"><h2>Compare</h2><ul>
@@ -124,8 +126,10 @@ export function siteFooter() {
       <li><a href="/about#photo-credits">Photo credits</a></li>
     </ul></nav>
   </div>
-  <p class="foot-fine">Estimates only. Providers change their pricing, and customs authorities have the final say on duty and tax. Always confirm on the provider’s own site before you buy.</p>
-</div></footer>`;
+  <p class="foot-fine">Estimates only. Providers change their pricing, and customs authorities have the final say on duty and tax. Always confirm on the provider’s own site before you buy. Part of <a href="https://kakuni-lab.com/">kakuni-lab</a>.</p>
+</div>
+<p class="foot-mark" aria-hidden="true">Japan Proxy Cost</p>
+</footer>`;
 }
 
 /** 写真クレジット。CC BY 系はこれが利用条件。 */

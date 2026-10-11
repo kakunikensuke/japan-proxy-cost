@@ -122,13 +122,14 @@ export function heatTable(grid, A, B) {
     if (c.d === 0) return `<td class="tie">tie</td>`;
     const t = Math.abs(c.d) / maxAbs;
     const aWins = c.d > 0;
-    const bg = aWins ? `rgba(36,83,255,${(0.1 + t * 0.4).toFixed(3)})` : `rgba(14,159,154,${(0.1 + t * 0.4).toFixed(3)})`;
+    // 色は kakuni-design の紺と山吹（2026-10-11）
+    const bg = aWins ? `rgba(16,36,64,${(0.08 + t * 0.32).toFixed(3)})` : `rgba(233,169,44,${(0.12 + t * 0.5).toFixed(3)})`;
     return `<td class="${aWins ? "w-a" : "w-b"}" style="background:${bg}" title="${esc(aWins ? A : B)} cheaper by ${yen(Math.abs(c.d))}">${yen(Math.abs(c.d))}</td>`;
   };
   const head = GRID_PN.map(([p, n]) => `<th scope="col">${yen(p)}<br>${plural(n, "item")}</th>`).join("");
   const rows = GRID_W.map((w) => `<tr><th scope="row">${kg(w)}</th>${grid.cells.filter((c) => c.w === w).map(cell).join("")}</tr>`).join("");
   return `<table class="heat"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table>
-  <ul class="heat-key"><li><i style="background:rgba(36,83,255,.4)"></i>${esc(A)} cheaper</li><li><i style="background:rgba(14,159,154,.4)"></i>${esc(B)} cheaper</li><li>Darker means a bigger gap. Each cell is the difference in the final total.</li></ul>`;
+  <ul class="heat-key"><li><i style="background:rgba(16,36,64,.4)"></i>${esc(A)} cheaper</li><li><i style="background:rgba(233,169,44,.62)"></i>${esc(B)} cheaper</li><li>Darker means a bigger gap. Each cell is the difference in the final total.</li></ul>`;
 }
 
 /** どの条件が差を一番動かすかを、軸ごとの平均変化量で言う。 */
