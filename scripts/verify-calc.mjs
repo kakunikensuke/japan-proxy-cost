@@ -341,6 +341,13 @@ console.log("\n\n=== EMS以外の配送方法 ===");
   const auSea = runP({ ...base, destination: "AU", carrier: "intl_parcel_sea", attributes: ["lithium_battery"] });
   check("豪州・電池・船便は全社不可（日本郵便の規則）", auSea.allBlocked === true);
   check("豪州・電池・航空小包は全社不可ではない", auAir.allBlocked === false);
+  // 日本郵便の船便の一覧（p05-06 注3）: 英国・シンガポールは載っている、米国・フランスは載っていない
+  const liSea = (cc) => runP({ ...base, destination: cc, carrier: "intl_parcel_sea", attributes: ["lithium_battery"] });
+  check("英国・電池・船便は全社不可ではない", liSea("GB").allBlocked === false);
+  check("英国・電池・EMSは全社不可", runP({ ...base, destination: "GB", attributes: ["lithium_battery"] }).allBlocked === true);
+  check("シンガポール・電池・船便は全社不可ではない", liSea("SG").allBlocked === false);
+  check("米国・電池・船便は全社不可", liSea("US").allBlocked === true);
+  check("フランス・電池・船便は全社不可", liSea("FR").allBlocked === true);
 
   // FROM JAPAN はシンガポール宛ての船便では GST を事前徴収しない（EMSではする）
   const fjOf = (r) => r.results.find((x) => x.proxyId === "fromjapan");

@@ -77,10 +77,10 @@
         }
       },
       "plans": [
-        { "id": "light",      "name": "ライトプラン",      "nameEn": "Light — no cover",                  "fee": 0,   "shippingGuarantee": false, "inspection": false },
+        { "id": "light",      "name": "ライトプラン",      "nameEn": "Light (no cover)",                  "fee": 0,   "shippingGuarantee": false, "inspection": false },
         { "id": "inspection", "name": "検品プラン",        "nameEn": "Inspection only",                   "fee": 300, "shippingGuarantee": false, "inspection": true },
         { "id": "guarantee",  "name": "配送保障プラン",     "nameEn": "Shipping guarantee only",           "fee": 500, "shippingGuarantee": true,  "inspection": false },
-        { "id": "standard",   "name": "スタンダードプラン", "nameEn": "Standard — guarantee + inspection", "fee": 500, "shippingGuarantee": true,  "inspection": true, "recommended": true }
+        { "id": "standard",   "name": "スタンダードプラン", "nameEn": "Standard (guarantee + inspection)", "fee": 500, "shippingGuarantee": true,  "inspection": true, "recommended": true }
       ],
       "defaultPlan": "light",
       "paymentFee": { "type": "none", "rate": 0 },

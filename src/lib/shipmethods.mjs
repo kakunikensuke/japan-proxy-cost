@@ -141,7 +141,7 @@ export function buildShippingGuide(data, { COUNTRY_SLUGS, countryName }) {
 
   <h2>What changes with the method</h2>
   <ul>
-    <li><strong>Batteries.</strong> Japan Post does not carry lithium batteries by surface mail to Australia or Singapore, and ZenMarket and Neokyo only accept devices with batteries by EMS.</li>
+    <li><strong>Batteries.</strong> Japan Post does not carry lithium batteries by surface mail to the United States, France or Australia, and to the United Kingdom it carries them only by surface mail. ZenMarket and Neokyo only accept devices with batteries by EMS.</li>
     <li><strong>Tax collected up front.</strong> FROM JAPAN collects Singapore's GST at checkout on EMS, but not on surface parcels, so the tax moves to the door.</li>
     <li><strong>Size.</strong> Small packets have size limits as well as the 2 kg weight limit. A boxed figure that is light enough may still be too large.</li>
     <li><strong>The United States.</strong> Japan Post currently marks every method to the United States, EMS included, as "partially accepted", and publishes separate notices about US consumer product (CPSC) rules from 8 July 2026. Check the latest status before sending.</li>

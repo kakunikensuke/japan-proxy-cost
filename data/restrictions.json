@@ -24,7 +24,7 @@
         "Gaia Notes",
         "lacquer thinner"
       ],
-      "whenBlockedEn": "No proxy and no Japanese shop can put this on a plane — it is an air transport rule, not a company policy. Buy the same paint from a hobby retailer in your own country; Mr. Hobby, Tamiya and Gaia Notes are all distributed internationally."
+      "whenBlockedEn": "No proxy and no Japanese shop can put this on a plane. It is an air transport rule, not a company policy. Buy the same paint from a hobby retailer in your own country; Mr. Hobby, Tamiya and Gaia Notes are all distributed internationally."
     },
     {
       "id": "aerosol",
@@ -50,7 +50,7 @@
         "LED figure base",
         "power bank"
       ],
-      "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping — the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route.",
+      "whenBlockedEn": "Japan Post will not carry it on this route, but DHL, FedEx and UPS still can. ZenMarket and Neokyo both offer courier shipping, though the price will be higher than the EMS figures on this page. Loose batteries and power banks are refused by every route.",
       "whenUnconfirmedEn": "Japan Post does carry lithium batteries to this destination, but only when the battery is already installed in the device, and the proxies cap it at two per parcel. Loose cells and power banks are refused on every route. With a service that publishes no rule of its own, the decision is made at the warehouse after you have paid."
     },
     {
@@ -64,7 +64,7 @@
         "model gun",
         "gas blowback"
       ],
-      "whenBlockedEn": "Buyee and Neokyo refuse airsoft and model guns outright. ZenMarket does not ban them, but publishes a handling procedure instead — any cartridges are destroyed on arrival and the package is opened for inspection, with disposal and handling fees on top. Before you bid, check that your own country allows the import: in Victoria, Queensland, South Australia and Tasmania, owning one is illegal regardless of how it was shipped."
+      "whenBlockedEn": "Buyee and Neokyo refuse airsoft and model guns outright. ZenMarket does not ban them, but publishes a handling procedure instead: any cartridges are destroyed on arrival and the package is opened for inspection, with disposal and handling fees on top. Before you bid, check that your own country allows the import: in Victoria, Queensland, South Australia and Tasmania, owning one is illegal regardless of how it was shipped."
     },
     {
       "id": "lighter",
@@ -302,7 +302,7 @@
       "lithium_battery": {
         "level": "unknown",
         "quoteEn": "Lead-acid Batteries",
-        "noteEn": "That is the only battery entry in Buyee's all-country prohibited list; lithium batteries are not mentioned either way. Japan Post rules still apply — see the destination check."
+        "noteEn": "That is the only battery entry in Buyee's all-country prohibited list; lithium batteries are not mentioned either way. Japan Post rules still apply, so check the destination too."
       },
       "replica_gun": {
         "level": "prohibited",
@@ -385,7 +385,7 @@
       "food": {
         "level": "unknown",
         "quoteEn": "Beverages with alcoholic content above 24%",
-        "noteEn": "That is the only food or drink entry in ZenMarket's prohibited list, and it is restricted to DHL. Because this tool prices EMS, such a purchase would not be shippable at all — but ordinary snacks are simply not covered by the published rules either way."
+        "noteEn": "That is the only food or drink entry in ZenMarket's prohibited list, and it is restricted to DHL. Because this tool prices EMS, such a purchase would not be shippable at all. Ordinary snacks are not covered by the published rules either way."
       },
       "adult": {
         "level": "conditional",
@@ -668,9 +668,9 @@
     "DE": {
       "lithium_battery": {
         "level": "prohibited",
-        "noteEn": "Germany is absent from Japan Post's published list of countries that accept equipment containing lithium batteries by air. Japan Post will not take them by EMS, air mail or surface mail, so no proxy can send them on this route.",
+        "noteEn": "Germany is on neither of Japan Post's lists of destinations that accept equipment containing lithium batteries (one for air mail and EMS, one for surface mail), so no proxy can send them on this route.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09",
+        "verifiedAt": "2026-10-13",
         "corroboratedBy": [
           "https://zenmarket.jp/en/prohibited_items.aspx",
           "https://neokyo.com/en/forbidden-items"
@@ -679,30 +679,34 @@
     },
     "GB": {
       "lithium_battery": {
-        "level": "prohibited",
-        "noteEn": "The United Kingdom is absent from Japan Post's published list of countries that accept equipment containing lithium batteries by air. Japan Post will not take them by EMS, air mail or surface mail, so no proxy can send them on this route.",
+        "level": "conditional",
+        "noteEn": "The United Kingdom is not on Japan Post's list of destinations that accept lithium batteries by air mail or EMS, but it is on the separate list for surface mail. Batteries must be installed in the device, and ZenMarket and Neokyo only send them by EMS, so surface mail through another service is the only route.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09",
-        "corroboratedBy": [
-          "https://zenmarket.jp/en/prohibited_items.aspx",
-          "https://neokyo.com/en/forbidden-items"
+        "verifiedAt": "2026-10-13",
+        "excludedCarriers": [
+          "ems",
+          "small_packet_air",
+          "intl_parcel_air"
         ]
       }
     },
     "US": {
       "lithium_battery": {
         "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for the United States by air when they are installed in the device. Proxies cap this at two batteries per parcel and refuse loose batteries and power banks.",
+        "noteEn": "Japan Post accepts lithium batteries for the United States by air when they are installed in the device. Proxies cap this at two batteries per parcel and refuse loose batteries and power banks. Surface mail is not available for batteries.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-10-13",
+        "excludedCarriers": [
+          "intl_parcel_sea"
+        ]
       }
     },
     "CA": {
       "lithium_battery": {
         "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for Canada by air when installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "noteEn": "Japan Post accepts lithium batteries for Canada by air and by surface mail when installed in the device. Two batteries per parcel, no loose cells or power banks.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-10-13"
       }
     },
     "AU": {
@@ -710,7 +714,7 @@
         "level": "conditional",
         "noteEn": "Japan Post accepts lithium batteries for Australia by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09",
+        "verifiedAt": "2026-10-13",
         "excludedCarriers": [
           "intl_parcel_sea"
         ]
@@ -719,36 +723,36 @@
     "FR": {
       "lithium_battery": {
         "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for France by air when installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "noteEn": "Japan Post accepts lithium batteries for France by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
-      }
-    },
-    "SG": {
-      "lithium_battery": {
-        "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for Singapore by air when installed in the device. Two batteries per parcel, no loose cells or power banks. Surface mail is not available for batteries.",
-        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09",
+        "verifiedAt": "2026-10-13",
         "excludedCarriers": [
           "intl_parcel_sea"
         ]
       }
     },
+    "SG": {
+      "lithium_battery": {
+        "level": "conditional",
+        "noteEn": "Japan Post accepts lithium batteries for Singapore by air and by surface mail when installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
+        "verifiedAt": "2026-10-13"
+      }
+    },
     "TW": {
       "lithium_battery": {
         "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for Taiwan by air when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "noteEn": "Japan Post accepts lithium batteries for Taiwan by air and by surface mail when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-10-13"
       }
     },
     "HK": {
       "lithium_battery": {
         "level": "conditional",
-        "noteEn": "Japan Post accepts lithium batteries for Hong Kong by air when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
+        "noteEn": "Japan Post accepts lithium batteries for Hong Kong by air and by surface mail when they are installed in the device. Two batteries per parcel, no loose cells or power banks.",
         "sourceUrl": "http://www.post.japanpost.jp/cgi-kokusai/p05-06.html",
-        "verifiedAt": "2026-08-09"
+        "verifiedAt": "2026-10-13"
       }
     }
   },

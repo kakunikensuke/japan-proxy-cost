@@ -439,7 +439,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       description: `Japan Post EMS prices for ${countries.length} countries in one table, and where a few grams over a band costs up to ${yen(Math.max(...steps.flatMap((s) => s.jumps.map((j) => j.add))))}.`,
       body: `
   <h1>EMS from Japan: the weight bands</h1>
-  <p>Totals on this site default to Japan Post's EMS, the one service all ${NW} proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. Here is the full table for the countries this site covers.</p>
+  <p>Totals on this site default to Japan Post's EMS, the one service all ${NW} proxies offer (other methods are compared in <a href="/guides/shipping-methods">the shipping methods guide</a>). EMS is not charged by the gram. It is charged in bands, and a parcel pays for the whole band it falls in. The full table for the countries this site covers is below.</p>
   <h2>The table</h2>
   <table><thead><tr><th>Weight</th>${zones.map((z) => `<th class="num">${zoneName(z)}</th>`).join("")}</tr></thead><tbody>${tr}</tbody></table>
   <p class="cap">Japan Post EMS, checked ${esc(ems._meta.updated)}. Countries in the same column share a price zone. Japan Post's bands: ${bandSteps(ems.rates)}. A parcel is priced at the band it falls in.</p>

@@ -16,7 +16,7 @@
       ],
       "vatRate": null,
       "vatNote": "米国に輸入VAT/GSTは無い。州の売上税は輸入時には徴収されない。",
-      "vatNoteEn": "none — the US has no import VAT or GST, and state sales tax is not collected at the border",
+      "vatNoteEn": "none; the US has no import VAT or GST, and state sales tax is not collected at the border",
       "deMinimis": {
         "status": "suspended",
         "formerThresholdUsd": 800,
@@ -170,7 +170,7 @@
       "vatLabel": "GST/HST",
       "vatRateStatus": "varies-by-province",
       "vatNote": "州によって5%〜15%（GST単独かHSTか）。州を選ばせないと確定できないため v1 では数値を出さない。",
-      "vatNoteEn": "5% to 15% depending on your province (GST alone, or HST) — we do not guess a single rate",
+      "vatNoteEn": "5% to 15% depending on your province (GST alone, or HST), so we do not guess a single rate",
       "deMinimis": {
         "status": "active",
         "dutyThreshold": 20,
@@ -230,7 +230,7 @@
       },
       "displayEn": {
         "headline": "Tax-free under NT$2,000, then 5%",
-        "body": "Taiwan exempts postal parcels with a customs value of NT$2,000 or less from duty and business tax. Above that, 5% business tax applies. Note that Taiwan is reported to limit how many times one person can claim the exemption within six months — if you order often, do not count on it.",
+        "body": "Taiwan exempts postal parcels with a customs value of NT$2,000 or less from duty and business tax. Above that, 5% business tax applies. Note that Taiwan is reported to limit how many times one person can claim the exemption within six months, so if you order often, do not count on it.",
         "severity": "low"
       }
     },
@@ -248,7 +248,7 @@
       "verifiedAt": "2026-10-06",
       "displayEn": {
         "headline": "No import tax at all",
-        "body": "Hong Kong is a free port. Only liquor, tobacco, hydrocarbon oil and methyl alcohol are dutiable — everything else arrives with no duty, no VAT and no sales tax. The figure below is the whole cost.",
+        "body": "Hong Kong is a free port. Only liquor, tobacco, hydrocarbon oil and methyl alcohol are dutiable. Everything else arrives with no duty, no VAT and no sales tax. The figure below is the whole cost.",
         "severity": "low"
       }
     }

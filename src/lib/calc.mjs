@@ -358,9 +358,9 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
         payOnDeliveryLines.push({
           key: "import_tax",
           labelEn: taxFree
-            ? `${country.vatLabel ?? "Import VAT"} — none at this destination`
+            ? `${country.vatLabel ?? "Import VAT"}: none at this destination`
             : underThreshold
-              ? `${country.vatLabel ?? "Import VAT"} — under the ${dmLabel} duty-free limit`
+              ? `${country.vatLabel ?? "Import VAT"}: under the ${dmLabel} duty-free limit`
               : `${country.vatLabel ?? "Import VAT"} (${(country.vatRate * 100).toFixed(country.vatRate * 100 % 1 ? 1 : 0)}%)`,
           amount,
           // 税がゼロの国に「到着時に税関から請求されます」と書くと、0円の行と矛盾する
@@ -385,7 +385,7 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
       }
       // 税がゼロの国（香港など）に「通関手数料が上乗せされる」と出すと嘘になる
       if (country?.vatRate === 0) {
-        deliveryNotes.push("Nothing to pay on arrival — this destination charges no import tax on general goods.");
+        deliveryNotes.push("Nothing to pay on arrival. This destination charges no import tax on general goods.");
       } else {
         deliveryNotes.push("Couriers usually add their own customs handling fee on top. Paying tax up front often avoids it.");
       }
@@ -406,7 +406,7 @@ export function calculateAll(input, { proxies, ems, importTax, restrictions, sto
       : { level: "ok", blockers: [] };
 
     if (shippable.level === "prohibited") {
-      push(`${proxy.shortName ?? proxy.name} cannot ship this item — the price below is for reference only`);
+      push(`${proxy.shortName ?? proxy.name} cannot ship this item, so the price below is for reference only`);
     } else if (shippable.level === "unknown") {
       push(`${proxy.shortName ?? proxy.name} does not publish a rule for this kind of item; it may be refused after you buy`);
     }

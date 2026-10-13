@@ -194,13 +194,13 @@ const homeBody = `
   <p>A proxy service buys something in Japan on your behalf and forwards it to you. Every one of them
   advertises a service fee of a few hundred yen, and every one of them ends up charging you several times
   that. The fee is not where the money goes.</p>
-  <p>This site runs the whole calculation — the item, the service fee, packing, domestic postage inside Japan,
+  <p>This site runs the whole calculation (the item, the service fee, packing, domestic postage inside Japan,
   international postage by weight band, deposit and payment fees, and the import tax your own country charges
-  when the parcel lands — for ${esc(proxies.proxies.map((p) => p.shortName ?? p.name).join(", "))}, across
+  when the parcel lands) for ${esc(proxies.proxies.map((p) => p.shortName ?? p.name).join(", "))}, across
   ${Object.keys(importTax.countries).length} destination countries.</p>
 
   <h2>Why no single service is &ldquo;the cheapest&rdquo;</h2>
-  <p>They do not charge on the same unit, so the ranking is not a fixed list — it is a function of your order.</p>
+  <p>They do not charge on the same unit, so the ranking is not a fixed list. It depends on your order.</p>
   <table>
     <thead><tr><th>Service</th><th>Service fee</th><th>Charged</th></tr></thead>
     <tbody>${feeStructureRows}</tbody>
@@ -220,14 +220,14 @@ const homeBody = `
   <p>${esc(light.name)} wins that order at ${yen(light.grandTotal)}. Take the identical order and make the
   parcel 3&nbsp;kg instead of 1&nbsp;kg and ${flips
     ? `the answer changes: ${esc(heavy.name)} becomes cheapest at ${yen(heavy.grandTotal)}`
-    : `${esc(heavy.name)} still wins, at ${yen(heavy.grandTotal)} — but the gap to the others has moved`}.
+    : `${esc(heavy.name)} still wins, at ${yen(heavy.grandTotal)}, but the gap to the others has moved`}.
   That is the whole reason this site exists: the answer depends on the order, so it has to be calculated rather
   than looked up.</p>
 
   <h2>Before price: can it even leave Japan?</h2>
   <p>Model paint, spray cans, lighters, airsoft, blades and anything with a loose lithium battery are refused
   by some or all of these companies, and some are refused by Japan Post regardless of which company you use.
-  The refusal happens at the warehouse, <em>after</em> you have paid for the item and its domestic postage —
+  The refusal happens at the warehouse, <em>after</em> you have paid for the item and its domestic postage,
   none of which comes back. So shippability is checked before a price is shown, and a service that will not
   export your item is never presented as the cheapest option.
   See <a href="/what-you-cannot-ship-from-japan">what you cannot ship out of Japan</a>.</p>
@@ -240,18 +240,18 @@ const homeBody = `
 
   <h2>Start here</h2>
   <ul>
-    <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a> — read before you bid</li>
+    <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a>, read before you bid</li>
     <li><a href="/cheapest-proxy-from-japan-to-united-states">Cheapest proxy to the United States, by marketplace</a></li>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a></li>
     ${proxies.proxies.map((p) => `<li><a href="/${p.id}-fees">${esc(p.shortName ?? p.name)} fees explained</a></li>`).join("")}
-    <li><a href="/how-we-calculate">How these numbers are worked out</a> — sources, method, and what is deliberately left out</li>
+    <li><a href="/how-we-calculate">How these numbers are worked out</a>: sources, method, and what is deliberately left out</li>
     <li><a href="/all-pages">Every page on this site</a></li>
   </ul>
   <p><small>Fee data checked ${esc(proxies._meta.updated)} against each provider's official pages.
-  Estimates only — see <a href="/how-we-calculate">how we calculate</a>.</small></p>`;
+  Estimates only. See <a href="/how-we-calculate">how we calculate</a>.</small></p>`;
 
 writePage("/", renderPage({
-  title: `Japan Proxy Cost Calculator — compare ${PROXY_TITLE_AMP}`,
+  title: `Japan Proxy Cost Calculator: compare ${PROXY_TITLE_AMP}`,
   description: "Work out what a Japanese proxy service actually costs. Service fees, packing, deposit fees, EMS postage and import tax, compared side by side.",
   canonicalPath: "/",
   body: homeBody,
@@ -264,7 +264,7 @@ writePage("/", renderPage({
 // トップページ自体は読み物として成立させる。
 const allPagesBody = `
   <h1>Every page on this site</h1>
-  <p>Each page below carries its own calculation — the figures on it are worked out for that specific
+  <p>Each page below carries its own calculation. The figures on it are worked out for that specific
   marketplace, weight, destination or item category, not copied between pages. If you would rather put in your
   own numbers, the calculator is on <a href="/">the front page</a>.</p>
   ${Object.entries(grouped).map(([heading, list]) => `
@@ -290,7 +290,7 @@ for (const p of pages) {
 // wrangler.toml で not_found_handling = "404-page" にしているため dist/404.html が必要。
 // 無いと存在しないURLで本文ゼロバイトの真っ白なページが返る。
 writePage("/404", renderPage({
-  title: "Page not found — Japan Proxy Cost Calculator",
+  title: "Page not found | Japan Proxy Cost Calculator",
   description: `That page does not exist. Start from the calculator to compare ${PROXY_TITLE_LIST}.`,
   canonicalPath: "/404",
   prefill: null,
