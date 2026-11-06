@@ -117,8 +117,18 @@ function renderPage({ title, description, canonicalPath, body, prefill, layout =
   }
 
   html = html.replace('<div id="root"></div>', `${siteHeader(section.key)}<main id="main">${main}</main>${siteFooter()}`);
+  // 検索に出さないページ（送信完了・404）には広告のタグを入れない。Google パブリッシャー ポリシーは、
+  // お礼・終了・エラーのような行き止まりのページに広告を置かないよう求めている
+  // （https://support.google.com/publisherpolicies/answer/11112688。2026-11-06）
+  if (noindex) {
+    if (!ADSENSE_TAG.test(html)) throw new Error("index.html に AdSense のタグが見つかりません（ADSENSE_TAG を直すこと）");
+    html = html.replace(ADSENSE_TAG, "");
+  }
   return html;
 }
+
+// index.html の AdSense のタグ（直前の説明のコメントごと）
+const ADSENSE_TAG = /\s*(?:<!-- AdSense[^>]*-->\s*)?<script\s+async\s+src="https:\/\/pagead2\.googlesyndication\.com[^"]*"[^>]*>\s*<\/script>/;
 
 function writePage(routePath, html) {
   // ★ foo/index.html ではなく foo.html に置く（307リダイレクト回避）
