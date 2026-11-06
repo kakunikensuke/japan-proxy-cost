@@ -154,7 +154,7 @@ export function buildListingsGuide(data) {
   <ul>
     <li>Check what the item contains against <a href="/what-you-cannot-ship-from-japan">what cannot be shipped</a>. A refused item is paid for and not sent.</li>
     <li>Work out the total, not the price: <a href="/guides/is-it-worth-it">when an item is worth the shipping</a> shows how much the overhead adds at each price.</li>
-    <li>Compare services for the marketplace you are buying from: <a href="/cheapest-proxy-from-japan-to-united-states">cheapest proxy by marketplace</a>.</li>
+    <li>Compare services for the marketplace you are buying from: <a href="/guides/which-proxy-is-cheapest">which proxy is cheapest</a>.</li>
   </ul>
   <nav class="related"><h2>Related</h2><ul><li><a href="/guides/how-proxy-buying-works">How proxy buying works, step by step</a></li><li><a href="/glossary">Glossary</a></li><li><a href="/faq">Frequently asked questions</a></li></ul></nav>`;
 

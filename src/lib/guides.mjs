@@ -61,7 +61,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
     }
     const tr = rows.map(({ cc, res }) => {
       const best = res.results[0].grandTotal;
-      return `<tr><td><a href="/cheapest-proxy-from-japan-to-${COUNTRY_SLUGS[cc]}">${esc(countryName(cc))}</a></td>${ids.map((x) => {
+      return `<tr><td><a href="/import-tax-${COUNTRY_SLUGS[cc]}">${esc(countryName(cc))}</a></td>${ids.map((x) => {
         const r = res.results.find((y) => y.proxyId === x.id);
         return `<td class="num"${r.grandTotal === best ? ' style="background:var(--green-soft);font-weight:600"' : ""}>${yen(r.grandTotal)}</td>`;
       }).join("")}</tr>`;
@@ -75,7 +75,7 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
       layout: "content-only",
       prefill: null,
       title: `Compare Japan proxy services: ${PROXY_TITLE_LIST}`,
-      description: `The same order priced through all ${NW} proxy services for ${countries.length} countries, with ${pairs.length * countries.length} head-to-head comparisons.`,
+      description: `The same order priced through all ${NW} proxy services for ${countries.length} countries, with ${pairs.length} head-to-head comparisons.`,
       body: `
   <h1>Compare Japan proxy services</h1>
   <p>The same ¥10,000, 1 kg Mercari Japan order, priced through all ${NW} services for each of the ${countries.length} countries this
@@ -96,9 +96,17 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   }).join("")}</ul>
   <p>Postage is the same for all ${NW}, so these gaps are made entirely of fees and, where it applies, of whether a service collects the tax at checkout.</p>
   <h2>Head-to-head comparisons</h2>
-  <p>Each page prices the pair on 24 different orders, shows which lines of the bill differ, compares what each will ship to that
-  country, and explains when you pay the tax.</p>
-  ${countries.map((cc) => `<h3>${esc(countryName(cc))}</h3><ul>${pairs.map(([a, b]) => `<li><a href="${versusPath(a.id, b.id, cc)}">${esc(a.name)} vs ${esc(b.name)}</a></li>`).join("")}</ul>`).join("")}
+  <p>Each page prices the pair on 24 different orders, shows which lines of the bill differ, compares what each will ship,
+  explains when you pay the tax, and lists the total for all ${countries.length} countries side by side.</p>
+  <table><thead><tr><th>Pair</th><th>Cheaper on this order</th><th class="num">Gap</th></tr></thead><tbody>${pairs.map(([a, b]) => {
+    // 9か国それぞれで、この組のどちらが安いかを数える（同額は引き分け）
+    const ds = rows.map(({ res }) => res.results.find((r) => r.proxyId === b.id).grandTotal - res.results.find((r) => r.proxyId === a.id).grandTotal);
+    const aw = ds.filter((d) => d > 0).length, bw = ds.filter((d) => d < 0).length;
+    const abs = ds.map(Math.abs);
+    const who = aw && bw ? `${esc(a.name)} in ${aw}, ${esc(b.name)} in ${bw}` : aw ? `${esc(a.name)} in all ${aw === countries.length ? countries.length : aw}` : bw ? `${esc(b.name)} in all ${bw === countries.length ? countries.length : bw}` : "level everywhere";
+    return `<tr><td><a href="${versusPath(a.id, b.id, "US")}">${esc(a.name)} vs ${esc(b.name)}</a></td><td>${who}${aw + bw < countries.length && (aw || bw) ? ` (level in ${countries.length - aw - bw})` : ""}</td><td class="num">${Math.min(...abs) === Math.max(...abs) ? yen(abs[0]) : `${yen(Math.min(...abs))}–${yen(Math.max(...abs))}`}</td></tr>`;
+  }).join("")}</tbody></table>
+  <p class="cap">Same ¥10,000, 1 kg Mercari order as the table above, counted over the ${countries.length} destinations. A pair that splits by country is one where the tax rules or a service’s country-specific charges decide the result.</p>
 
   <h2>Fees for each service</h2>
   <ul>${ids.map((x) => `<li><a href="/${x.id}-fees">${esc(x.name)} fees explained</a></li>`).join("")}</ul>
@@ -454,7 +462,9 @@ export function buildGuides(data, { COUNTRY_SLUGS, versusPath, countryName }) {
   <p>The single biggest step in this table is ${(() => { const all = steps.flatMap((s) => s.jumps.map((j) => ({ ...j, z: s.z }))).sort((a, b) => b.add - a.add)[0]; return `${yen(all.add)}, from ${kg(all.from)} to ${kg(all.to)} to ${zoneName(all.z)}`; })()}.
   The cheapest step is ${(() => { const all = steps.flatMap((s) => s.jumps.map((j) => ({ ...j, z: s.z }))).sort((a, b) => a.add - b.add)[0]; return `${yen(all.add)}, from ${kg(all.from)} to ${kg(all.to)} to ${zoneName(all.z)}`; })()}. Either way, one gram over a boundary costs the whole step.</p>
   <h2>Shipping costs for common items</h2>
-  <ul>${countries.map((cc) => `<li><a href="/ship-scale-figure-from-japan-to-${COUNTRY_SLUGS[cc]}">A boxed figure to ${esc(countryName(cc))}</a> or <a href="/ship-manga-from-japan-to-${COUNTRY_SLUGS[cc]}">a manga volume</a></li>`).join("")}</ul>
+  <p>The item guides price a typical parcel to every country: <a href="/guides/buying-manga-from-japan">manga and artbooks</a>,
+  <a href="/guides/buying-figures-from-japan">boxed figures</a>, <a href="/guides/buying-trading-cards-from-japan">trading cards</a>
+  and <a href="/guides/buying-game-consoles-from-japan">game consoles</a>.</p>
   ${related([
     { href: "/guides/consolidating-parcels", text: "When one box saves money" },
     { href: "/guides/is-it-worth-it", text: "When an item from Japan is worth the shipping" },

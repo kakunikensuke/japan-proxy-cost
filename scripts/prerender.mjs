@@ -137,8 +137,6 @@ const grouped = {
   "Guides and overviews": pages.filter((p) => p.path.startsWith("/guides") || ["/compare", "/import-tax"].includes(p.path)),
   "Can you even ship it?": pages.filter((p) => p.path.startsWith("/can-you-ship-") || p.path === "/what-you-cannot-ship-from-japan"),
   "Compare two services": pages.filter((p) => p.path.includes("-vs-")),
-  "Cheapest proxy by marketplace": pages.filter((p) => p.path.startsWith("/cheapest-proxy-")),
-  "Shipping cost by item": pages.filter((p) => p.path.startsWith("/ship-")),
   "Fees by service": pages.filter((p) => p.path.endsWith("-fees")),
   "Import tax by country": pages.filter((p) => p.path.startsWith("/import-tax-")),
   "About this site": pages.filter((p) => ["/about", "/how-we-calculate", "/privacy-policy", "/contact", "/contact-received"].includes(p.path)),
@@ -241,7 +239,7 @@ const homeBody = `
   <h2>Start here</h2>
   <ul>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a>, read before you bid</li>
-    <li><a href="/cheapest-proxy-from-japan-to-united-states">Cheapest proxy to the United States, by marketplace</a></li>
+    <li><a href="/guides/which-proxy-is-cheapest">Which proxy is cheapest</a>, across 1,512 priced orders</li>
     <li><a href="/what-you-cannot-ship-from-japan">What you cannot ship out of Japan</a></li>
     ${proxies.proxies.map((p) => `<li><a href="/${p.id}-fees">${esc(p.shortName ?? p.name)} fees explained</a></li>`).join("")}
     <li><a href="/how-we-calculate">How these numbers are worked out</a>: sources, method, and what is deliberately left out</li>

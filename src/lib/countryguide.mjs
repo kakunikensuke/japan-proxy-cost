@@ -96,10 +96,9 @@ export function countryGuide(cc, data, { COUNTRY_SLUGS, versusPath, countryName 
     `<tr><td><a href="/guides/${g.slug}">${esc(g.name.charAt(0).toUpperCase() + g.name.slice(1))}</a></td><td>${esc(o.what)}, ¥${o.price.toLocaleString("en-US")}, ${kg(o.weightG)}</td><td>${top ? esc(top.name) + (top.shippable.level !== "ok" ? " (with conditions)" : "") : "No service"}</td><td class="num">${top ? yen(top.grandTotal) + (top.grandTotalIsMinimum ? (dutyCell(data.importTax.countries[cc], o.price, o.category) ? `<br><small>+ duty, ${dutyCell(data.importTax.countries[cc], o.price, o.category)}</small>` : " +duty") : "") : "—"}</td></tr>`).join("")}</tbody></table>`;
 
   // ---- 関連ページ ----
-  const slug = COUNTRY_SLUGS[cc];
   const more = `<ul>
-    <li><a href="/cheapest-proxy-from-japan-to-${slug}">Cheapest proxy to ${esc(cn)}, by marketplace</a></li>
-    <li>Shipping by weight to ${esc(cn)}: <a href="/ship-manga-from-japan-to-${slug}">a manga volume</a>, <a href="/ship-scale-figure-from-japan-to-${slug}">a boxed figure</a>, <a href="/ship-2kg-from-japan-to-${slug}">a 2 kg parcel</a>, <a href="/ship-3kg-from-japan-to-${slug}">a 3 kg parcel</a></li>
+    <li><a href="/guides/which-proxy-is-cheapest">Which proxy is cheapest, across 1,512 orders</a></li>
+    <li>Postage by weight: <a href="/guides/ems-weight-bands">EMS weight bands</a>, <a href="/guides/buying-manga-from-japan">manga</a>, <a href="/guides/buying-figures-from-japan">boxed figures</a></li>
     <li><a href="/guides/paying-import-tax-up-front">Paying import tax up front or on delivery</a></li>
     <li><a href="/import-tax">Import tax in all nine countries</a></li>
   </ul>`;

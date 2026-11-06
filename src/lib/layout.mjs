@@ -106,8 +106,8 @@ export function siteFooter() {
     </div>
     <nav aria-label="Compare"><h2>Compare</h2><ul>
       <li><a href="/compare">All service comparisons</a></li>
-      <li><a href="/buyee-vs-zenmarket-to-united-states">Buyee vs ZenMarket</a></li>
-      <li><a href="/fromjapan-vs-buyee-to-united-states">FROM JAPAN vs Buyee</a></li>
+      <li><a href="/buyee-vs-zenmarket">Buyee vs ZenMarket</a></li>
+      <li><a href="/fromjapan-vs-buyee">FROM JAPAN vs Buyee</a></li>
       <li><a href="/all-pages">Every page on this site</a></li>
     </ul></nav>
     <nav aria-label="Before you buy"><h2>Before you buy</h2><ul>

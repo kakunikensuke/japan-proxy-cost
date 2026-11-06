@@ -47,7 +47,7 @@ export const GENRES = [
     bundle: { what: "three prize figures", n: 3, unitG: 400, unitPrice: 3000 },
     storeCats: ["figure"],
     intro: "A boxed figure is the typical proxy purchase: not heavy, not fragile in the way glass is, and usually second-hand from Mercari or Yahoo! Auctions. The figure itself is almost never the problem. What changes the answer is the box size, and whether anything in it has a battery.",
-    see: ["/can-you-ship-lithium-batteries-from-japan", "/ship-scale-figure-from-japan-to-united-states"],
+    see: ["/can-you-ship-lithium-batteries-from-japan", "/guides/ems-weight-bands"],
   },
   {
     slug: "buying-gunpla-and-model-kits-from-japan",
@@ -79,7 +79,7 @@ export const GENRES = [
     bundle: { what: "ten volumes bought one at a time", n: 10, unitG: 200, unitPrice: 600, compareAs: "set" },
     storeCats: ["book"],
     intro: "Books are heavy for their price. A single paperback volume costs little in Japan and a lot to post, so how you buy manga matters more than which proxy you use: as a set listed by one seller, or volume by volume from different sellers.",
-    see: ["/ship-manga-from-japan-to-united-states", "/guides/consolidating-parcels"],
+    see: ["/guides/ems-weight-bands", "/guides/consolidating-parcels"],
   },
   {
     slug: "buying-trading-cards-from-japan",
